@@ -39,7 +39,7 @@ class Expression:
             assert len(tail) >= 1, 'Expression::execute(): dot-special-form: expected at least one argument there'
             object_name: Operand
             method_args: Children
-            object_name, *method_args = head
+            object_name, *method_args = tail
             method_name: str = head.token().value()[1:]  # cutting . character from the beginning, gives us a name
             object_instance = object_name.execute(environ, False)
             method_handler: Callable = getattr(object_instance, method_name, NotFound)  # NotFound is a stub class

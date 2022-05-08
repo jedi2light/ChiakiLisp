@@ -90,6 +90,10 @@ if __name__ == '__main__':
 
         return (tuple(filter(lambda name: name.startswith(text), names)) + (None,))[state]
 
+    if os.path.exists('corelib/core.cl'):
+        with open('corelib/core.cl', 'r', encoding='utf-8') as r:
+            execute(r.read(), silent=True)  # inject core library
+
     if len(sys.argv) > 1:
         self: str = sys.argv[0]
         assert len(sys.argv) == 2, f'Usage: {self} [source]'
