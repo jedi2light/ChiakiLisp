@@ -81,6 +81,12 @@ class Expression:
             cond, true, false = tail
             return true.execute(environ, False) if cond.execute(environ, False) else false.execute(environ, False)
 
+        if head.token().value() == 'when':
+            assert len(tail) == 2, 'Expression::execute(): when-special-form: expected exactly two arguments here'
+            cond, true = tail
+            false = Operand(Token(Token.Nil, 'nil'))
+            return true.execute(environ, False) if cond.execute(environ, False) else false.execute(environ, False)
+
         if head.token().value() == 'let':
             assert len(tail) >= 1, 'Expression::execute(): let-special-form: expected at least one argument there'
             bindings, *body = tail
