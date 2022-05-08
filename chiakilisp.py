@@ -2,6 +2,7 @@
 
 import os
 import sys
+import traceback
 from chiakilisp.utils import pprint
 from chiakilisp.lexer import Lexer
 from chiakilisp.parser import Parser
@@ -62,7 +63,7 @@ def repl() -> None:
         try:
             execute(source)  # execute function also prints result
         except (Exception,) as exception:  # pylint: disable=W0703   # try to catch eny possible exception here
-            print(exception)  # but we should manually print error
+            traceback.print_exc()  # have to manually print errors
 
 
 if __name__ == '__main__':
