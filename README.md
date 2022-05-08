@@ -12,6 +12,7 @@ But this project tries to be as simple as possible, but providing some features 
  - Custom formatting for Python 3 native data types
  - Multiline lambda functions (unreachable in Python 3 syntax)
  - `if` special form which looks more like Python 3 ternary expression
+ - `when` special form which is basically `if` but with `nil` for `else`
  - `let` blocks with their own local environment unreachable from outer scope
  - `nil/true/false` keywords (you do not need the press a Shift key any time you want to type them)
  - `->/->>` aka `first/last threadin macro` right in Python 3, could you imagine this earlier, guys?)
