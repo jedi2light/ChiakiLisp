@@ -39,14 +39,20 @@ def find_nearest_closing_bracket(filtered: list, visited: list) -> tuple:
 
     """This function takes a token collection listing and finds the nearest closing bracket position"""
 
-    return tuple(filter(lambda p: p not in visited and p[1].type() == Token.ClosingBracket, filtered))[0]
+    _all = tuple(filter(lambda p: p not in visited and p[1].type() == Token.ClosingBracket, filtered))
+    if not _all:
+        raise AssertionError('Parser::find_nearest_closing_bracket() there is no nearest ClosingBracket')
+    return _all[0]
 
 
 def find_nearest_opening_bracket(filtered: list, visited: list) -> tuple:
 
     """This function takes a token collection listing and finds the nearest opening bracket position"""
 
-    return tuple(filter(lambda p: p not in visited and p[1].type() == Token.OpeningBracket, filtered))[0]
+    _all = tuple(filter(lambda p: p not in visited and p[1].type() == Token.OpeningBracket, filtered))
+    if not _all:
+        raise AssertionError('Parser::find_nearest_closing_bracket() there is no nearest OpeningBracket')
+    return _all[0]
 
 
 def boundary(lst: List[Token]) -> int:
