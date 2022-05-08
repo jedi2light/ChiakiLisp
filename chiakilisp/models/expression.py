@@ -32,6 +32,9 @@ class Expression:
 
         head: Operand
         tail: Children
+
+        assert self.children(),  'Expression::execute(): current expression has no operands, unable to execute it'
+
         head, *tail = self.children()
         assert head.token().type() == Token.Identifier, 'Expression::execute(): head of expression !== identifier'
 
