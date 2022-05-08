@@ -14,6 +14,7 @@ But this project tries to be as simple as possible, but providing some features 
  - `if` special form which looks more like Python 3 ternary expression
  - `let` blocks with their own local environment unreachable from outer scope
  - `nil/true/false` keywords (you do not need the press a Shift key any time you want to type them)
+ - `->/->>` aka `first/last threadin macro` right in Python 3, could you imagine this earlier, guys?)
  - Obviously, you do not need to separate your operands by a coma (,) (also, `{}` form does not need colon (:) char)
 
 ## Simple and complex (collections) data types

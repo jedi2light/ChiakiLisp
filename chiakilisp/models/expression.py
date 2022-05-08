@@ -35,6 +35,36 @@ class Expression:
         head, *tail = self.children()
         assert head.token().type() == Token.Identifier, 'Expression::execute(): head of expression !== identifier'
 
+        if head.token().value() == '->':
+            if len(tail) == 1:
+                return tail[-1].execute(environ, False)  # <------------ if there is only one argument, execute it
+
+            target, *rest = tail  # <------- split tail for the first time to initialize target and rest variables
+            while len(tail) > 1:  # <-- do not leave the loop while there is at least one element left in the tail
+                _ = rest[0]
+                if isinstance(_, Operand):
+                    rest[0] = Expression([_])  # <-------- each argument except first should be cast to Expression
+                rest[0].children().insert(1, target)  # <- in case of first-threading-macro, insert as the 1st arg
+                tail = [rest[0]] + rest[1:]  # <- override tail: modified expression and the tail rest with offset
+                target, *rest = tail  # <--------------------------- do the same we did before entering while-loop
+
+            return target.execute(environ, False)  # <----- at the end, return target' expression execution result
+
+        if head.token().value() == '->>':
+            if len(tail) == 1:
+                return tail[-1].execute(environ, False)  # <------------ if there is only one argument, execute it
+
+            target, *rest = tail  # <------- split tail for the first time to initialize target and rest variables
+            while len(tail) > 1:  # <-- do not leave the loop while there is at least one element left in the tail
+                _ = rest[0]
+                if isinstance(_, Operand):
+                    rest[0] = Expression([_])  # <-------- each argument except first should be cast to Expression
+                rest[0].children().append(target)  # <- in case of last-threading-macro, append to the end of args
+                tail = [rest[0]] + rest[1:]  # <- override tail: modified expression and the tail rest with offset
+                target, *rest = tail  # <--------------------------- do the same we did before entering while-loop
+
+            return target.execute(environ, False)  # <----- at the end, return target' expression execution result
+
         if head.token().value().startswith('.'):
             assert len(tail) >= 1, 'Expression::execute(): dot-special-form: expected at least one argument there'
             object_name: Operand
