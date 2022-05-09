@@ -196,6 +196,7 @@ class Expression:
                 closure.update(dict(zip(names, c_arguments)))  # <- update closure dictionary with parameter names
                 return [child.execute(closure, False) for child in body][-1]  # <-- return last calculation result
 
+            handle.x__custom_name__x = name.token().value()  # assign custom function name to display it by pprint
             environ.update({name.token().value(): handle})  # in case of 'defn', we also need to update global env
             return handle
 

@@ -10,6 +10,9 @@ def wrap(arg) -> str:
 
     if callable(arg):  # if it's an object (function and class)
 
+        if hasattr(arg, 'x__custom_name__x'):
+            return arg.x__custom_name__x  # <--- that simple :D
+
         return str(getattr(
             arg, '__name__',
             getattr(arg, '__class__', None).__name__)  # <- >_<
