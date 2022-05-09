@@ -13,7 +13,7 @@ ENVIRONMENT.update({name: getattr(BUILTINS, name, None)
                     for name in dir(BUILTINS)})
 
 
-def wood(source: str) -> list:  # sadly,  no exact type
+def wood(source: str) -> list:  # sadly, no exact types
 
     """
     wood() method converts source to a wood of children
@@ -62,16 +62,16 @@ def repl() -> None:
             continue
         try:
             execute(source)  # execute function also prints result
-        except (Exception,) as exception:  # pylint: disable=W0703   # try to catch eny possible exception here
+        except (Exception,) as exception:  # pylint: disable=W0703   # try to catch any possible exception here
             traceback.print_exc()  # have to manually print errors
 
 
 if __name__ == '__main__':
 
     try:
-        import readline  # pylint: disable=W0611             (>_<)
+        import readline  # pylint: disable=W0611                                     (>_<)
     except ImportError:
-        class readline:  # pylint: disable=C0103             (>_<)
+        class readline:  # pylint: disable=C0103                                     (>_<)
             """readline stub class"""
 
             def set_completer(self, _) -> None:
@@ -79,7 +79,7 @@ if __name__ == '__main__':
 
             def parse_and_bind(self, _) -> None:
                 """readline::parse_and_bind stub method"""
-                # #        this is for MS Windows NT compatibility
+                # <------------------------------- this is for MS Windows NT compatibility
 
     readline.parse_and_bind("tab: complete")
 
@@ -87,9 +87,11 @@ if __name__ == '__main__':
 
         """Handle completions shown by GNU Readline library when the user press Tab key"""
 
-        names = tuple(ENVIRONMENT.keys())  # + tuple(PYTHON_3_BUILTINS.keys()) # buggy >_<
+        names = tuple(ENVIRONMENT.keys())
 
         return (tuple(filter(lambda name: name.startswith(text), names)) + (None,))[state]
+
+    readline.set_completer(completer)
 
     if os.path.exists('corelib/core.cl'):
         with open('corelib/core.cl', 'r', encoding='utf-8') as r:

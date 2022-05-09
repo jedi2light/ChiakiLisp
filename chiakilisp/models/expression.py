@@ -36,7 +36,7 @@ class Expression:
         assert self.children(),  'Expression::execute(): current expression has no operands, unable to execute it'
 
         head, *tail = self.children()
-        assert head.token().type() == Token.Identifier, 'Expression::execute(): head of expression !== identifier'
+        assert head.token().type() == Token.Identifier, 'Expression::execute(): expression head isn\'t Identifier'
 
         if head.token().value() == '->':
             if len(tail) == 1:
@@ -73,11 +73,11 @@ class Expression:
             object_name: Operand
             method_args: Children
             object_name, *method_args = tail
-            method_name: str = head.token().value()[1:]  # cutting . character from the beginning, gives us a name
+            method_name: str = head.token().value()[1:]
             object_instance = object_name.execute(environ, False)
             method_handler: Callable = getattr(object_instance, method_name, NotFound)  # NotFound is a stub class
             assert method_handler is not NotFound, 'Expression::execute(): dot-special-form: can\'t find a method'
-            return method_handler(*(child.execute(environ, False) for child in method_args))  # execute method !!!
+            return method_handler(*(child.execute(environ, False) for child in method_args))  # execute the method
 
         if head.token().value() == 'if':
             assert len(tail) == 3, 'Expression::execute(): if-special-form: expected exactly three arguments here'
@@ -101,7 +101,7 @@ class Expression:
             for name, value in (items[i:i + 2] for i in range(0, len(items), 2)):
                 assert name.token().type() == Token.Identifier, 'Expression::execute() let-special-form: is wrong'
                 let.update({name.token().value(): value.execute(let, False)})
-            return [child.execute(let, False) for child in body][-1]  # #  then return the last calculation result
+            return [child.execute(let, False) for child in body][-1]  # <- then return the last calculation result
 
         if head.token().value() == 'fn':
             assert len(tail) >= 1, "Expression::execute(): fn-special-form: expected at least two arguments there"
@@ -120,8 +120,8 @@ class Expression:
                 assert len(c_arguments) == len(names), f'fn: wrong arity, expected exactly {arity} arguments here'
 
                 closure = {}
-                closure.update(environ)  # #       update (not bootstrap!) closure environment with the global one
-                closure.update(dict(zip(names, c_arguments)))  # #          update closure environ with parameters
+                closure.update(environ)  # <------ update (not bootstrap!) closure environment with the global one
+                closure.update(dict(zip(names, c_arguments)))  # <--------- update closure environ with parameters
                 return [child.execute(closure, False) for child in body][-1]  # return the last calculation result
 
             return handle
@@ -136,7 +136,7 @@ class Expression:
             return executed
 
         if head.token().value() == 'defn':
-            assert top, 'Expression::execute(): defn-special-form, unable to use (defn ) there, use (fn)  instead'
+            assert top, 'Expression::execute(): defn-special-form, unable to use (defn)  there, use (fn)  instead'
             assert len(tail) >= 2, 'Expression::execute(): defn-special-form: wrong arity, at least two args here'
             name, parameters, *body = tail
             assert isinstance(parameters, Expression), 'Expression::execute(): defn-special-form: is invalid type'
@@ -146,7 +146,7 @@ class Expression:
                 assert parameter.token().type() == Token.Identifier, 'Expression::execute(): defn-special-form: !'
                 names.append(parameter.token().value())
 
-            def handle(*c_arguments):  # pylint: disable=E0102  # ...this handle() function could not be redefined
+            def handle(*c_arguments):  # pylint: disable=E0102  # <- this handle() function could not be redefined
 
                 """User-function handle"""
 
@@ -154,9 +154,9 @@ class Expression:
                 assert len(c_arguments) == len(names), f'fn: wrong arity, expected exactly {arity} arguments here'
 
                 closure = {}
-                closure.update(environ)  # #    _update_ closure environment with global, and not bootstrapping it
-                closure.update(dict(zip(names, c_arguments)))  # #  update closure dictionary with parameter names
-                return [child.execute(closure, False) for child in body][-1]  # #   return last calculation result
+                closure.update(environ)  # <- update closure environment with the global one, not bootstrapping it
+                closure.update(dict(zip(names, c_arguments)))  # <- update closure dictionary with parameter names
+                return [child.execute(closure, False) for child in body][-1]  # <-- return last calculation result
 
             environ.update({name.token().value(): handle})  # in case of 'defn', we also need to update global env
             return handle

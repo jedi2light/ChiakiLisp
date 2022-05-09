@@ -30,7 +30,7 @@ class Lexer:
 
         return self._tokens
 
-    def lex(self) -> None:  # pylint: disable=R0912, disable=R0915
+    def lex(self) -> None:  # pylint: disable=R0912, disable=R0915  # >_<
 
         """Process the source code, thus it populates the tokens list"""
 

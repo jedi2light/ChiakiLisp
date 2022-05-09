@@ -39,4 +39,4 @@ def pprint(*args: list) -> None:
 
     """Overrides stock print() function"""
 
-    print(' '.join(map(wrap, args)))  # print separating by '_'
+    print(' '.join(map(wrap, args)))  # white-space' joined str
