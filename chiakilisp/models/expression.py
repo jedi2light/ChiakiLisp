@@ -144,6 +144,8 @@ class Expression:
         if head.token().value() == 'fn':
             assert len(tail) >= 1, "Expression::execute(): fn-special-form: expected at least two arguments there"
             parameters, *body = tail
+            if not body:
+                body = [Operand(Token(Token.Nil, 'nil'))]
             assert isinstance(parameters, Expression), 'Expression::execute(): fn-special-form: wrong parameters!'
             names = []
             for parameter in parameters.children():  # lexically, it sounds a bit weird, but have to deal with it.
@@ -177,6 +179,8 @@ class Expression:
             assert top, 'Expression::execute(): defn-special-form, unable to use (defn)  there, use (fn)  instead'
             assert len(tail) >= 2, 'Expression::execute(): defn-special-form: wrong arity, at least two args here'
             name, parameters, *body = tail
+            if not body:
+                body = [Operand(Token(Token.Nil, 'nil'))]
             assert isinstance(parameters, Expression), 'Expression::execute(): defn-special-form: is invalid type'
             assert name.token().type() == Token.Identifier, 'Expression::execute(): defn-special-form: wrong type'
             names = []
