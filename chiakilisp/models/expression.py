@@ -38,6 +38,24 @@ class Expression:
         head, *tail = self.children()
         assert head.token().type() == Token.Identifier, 'Expression::execute(): expression head isn\'t Identifier'
 
+        if head.token().value() == 'try':
+            assert len(tail) == 2, 'Expression::execute(): try-special-form: excepted main and catch blocks there'
+            main, catch = tail
+            assert isinstance(catch, Expression), 'Expression::execute() try-special-form: catch block not a form'
+            assert len(catch.children()) == 4, 'Expression::execute() try-special-form: invalid catch block arity'
+            handle_name_, exception_object_name, exception_alias_name, exception_handling_block = catch.children()
+            assert isinstance(handle_name_, Operand), 'Expression::execute(): try-special-form: must be \'catch\''
+            assert isinstance(exception_object_name, Operand), 'Expression::execute(): try-special-form: is wrong'
+            assert isinstance(exception_alias_name, Operand),  'Expression::execute(): try-special-form: is wrong'
+            exception_object = exception_object_name.execute(environ, False)  # <---- get actual exception object
+            closure = {}
+            closure.update(environ)  # <- we do not want to modify global environment to store exception instance
+            try:
+                main.execute(environ, False)  # <-------------------------------------- try to execute main block
+            except exception_object as exception_instance:  # <------------------- if exception has been occurred
+                closure[exception_alias_name.token().value()] = exception_instance  # <- update local try closure
+                return exception_handling_block.execute(closure, False)  # <---- return exception handling result
+
         if head.token().value() == '->':
             if len(tail) == 1:
                 return tail[-1].execute(environ, False)  # <------------ if there is only one argument, execute it
