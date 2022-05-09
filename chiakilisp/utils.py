@@ -10,7 +10,10 @@ def wrap(arg) -> str:
 
     if callable(arg):  # if it's an object (function and class)
 
-        return str(arg.__name__)
+        return str(getattr(
+            arg, '__name__',
+            getattr(arg, '__class__', None).__name__)  # <- >_<
+        )
 
     if isinstance(arg, list):  # wrap each child of the list()
 
