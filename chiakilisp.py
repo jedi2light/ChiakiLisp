@@ -116,8 +116,7 @@ if __name__ == '__main__':
     readline.set_completer(completer)
 
     if os.path.exists('corelib/core.cl'):
-        with open('corelib/core.cl', 'r', encoding='utf-8') as r:
-            execute(r.read(), silent=True)  # inject core library
+        require('corelib/core.cl', merge=True)  # te corelib
 
     if len(sys.argv) > 1:
         self: str = sys.argv[0]
