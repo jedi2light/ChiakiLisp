@@ -38,6 +38,26 @@ class Expression:
         head, *tail = self.children()
         assert head.token().type() == Token.Identifier, 'Expression::execute(): expression head isn\'t Identifier'
 
+        if head.token().value() == 'and':
+            if not tail:
+                return True  # <-------------------------- if there is no arguments given to the form, return true
+            result = None  # <----------------------------------------------- set result to the null pointer first
+            for cond in tail:  # <-------------------------------------------- for each condition in the arguments
+                result = cond.execute(environ, False)  # <------------------------------------- compute the result
+                if not result:
+                    return result  # <----------------------------- and if there is None or False value, return it
+            return result  # <------ if all conditions have been evaluated to truthy ones, return the last of them
+
+        if head.token().value() == 'or':
+            if not tail:
+                return None  # <--------------------------- if there is no arguments given to the form, return nil
+            result = None  # <----------------------------------------------- set result to the null pointer first
+            for cond in tail:  # <-------------------------------------------- for each condition in the arguments
+                result = cond.execute(environ, False)  # <------------------------------------- compute the result
+                if result:
+                    return result  # <------------------------------------ and if there is truthy value, return it
+            return result  # <------- if all conditions have been evaluated to falsy ones, return the last of them
+
         if head.token().value() == 'try':
             assert len(tail) == 2, 'Expression::execute(): try-special-form: excepted main and catch blocks there'
             main, catch = tail
