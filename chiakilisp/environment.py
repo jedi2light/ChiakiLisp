@@ -13,4 +13,5 @@ ENVIRONMENT = {
     'prn': pprint,
     'print': pprint,
     'println': pprint,  # we need more aliases for _print!  \O/
+    'contains?': lambda coll, x: x in coll  # requires 'in' key
 }
