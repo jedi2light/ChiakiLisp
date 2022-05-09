@@ -29,6 +29,26 @@ def wood(source: str) -> list:  # sadly, no exact types
     return parser.wood()  # return wood of the Children
 
 
+def require(path: str, merge: bool = False) -> dict:
+
+    """
+    require() method takes path as string, opens it,
+    takes it to the parser, then returns module environ
+
+    :param path: ChiakiLisp source path
+    :param merge: whether to merge with global environ?
+    :return: an executed module environment (as a dict)
+    """
+
+    with open(path, 'r', encoding='utf-8') as r:
+        environment = {} if not merge else ENVIRONMENT
+        if not merge:
+            environment.update(ENVIRONMENT)  # then do this
+        for child in wood(r.read()):
+            child.execute(environment)
+        return environment  # <---- return ready to use env
+
+
 def execute(source: str, silent: bool = False) -> None:
 
     """
@@ -67,6 +87,8 @@ def repl() -> None:
 
 
 if __name__ == '__main__':
+
+    ENVIRONMENT['require'] = require  # <-- make it possible to require ChiakiLisp modules
 
     try:
         import readline  # pylint: disable=W0611                                     (>_<)
