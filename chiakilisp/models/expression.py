@@ -6,6 +6,20 @@ Child = Operand or 'Expression'  # define a type for a single child
 Children = List[Child]  # define a type describing list of children
 
 
+def is_identifier(x) -> bool:
+
+    """
+    Whether x is:
+     - Operand (not Expression instance)
+     - its token().type() is Token.Identifier
+
+    :param x: literally any valid Python type
+    :return: method returns comparison result
+    """
+
+    return isinstance(x, Operand) and x.token().type() == Token.Identifier
+
+
 class Expression:
 
     """
@@ -36,21 +50,11 @@ class Expression:
         assert self.children(),  'Expression::execute(): current expression has no operands, unable to execute it'
 
         head, *tail = self.children()
-        assert head.token().type() == Token.Identifier, 'Expression::execute(): expression head isn\'t Identifier'
-
-        if head.token().value() == 'and':
-            if not tail:
-                return True  # <-------------------------- if there is no arguments given to the form, return true
-            result = None  # <----------------------------------------------- set result to the null pointer first
-            for cond in tail:  # <-------------------------------------------- for each condition in the arguments
-                result = cond.execute(environ, False)  # <------------------------------------- compute the result
-                if not result:
-                    return result  # <----------------------------- and if there is None or False value, return it
-            return result  # <------ if all conditions have been evaluated to truthy ones, return the last of them
+        assert is_identifier(head), 'Expression::execute(): expression head have to be a Token of type Identifier'
 
         if head.token().value() == 'or':
             if not tail:
-                return None  # <--------------------------- if there is no arguments given to the form, return nil
+                return None  # <-------------------------- if there are no arguments given to the form, return nil
             result = None  # <----------------------------------------------- set result to the null pointer first
             for cond in tail:  # <-------------------------------------------- for each condition in the arguments
                 result = cond.execute(environ, False)  # <------------------------------------- compute the result
@@ -58,23 +62,34 @@ class Expression:
                     return result  # <------------------------------------ and if there is truthy value, return it
             return result  # <------- if all conditions have been evaluated to falsy ones, return the last of them
 
+        if head.token().value() == 'and':
+            if not tail:
+                return True  # <------------------------- if there are no arguments given to the form, return true
+            result = None  # <----------------------------------------------- set result to the null pointer first
+            for cond in tail:  # <-------------------------------------------- for each condition in the arguments
+                result = cond.execute(environ, False)  # <------------------------------------- compute the result
+                if not result:
+                    return result  # <----------------------------- and if there is None or False value, return it
+            return result  # <------ if all conditions have been evaluated to truthy ones, return the last of them
+
         if head.token().value() == 'try':
-            assert len(tail) == 2, 'Expression::execute(): try-special-form: excepted main and catch blocks there'
+            assert len(tail) == 2, 'Expression::execute(): try: expected 2 expressions: main, and the catch block'
             main, catch = tail
-            assert isinstance(catch, Expression), 'Expression::execute() try-special-form: catch block not a form'
-            assert len(catch.children()) == 4, 'Expression::execute() try-special-form: invalid catch block arity'
-            handle_name_, exception_object_name, exception_alias_name, exception_handling_block = catch.children()
-            assert isinstance(handle_name_, Operand), 'Expression::execute(): try-special-form: must be \'catch\''
-            assert isinstance(exception_object_name, Operand), 'Expression::execute(): try-special-form: is wrong'
-            assert isinstance(exception_alias_name, Operand),  'Expression::execute(): try-special-form: is wrong'
-            exception_object = exception_object_name.execute(environ, False)  # <---- get actual exception object
+            assert isinstance(catch, Expression), 'Expression::execute(): try: the catch block have to be a form'
+            assert len(catch.children()) == 4, 'Expression::execute(): try: expected exactly three operands here'
+            kind, klass, alias, block = catch.children()
+            assert is_identifier(kind), 'Expression::execute(): try: handle name have to be Identifier'
+            assert kind.token().value() == 'catch', "Expression::execute(): try: only supports a 'catch' handle"
+            assert is_identifier(klass), 'Expression::execute(): try: class name have to be Identifier'
+            assert is_identifier(alias), 'Expression::execute(): try: alias name have to be Identifier'
+            obj = klass.execute(environ, False)  # <---------------------------------- get actual exception object
             closure = {}
-            closure.update(environ)  # <- we do not want to modify global environment to store exception instance
+            closure.update(environ)  # <-- we do not want to modify global environment to store exception instance
             try:
-                main.execute(environ, False)  # <-------------------------------------- try to execute main block
-            except exception_object as exception_instance:  # <------------------- if exception has been occurred
-                closure[exception_alias_name.token().value()] = exception_instance  # <- update local try closure
-                return exception_handling_block.execute(closure, False)  # <---- return exception handling result
+                main.execute(environ, False)  # <--------------------------------------- try to execute main block
+            except obj as exception:  # <------------------------------------------ if exception has been occurred
+                closure[alias.token().value()] = exception  # <-------------------------- update local try closure
+                return block.execute(closure, False)  # <------------------------ return exception handling result
 
         if head.token().value() == '->':
             if len(tail) == 1:
@@ -137,7 +152,7 @@ class Expression:
             assert len(items) % 2 == 0, 'Expression::execute() let-special-form: bindings should have even length'
             let.update(environ)  # we can't just bootstrap 'let' environ, because we do not want instances linking
             for name, value in (items[i:i + 2] for i in range(0, len(items), 2)):
-                assert name.token().type() == Token.Identifier, 'Expression::execute() let-special-form: is wrong'
+                assert is_identifier(name), 'Expression::execute() let-special-form: name should be an Identifier'
                 let.update({name.token().value(): value.execute(let, False)})
             return [child.execute(let, False) for child in body][-1]  # <- then return the last calculation result
 
@@ -146,10 +161,10 @@ class Expression:
             parameters, *body = tail
             if not body:
                 body = [Operand(Token(Token.Nil, 'nil'))]
-            assert isinstance(parameters, Expression), 'Expression::execute(): fn-special-form: wrong parameters!'
+            assert isinstance(parameters, Expression), 'Expression::execute(): fn-special-form: params not a form'
             names = []
             for parameter in parameters.children():  # lexically, it sounds a bit weird, but have to deal with it.
-                assert parameter.token().type() == Token.Identifier, 'Expression::execute(): fn-special-form: !!!'
+                assert is_identifier(parameter), 'Expression::execute() fn-special-form: parameter not Identifier'
                 names.append(parameter.token().value())
 
             def handle(*c_arguments):
@@ -170,7 +185,7 @@ class Expression:
             assert top, 'Expression::execute(); def-special-form: unable to use (def) on current scope, use (let)'
             assert len(tail) == 2, 'Expression::execute(): def-special-form: incorrect arity, exactly 2 args here'
             name, value = tail
-            assert name.token().type() == Token.Identifier, 'Expression:execute(): def-special-form: ! Identifier'
+            assert is_identifier(name), 'Expression::execute() def-special-form binding name is not an Identifier'
             executed = value.execute(environ, False)
             environ.update({name.token().value(): executed})
             return executed
@@ -181,11 +196,11 @@ class Expression:
             name, parameters, *body = tail
             if not body:
                 body = [Operand(Token(Token.Nil, 'nil'))]
-            assert isinstance(parameters, Expression), 'Expression::execute(): defn-special-form: is invalid type'
-            assert name.token().type() == Token.Identifier, 'Expression::execute(): defn-special-form: wrong type'
+            assert isinstance(parameters, Expression), 'Expression::execute() defn-special-form: params\'re wrong'
+            assert is_identifier(name), 'Expression::execute() defn-special-form: function name is not Identifier'
             names = []
             for parameter in parameters.children():  # lexically, it sounds a bit weird, but have to deal with it.
-                assert parameter.token().type() == Token.Identifier, 'Expression::execute(): defn-special-form: !'
+                assert is_identifier(parameter), 'Expression::execute() defn-special-form param\'s not Identifier'
                 names.append(parameter.token().value())
 
             def handle(*c_arguments):  # pylint: disable=E0102  # <- this handle() function could not be redefined
@@ -200,10 +215,10 @@ class Expression:
                 closure.update(dict(zip(names, c_arguments)))  # <- update closure dictionary with parameter names
                 return [child.execute(closure, False) for child in body][-1]  # <-- return last calculation result
 
-            environ.update({name.token().value(): handle})  # in case of 'defn', we also need to update global env
             handle.x__custom_name__x = name.token().value()  # assign custom function name to display it by pprint
+            environ.update({name.token().value(): handle})  # in case of 'defn', we also need to update global env
             return handle
 
         handle = head.execute(environ, False)
         arguments = tuple(map(lambda argument: argument.execute(environ, False), tail))
-        return handle(*arguments)  # return handle execution result (which is Python 3 value) to the callee object
+        return handle(*arguments)  # return handle execution result (which is Python 3 value) to the caller object
