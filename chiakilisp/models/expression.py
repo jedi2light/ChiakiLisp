@@ -233,7 +233,7 @@ class Expression:
             name = tail[0]
             assert is_identifier(name), 'Expression::execute() require module name should be a type of Identifier'
             module = type(name.token().value(), (object,), environ['require'](name.token().value() + '.cl'))  # -|
-            environ[name.token().value()] = module  # <------------ update global environment with required module
+            environ[name.token().value().split('/')[-1]] = module  # <--update global environ with required module
             return None  # <--------------------------------------------------------------------------- return nil
 
         handle = head.execute(environ, False)
