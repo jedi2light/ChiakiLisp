@@ -3,4 +3,5 @@
   n
   (* n (fac (- n 1)))))
 
-(fac 4) ; will print 24
+(prn (fac 4)) ;; _=> 24
+(prn (fac 165)) ; limit
