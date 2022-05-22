@@ -219,6 +219,23 @@ class Expression:
             environ.update({name.token().value(): handle})  # in case of 'defn', we also need to update global env
             return handle
 
+        if head.token().value() == 'import':
+            assert top, 'Expression::execute(): import: you should only call \'import\' at the top of the program'
+            assert len(tail) == 1, 'Expression::execute() import: expected exactly one argument: Identifier token'
+            name = tail[0]
+            assert is_identifier(name), 'Expression::execute() import: module name should be a type of Identifier'
+            environ[name.token().value()] = __import__(name.token().value())  # <- update env with a module object
+            return None  # <--------------------------------------------------------------------------- return nil
+
+        if head.token().value() == 'require':
+            assert top, 'Expression::execute(): require: you should only call \'require\' at the top of a program'
+            assert len(tail) == 1, 'Expression::execute() require: expected exactly one argument Identifier token'
+            name = tail[0]
+            assert is_identifier(name), 'Expression::execute() require module name should be a type of Identifier'
+            module = type(name.token().value(), (object,), environ['require'](name.token().value() + '.cl'))  # -|
+            environ[name.token().value()] = module  # <------------ update global environment with required module
+            return None  # <--------------------------------------------------------------------------- return nil
+
         handle = head.execute(environ, False)
         arguments = tuple(map(lambda argument: argument.execute(environ, False), tail))
         return handle(*arguments)  # return handle execution result (which is Python 3 value) to the caller object
