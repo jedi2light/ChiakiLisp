@@ -126,7 +126,7 @@ if __name__ == '__main__':
         assert os.path.exists(file_path), f'{self}: {file_path}: no such file or directory'
         assert os.path.isfile(file_path) or os.path.islink(file_path), f'{self}: {file_path}: invalid pathnode'
         with open(file_path, 'r', encoding='utf-8') as r:
-            execute(r.read())
+            execute(r.read(), silent=True)  # <- when silent is set to True, only intentional (prn..) will work
     else:
         print('Press Ctrl+C to cancel input, press Ctrl+D to exit REPL, press Tab to see all global functions')
         repl()
