@@ -1,3 +1,6 @@
+# pylint: disable=line-too-long
+# pylint: disable=missing-module-docstring
+
 from typing import List
 from chiakilisp.models.token import Token
 from chiakilisp.models.operand import Operand

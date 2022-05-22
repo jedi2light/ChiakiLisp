@@ -1,7 +1,11 @@
 #!/usr/bin/env python3
 
+# pylint: disable=line-too-long
+# pylint: disable=missing-module-docstring
+
 import os
 import sys
+import pkgutil
 import traceback
 from chiakilisp.utils import pprint
 from chiakilisp.lexer import Lexer
@@ -40,11 +44,11 @@ def require(path: str, merge: bool = False) -> dict:
     :return: an executed module environment (as a dict)
     """
 
-    with open(path, 'r', encoding='utf-8') as r:
+    with open(path, 'r', encoding='utf-8') as _r:
         environment = {} if not merge else ENVIRONMENT
         if not merge:
             environment.update(ENVIRONMENT)  # then do this
-        for child in wood(r.read()):
+        for child in wood(_r.read()):
             child.execute(environment)
         return environment  # <---- return ready to use env
 
@@ -82,7 +86,7 @@ def repl() -> None:
             continue
         try:
             execute(source)  # execute function also prints result
-        except (Exception,) as exception:  # pylint: disable=W0703   # try to catch any possible exception here
+        except (Exception,):  # pylint: disable=W0703                # try to catch any possible exception here
             traceback.print_exc()  # have to manually print errors
 
 
@@ -93,15 +97,10 @@ if __name__ == '__main__':
     try:
         import readline  # pylint: disable=W0611                                     (>_<)
     except ImportError:
-        class readline:  # pylint: disable=C0103                                     (>_<)
-            """readline stub class"""
-
-            def set_completer(self, _) -> None:
-                """readline::set_completer stub method"""
-
-            def parse_and_bind(self, _) -> None:
-                """readline::parse_and_bind stub method"""
-                # <------------------------------- this is for MS Windows NT compatibility
+        readline = type('readline', (object,), {  # pylint: disable=invalid-name     (>_<)
+            "set_completer": lambda _, __: None,
+            "parse_and_bind": lambda _, __: None
+        })  # <----------------------------------- this is for MS Windows NT compatibility
 
     readline.parse_and_bind("tab: complete")  # <--- allows user to complete binding names
     readline.parse_and_bind('set: blink-matching-paren on')  # <- extremely needed feature
@@ -116,8 +115,10 @@ if __name__ == '__main__':
 
     readline.set_completer(completer)
 
-    if os.path.exists('corelib/core.cl'):
-        require('corelib/core.cl', merge=True)  # - corelib
+    if os.path.exists('chiakilisp/corelib/core.cl'):
+        require('chiakilisp/corelib/core.cl', merge=True)  # <---------------- load chiakilisp corelib
+    else:
+        execute(source=pkgutil.get_data('chiakilisp', 'corelib/core.cl').decode('utf-8'), silent=True)
 
     if len(sys.argv) > 1:
         self: str = sys.argv[0]

@@ -1,3 +1,7 @@
+# pylint: disable=line-too-long
+# pylint: disable=missing-module-docstring
+# pylint: disable=too-many-return-statements  # it is fine dear
+
 FORMATTERS = {'True': 'true', 'False': 'false',  'None': 'nil'}
 
 

@@ -1,5 +1,8 @@
+# pylint: disable=line-too-long
+# pylint: disable=missing-module-docstring
+
 from functools import reduce
-from chiakilisp.utils import pprint
+from chiakilisp.utils import pprint  # our lovely custom print
 
 ENVIRONMENT = {
     '+': lambda *args: reduce(lambda acc, cur: acc+cur,  args),

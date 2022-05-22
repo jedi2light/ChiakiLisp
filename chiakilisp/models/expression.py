@@ -1,3 +1,10 @@
+# pylint: disable=line-too-long
+# pylint: disable=missing-module-docstring
+# pylint: disable=too-many-locals
+# pylint: disable=too-many-branches
+# pylint: disable=too-many-statements
+# pylint: disable=too-many-return-statements
+
 from typing import List, Any, Callable
 from chiakilisp.models.token import Token
 from chiakilisp.models.operand import Operand, NotFound
@@ -6,7 +13,7 @@ Child = Operand or 'Expression'  # define a type for a single child
 Children = List[Child]  # define a type describing list of children
 
 
-def is_identifier(x) -> bool:
+def is_identifier(x) -> bool:  # pylint: disable=invalid-name  # x is fine
 
     """
     Whether x is:

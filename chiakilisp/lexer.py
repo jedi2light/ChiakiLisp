@@ -1,6 +1,9 @@
+# pylint: disable=line-too-long
+# pylint: disable=missing-module-docstring
+
 import re
 from typing import List
-from chiakilisp.models.token import Token
+from chiakilisp.models.token import Token  # Lexer needs Token :*)
 
 
 ALPHABET = ['+', '-', '*', '/', '=', '<', '>', '?', '!', '.', '_']

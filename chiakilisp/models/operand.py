@@ -1,8 +1,11 @@
+# pylint: disable=line-too-long
+# pylint: disable=missing-module-docstring
+
 from typing import Any
-from chiakilisp.models.token import Token
+from chiakilisp.models.token import Token  # Operand needs Token :*)
 
 
-class NotFound:
+class NotFound:  # pylint: disable=too-few-public-methods  # shut up!
 
     """
     Stub class to display that there is no such a name in environment
@@ -29,7 +32,7 @@ class Operand:
 
         return self._token
 
-    def execute(self, environment: dict, top: bool = True) -> Any:
+    def execute(self, environment: dict, _) -> Any:  # pylint: disable=inconsistent-return-statements  ?????
 
         """Execute here, is the return Python value related to the operand: string, number and vice versa"""
 
