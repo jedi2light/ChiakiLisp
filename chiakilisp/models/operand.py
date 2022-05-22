@@ -54,6 +54,14 @@ class Operand:
             name = self.token().value()
             found = environment.get(name, NotFound)
 
+            if found is NotFound and '/' in self.token().value():
+                _object, member = self.token().value().split('/')
+                _object = environment.get(_object, NotFound)
+                assert _object is not NotFound,   'Expression::execute(): qualified identifier lookup error'
+                member = getattr(_object, member, NotFound)
+                assert member is not NotFound,    'Expression::execute(): qualified identifier lookup error'
+                return member  # <--------------------------- thus we return member of an object or a module
+
             assert found is not NotFound, f'Operand::execute(): no {name} in the current environment, typo?'
 
             return found  # return found Python 3 value (from the current environment), if not found, raise!
