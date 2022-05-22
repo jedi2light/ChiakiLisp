@@ -116,7 +116,7 @@ if __name__ == '__main__':
     readline.set_completer(completer)
 
     if os.path.exists('corelib/core.cl'):
-        require('corelib/core.cl', merge=True)  # te corelib
+        require('corelib/core.cl', merge=True)  # - corelib
 
     if len(sys.argv) > 1:
         self: str = sys.argv[0]
