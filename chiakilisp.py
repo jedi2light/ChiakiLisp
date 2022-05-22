@@ -103,7 +103,8 @@ if __name__ == '__main__':
                 """readline::parse_and_bind stub method"""
                 # <------------------------------- this is for MS Windows NT compatibility
 
-    readline.parse_and_bind("tab: complete")
+    readline.parse_and_bind("tab: complete")  # <--- allows user to complete binding names
+    readline.parse_and_bind('set: blink-matching-paren on')  # <- extremely needed feature
 
     def completer(text, state) -> str or None:
 
