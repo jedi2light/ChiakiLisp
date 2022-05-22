@@ -32,7 +32,7 @@ class Operand:
 
         return self._token
 
-    def execute(self, environment: dict, _) -> Any:  # pylint: disable=inconsistent-return-statements  ?????
+    def execute(self, environment: dict, __=False) -> Any:  # pylint: disable=inconsistent-return-statements
 
         """Execute here, is the return Python value related to the operand: string, number and vice versa"""
 
