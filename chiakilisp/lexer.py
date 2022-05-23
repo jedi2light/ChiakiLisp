@@ -6,7 +6,7 @@ from typing import List
 from chiakilisp.models.token import Token  # Lexer needs Token :*)
 
 
-ALPHABET = ['+', '-', '*', '/', '=', '<', '>', '?', '!', '.', '_']
+ALPHABET = ['+', '-', '*', '/', '=', '<', '>', '?', '!', '.', '_', '&']
 
 
 class Lexer:

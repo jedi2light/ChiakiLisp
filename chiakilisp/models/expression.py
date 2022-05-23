@@ -170,16 +170,40 @@ class Expression:
                 body = [Operand(Token(Token.Nil, 'nil'))]
             assert isinstance(parameters, Expression), 'Expression::execute(): fn-special-form: params not a form'
             names = []
-            for parameter in parameters.children():  # lexically, it sounds a bit weird, but have to deal with it.
+            children = parameters.children()
+            ampersand_found = tuple(filter(lambda pair: is_identifier(pair[1]) and pair[1].token().value() == '&',
+                                           enumerate(children)))  # <- find a tuple, where 0 - pos, 1 - an operand
+            ampersand_position: int = ampersand_found[0][0] if ampersand_found else -1  # <---- 0 - tuple, 1 - pos
+            positional_parameters = children[:ampersand_position] if ampersand_found else children  # <-- before &
+            for parameter in positional_parameters:
                 assert is_identifier(parameter), 'Expression::execute() fn-special-form: parameter not Identifier'
                 names.append(parameter.token().value())
+            can_take_extras = False  # <-------------------- by default, function can not take any extra arguments
+            if ampersand_found:
+                assert len(children) - 1 != ampersand_position  # <--- ensure that the ampersand is not at the end
+                assert len(children) - 2 == ampersand_position  # <--  ensure that the only one param goes after &
+                operand = children[-1]
+                assert is_identifier(operand), 'Expression::execute(): defn-special-form: param is not Identifier'
+                can_take_extras = True  # <- now we set this to true, as the function now can take extra arguments
+                names.append(operand.token().value())  # <- append extra parameter names to all fn parameter names
 
             def handle(*c_arguments):
 
                 """User-function handle"""
 
                 arity = len(names)
-                assert len(c_arguments) == len(names), f'fn: wrong arity, expected exactly {arity} arguments here'
+                if can_take_extras:
+                    arity = arity - 1  # <-------------- because the last parameter is not actually a required one
+                    assert len(c_arguments) >= arity,    f'fn: wrong arity, expected at least {arity} argument(s)'
+                else:
+                    assert len(c_arguments) == arity,     f'fn: wrong arity, expected exactly {arity} argument(s)'
+
+                if can_take_extras:
+                    if len(c_arguments) > arity:
+                        extra_arguments = c_arguments[arity:]
+                        c_arguments = c_arguments[:arity] + (extra_arguments,)
+                    else:
+                        c_arguments = c_arguments + (tuple(),)  # <- if extras are possible but missing, set to ()
 
                 closure = {}
                 closure.update(environ)  # <------ update (not bootstrap!) closure environment with the global one
@@ -206,19 +230,44 @@ class Expression:
             assert isinstance(parameters, Expression), 'Expression::execute() defn-special-form: params\'re wrong'
             assert is_identifier(name), 'Expression::execute() defn-special-form: function name is not Identifier'
             names = []
-            for parameter in parameters.children():  # lexically, it sounds a bit weird, but have to deal with it.
+            children = parameters.children()
+            ampersand_found = tuple(filter(lambda pair: is_identifier(pair[1]) and pair[1].token().value() == '&',
+                                           enumerate(children)))  # <- find a tuple, where 0 - pos, 1 - an operand
+            ampersand_position: int = ampersand_found[0][0] if ampersand_found else -1  # <---- 0 - tuple, 1 - pos
+            positional_parameters = children[:ampersand_position] if ampersand_found else children  # <-- before &
+            for parameter in positional_parameters:
                 assert is_identifier(parameter), 'Expression::execute() defn-special-form param\'s not Identifier'
                 names.append(parameter.token().value())
+            can_take_extras = False  # <-------------------- by default, function can not take any extra arguments
+            if ampersand_found:
+                assert len(children) - 1 != ampersand_position  # <--- ensure that the ampersand is not at the end
+                assert len(children) - 2 == ampersand_position  # <--  ensure that the only one param goes after &
+                operand = children[-1]
+                assert is_identifier(operand), 'Expression::execute(): defn-special-form: param is not Identifier'
+                can_take_extras = True  # <- now we set this to true, as the function now can take extra arguments
+                names.append(operand.token().value())  # <- append extra parameter names to all fn parameter names
 
             def handle(*c_arguments):  # pylint: disable=E0102  # <- this handle() function could not be redefined
 
                 """User-function handle"""
 
                 arity = len(names)
-                assert len(c_arguments) == len(names), f'fn: wrong arity, expected exactly {arity} arguments here'
+                if can_take_extras:
+                    arity = arity - 1  # <-------------- because the last parameter is not actually a required one
+                    assert len(c_arguments) >= arity,    f'fn: wrong arity, expected at least {arity} argument(s)'
+                else:
+                    assert len(c_arguments) == arity,     f'fn: wrong arity, expected exactly {arity} argument(s)'
 
                 closure = {}
                 closure.update(environ)  # <- update closure environment with the global one, not bootstrapping it
+
+                if can_take_extras:
+                    if len(c_arguments) > arity:
+                        extra_arguments = c_arguments[arity:]
+                        c_arguments = c_arguments[:arity] + (extra_arguments,)
+                    else:
+                        c_arguments = c_arguments + (tuple(),)  # <- if extras are possible but missing, set to ()
+
                 closure.update(dict(zip(names, c_arguments)))  # <- update closure dictionary with parameter names
                 return [child.execute(closure, False) for child in body][-1]  # <-- return last calculation result
 
