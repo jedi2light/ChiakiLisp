@@ -128,7 +128,7 @@ class Expression:
 
             return target.execute(environ, False)  # <----- at the end, return target' expression execution result
 
-        if head.token().value().startswith('.'):
+        if head.token().value().startswith('.') and not head.token().value() == '...':  # special handling for ...
             assert len(tail) >= 1, 'Expression::execute(): dot-special-form: expected at least one argument there'
             object_name: Operand
             method_args: Children
