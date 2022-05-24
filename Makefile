@@ -7,8 +7,12 @@ build: chiakilisp chiakilang setup.cfg
 	rm -rf dist/*  # <------ do not forget to clean the ./dist directory first
 	python -m build
 
-install: build
+upload: lint build
+	python -m twine upload --repository pypi --verbose ./dist/chiakilisp-*.whl
+
+install: lint build
 	pip install --force-reinstall dist/chiakilisp-*.whl  # force reinstall pkg
 
-upload: build
+build-upload-install: lint build
 	python -m twine upload --repository pypi --verbose ./dist/chiakilisp-*.whl
+	pip install --force-reinstall dist/chiakilisp-*.whl  # force reinstall pkg
