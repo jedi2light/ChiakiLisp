@@ -187,9 +187,9 @@ class Expression:
                 can_take_extras = True  # <- now we set this to true, as the function now can take extra arguments
                 names.append(operand.token().value())  # <- append extra parameter names to all fn parameter names
 
-            def handle(*c_arguments):
+            def handle(*c_arguments, **kwargs):
 
-                """User-function handle"""
+                """User-function handle object"""
 
                 arity = len(names)
                 if can_take_extras:
@@ -208,6 +208,7 @@ class Expression:
                 closure = {}
                 closure.update(environ)  # <------ update (not bootstrap!) closure environment with the global one
                 closure.update(dict(zip(names, c_arguments)))  # <--------- update closure environ with parameters
+                closure.update({'kwargs': kwargs})  # <--- currently, there is no way to pass them from ChiakiLisp
                 return [child.execute(closure, False) for child in body][-1]  # return the last calculation result
 
             return handle
@@ -247,9 +248,9 @@ class Expression:
                 can_take_extras = True  # <- now we set this to true, as the function now can take extra arguments
                 names.append(operand.token().value())  # <- append extra parameter names to all fn parameter names
 
-            def handle(*c_arguments):  # pylint: disable=E0102  # <- this handle() function could not be redefined
+            def handle(*c_arguments, **kwargs):  # pylint: disable=E0102  # <- handle object couldn't be redefined
 
-                """User-function handle"""
+                """User-function handle object"""
 
                 arity = len(names)
                 if can_take_extras:
@@ -269,6 +270,7 @@ class Expression:
                         c_arguments = c_arguments + (tuple(),)  # <- if extras are possible but missing, set to ()
 
                 closure.update(dict(zip(names, c_arguments)))  # <- update closure dictionary with parameter names
+                closure.update({'kwargs': kwargs})  # <--- currently, there is no way to pass them from ChiakiLisp
                 return [child.execute(closure, False) for child in body][-1]  # <-- return last calculation result
 
             handle.x__custom_name__x = name.token().value()  # assign custom function name to display it by pprint
