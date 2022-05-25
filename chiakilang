@@ -11,6 +11,8 @@ from chiakilisp.utils import pprint
 from chiakilisp.lexer import Lexer
 from chiakilisp.parser import Parser
 from chiakilisp.environment import ENVIRONMENT
+from chiakilisp.cppenvironment import CPP_ENVIRON
+from chiakilisp.cppcodegen import CPPCodeGenerator
 
 BUILTINS = globals()['__builtins__']
 ENVIRONMENT.update({name: getattr(BUILTINS, name, None)
@@ -67,6 +69,28 @@ def execute(source: str, silent: bool = False) -> None:
         result = child.execute(ENVIRONMENT)
         if not silent:
             pprint(result)  # with the custom formatting :D
+
+
+def generate(source: str, out_file_name: str) -> None:
+
+    """
+    generate() method convert source to AST and executes its
+
+    :param source: ChiakiLisp valid source code as a string
+    :param out_file_name: file' name to write CPP code into
+    :return: returns _nothing, it only generates a CPP code
+    """
+
+    gvc = 0
+    gss = []
+
+    for child in wood(source):
+        name = f'_global_{gvc}'
+        gss.append(child.generate(CPP_ENVIRON, name, False))
+        gvc += 1
+
+    with open(out_file_name, 'w', encoding='utf-8') as wrtr:
+        wrtr.write(CPPCodeGenerator(source=gss).generate( ))
 
 
 def repl() -> None:
@@ -127,6 +151,11 @@ if __name__ == '__main__':
         assert os.path.exists(file_path), f'{self}: {file_path}: no such file or directory'
         assert os.path.isfile(file_path) or os.path.islink(file_path), f'{self}: {file_path}: invalid pathnode'
         with open(file_path, 'r', encoding='utf-8') as r:
+
+            if os.environ.get('CHIAKILISP__GENERATE_CPP'):
+                generate(r.read(), 'generated.cpp')  # <----------------- generate CPP file named generated.cpp
+                sys.exit(0)  # <------------------------------ exit chiakilang after successful code-generation
+
             execute(r.read(), silent=True)  # <- when silent is set to True, only intentional (prn..) will work
     else:
         print('Press Ctrl+C to cancel input, press Ctrl+D to exit REPL, press Tab to see all global functions')

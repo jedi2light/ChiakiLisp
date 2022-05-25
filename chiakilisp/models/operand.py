@@ -32,6 +32,21 @@ class Operand:
 
         return self._token
 
+    def generate(self, _e: dict, name: str, inline: bool):  # pylint: disable=inconsistent-return-statements
+
+        """Generate C++ representation of operand"""
+
+        token = self.token()  # to refer it for multimple times
+
+        if token.type() == Token.Nil:
+            return 'NULL' if inline else f'void* {name} = NULL;'
+        if token.type() == Token.Number:
+            return token.value() if inline else f'unsigned int {name} = {token.value()};'
+        if token.type() == Token.String:
+            return f'"{token.value()}"' if inline else f'std::string {name} = "{token.value()}";'
+        if token.type() == Token.Boolean:
+            return token.value() if inline else f'bool {name} = {token.value()};'
+
     def execute(self, environment: dict, __=False) -> Any:  # pylint: disable=inconsistent-return-statements
 
         """Execute here, is the return Python value related to the operand: string, number and vice versa"""

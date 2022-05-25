@@ -2,3 +2,12 @@
 __pycache__
 /dist
 /chiakilisp.egg-info/
+/generated
+/generated.cpp
+/runtime/Makefile
+/runtime/.qtc_clangd
+/runtime/.qmake.stash
+/runtime/chiakilisp.o
+/runtime/libchiakilisp.so*
+/runtime/libChiakiLispRuntime.so*
+/runtime/ChiakiLispRuntime.pro.user

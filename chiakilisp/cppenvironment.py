@@ -1,0 +1,7 @@
+CPP_ENVIRON = {
+    '+': 'chiakilisp::add', '-': 'chiakilisp::sub',
+    '/': 'chiakilisp::div', '*': 'chiakilisp::mul',
+    'listy': 'chiakilisp::vec', 'dicty': 'chiakilisp::map',
+    'prn': 'chiakilisp::println',
+    'print': 'chiakilisp::println', 'println': 'chiakilisp::println',
+}

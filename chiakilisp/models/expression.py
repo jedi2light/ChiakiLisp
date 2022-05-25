@@ -47,6 +47,31 @@ class Expression:
 
         return self._children
 
+    def generate(self, _e: dict, name: str, inline: bool):
+
+        """Generate C++ representation of expression"""
+
+        head: Operand
+        rest: Children
+        head, *rest = self.children()
+
+        assert is_identifier(head), 'Expression::generate(): head of expression should be an Identifier'
+
+        cpp_function_name = _e.get(head.token().value())
+
+        lines = [f'{cpp_function_name}(']  # <--- start with the function call: name and opening bracket
+
+        arguments = []  # <------------------ a list holding all the generated "arguments" to a function
+
+        for each in rest:
+            arguments.append(each.generate(_e, '', True))  # <- recursively populate a list of arguments
+
+        lines.append(', '.join(arguments))  # <--- join all the function "arguments" by a coma character
+
+        lines.append(')' if inline else ');')  # <- close the function call with closing bracket and ';'
+
+        return ''.join(lines)  # <------------------------------ at the end, return all the lines joined
+
     def execute(self, environ: dict, top: bool = True) -> Any:
 
         """Execute here, is the return Python value related to the expression: string, number and vice versa"""
