@@ -142,6 +142,13 @@ if __name__ == '__main__':
 
     readline.set_completer(completer)
 
+    rc_file = os.path.join(os.environ.get('HOME', os.environ.get('USER')), '.chiakilang-repl-rc.cl')
+    if os.path.exists(rc_file):
+        require(rc_file, merge=True)
+    else:
+        with open(rc_file, 'w') as w:
+            w.write('(def repl-show-traceback false) ;; set to true to see the exception\' traceback')
+
     if os.path.exists('chiakilisp/corelib/core.cl'):
         require('chiakilisp/corelib/core.cl', merge=True)  # <---------------- load chiakilisp corelib
     else:
