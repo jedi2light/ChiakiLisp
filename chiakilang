@@ -110,8 +110,11 @@ def repl() -> None:
             continue
         try:
             execute(source)  # execute function also prints result
-        except (Exception,):  # pylint: disable=W0703                # try to catch any possible exception here
-            traceback.print_exc()  # have to manually print errors
+        except (Exception,) as e:  # pylint: disable=W0703           # try to catch any possible exception here
+            if ENVIRONMENT.get('repl-show-traceback'):
+                traceback.print_exc()
+            else:
+                print(e)  # have to manually print errors (and if user want to - print out exception traceback)
 
 
 if __name__ == '__main__':
