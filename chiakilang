@@ -11,8 +11,8 @@ from chiakilisp.utils import pprint
 from chiakilisp.lexer import Lexer
 from chiakilisp.parser import Parser
 from chiakilisp.environment import ENVIRONMENT
-from chiakilisp.cppenvironment import CPP_ENVIRON
-from chiakilisp.cppcodegen import CPPCodeGenerator
+from chiakilisp.cxcompiler.dictionary import DICTIONARY
+from chiakilisp.cxcompiler.cgen import CPPCodeGenerator
 
 BUILTINS = globals()['__builtins__']
 ENVIRONMENT.update({name: getattr(BUILTINS, name, None)
@@ -71,13 +71,13 @@ def execute(source: str, silent: bool = False) -> None:
             pprint(result)  # with the custom formatting :D
 
 
-def generate(source: str, out_file_name: str) -> None:
+def generate(source: str, outfile_name: str) -> None:
 
     """
-    generate() method convert source to AST and executes its
+    generate() method convert source to AST and executes it
 
     :param source: ChiakiLisp valid source code as a string
-    :param out_file_name: file' name to write CPP code into
+    :param outfile_name: file's name to write CPP code into
     :return: returns _nothing, it only generates a CPP code
     """
 
@@ -86,11 +86,11 @@ def generate(source: str, out_file_name: str) -> None:
 
     for child in wood(source):
         name = f'_global_{gvc}'
-        gss.append(child.generate(CPP_ENVIRON, name, False))
+        gss.append(child.generate(DICTIONARY, name, False))
         gvc += 1
 
-    with open(out_file_name, 'w', encoding='utf-8') as wrtr:
-        wrtr.write(CPPCodeGenerator(source=gss).generate( ))
+    with open(outfile_name, 'w', encoding='utf-8') as wrtr:
+        wrtr.write(CPPCodeGenerator(source=gss).generate())
 
 
 def repl() -> None:
