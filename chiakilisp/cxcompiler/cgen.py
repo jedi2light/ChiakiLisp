@@ -1,3 +1,7 @@
+# pylint: disable=line-too-long
+# pylint: disable=missing-module-docstring
+
+
 class CPPCodeGenerator:
 
     """Helps to complete CPP code generation"""
@@ -9,6 +13,12 @@ class CPPCodeGenerator:
         """Initializes a CPPCodeGenerator instance"""
 
         self._source = source
+
+    def source(self) -> list:
+
+        """Returns holding source instance"""
+
+        return self._source
 
     def generate(self) -> str:
 
@@ -23,4 +33,3 @@ class CPPCodeGenerator:
             'return 0;',  # <-- always return 0 to system
             '}'  # <---- block finishing character in CPP
         ])
-

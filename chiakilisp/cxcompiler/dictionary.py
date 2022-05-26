@@ -1,3 +1,6 @@
+# pylint: disable=line-too-long
+# pylint: disable=missing-module-docstring
+
 DICTIONARY = {
     '+': 'chiakilisp::add', '-': 'chiakilisp::sub',
     '/': 'chiakilisp::div', '*': 'chiakilisp::mul',
