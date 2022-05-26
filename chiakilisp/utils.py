@@ -40,6 +40,9 @@ def wrap(arg) -> str:
         )
         return f'{{{formatted}}}'
 
+    if arg is ...:
+        return '...'  # <---- print ...  for Ellipsis instances
+
     sarg = str(arg)  # cast to str to format it or return sting
 
     return FORMATTERS.get(sarg, sarg)  # this looks funny :DDDD
