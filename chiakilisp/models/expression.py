@@ -7,9 +7,9 @@
 
 from typing import List, Any, Callable
 from chiakilisp.models.token import Token
-from chiakilisp.models.operand import Operand, NotFound
+from chiakilisp.models.value import Value, NotFound
 
-Child = Operand or 'Expression'  # define a type for a single child
+Child = Value or 'Expression'  # define the type for a single child
 Children = List[Child]  # define a type describing list of children
 
 
@@ -17,14 +17,14 @@ def is_identifier(x) -> bool:  # pylint: disable=invalid-name  # x is fine
 
     """
     Whether x is:
-     - Operand (not Expression instance)
+     - Value (not Expression instance)
      - its token().type() is Token.Identifier
 
     :param x: literally any valid Python type
     :return: method returns comparison result
     """
 
-    return isinstance(x, Operand) and x.token().type() == Token.Identifier
+    return isinstance(x, Value) and x.token().type() == Token.Identifier
 
 
 class Expression:
@@ -33,9 +33,9 @@ class Expression:
     Expression is the class that indented to be used to calculate something
     """
 
-    _children: List[Operand or "Expression"]
+    _children: Children
 
-    def __init__(self, children: List[Operand or 'Expression']) -> None:
+    def __init__(self, children: Children) -> None:
 
         """Initialize Expression instance"""
 
@@ -47,11 +47,11 @@ class Expression:
 
         return self._children
 
-    def generate(self, _e: dict, name: str, inline: bool):
+    def generate(self, _e: dict, _, inline: bool):
 
         """Generate C++ representation of expression"""
 
-        head: Operand
+        head: Value
         rest: Children
         head, *rest = self.children()
 
@@ -76,10 +76,10 @@ class Expression:
 
         """Execute here, is the return Python value related to the expression: string, number and vice versa"""
 
-        head: Operand
+        head: Value
         tail: Children
 
-        assert self.children(),  'Expression::execute(): current expression has no operands, unable to execute it'
+        assert self.children(),    'Expression::execute(): current expression has no values, unable to execute it'
 
         head, *tail = self.children()
         assert is_identifier(head), 'Expression::execute(): expression head have to be a Token of type Identifier'
@@ -118,7 +118,7 @@ class Expression:
             closure = {}
             closure.update(environ)  # <-- we do not want to modify global environment to store exception instance
             try:
-                main.execute(environ, False)  # <--------------------------------------- try to execute main block
+                return main.execute(environ, False)  # <-------------------------------- try to execute main block
             except obj as exception:  # <------------------------------------------ if exception has been occurred
                 closure[alias.token().value()] = exception  # <-------------------------- update local try closure
                 return block.execute(closure, False)  # <------------------------ return exception handling result
@@ -130,7 +130,7 @@ class Expression:
             target, *rest = tail  # <------- split tail for the first time to initialize target and rest variables
             while len(tail) > 1:  # <-- do not leave the loop while there is at least one element left in the tail
                 _ = rest[0]
-                if isinstance(_, Operand):
+                if isinstance(_, Value):
                     rest[0] = Expression([_])  # <-------- each argument except first should be cast to Expression
                 rest[0].children().insert(1, target)  # <- in case of first-threading-macro, insert as the 1st arg
                 tail = [rest[0]] + rest[1:]  # <- override tail: modified expression and the tail rest with offset
@@ -145,7 +145,7 @@ class Expression:
             target, *rest = tail  # <------- split tail for the first time to initialize target and rest variables
             while len(tail) > 1:  # <-- do not leave the loop while there is at least one element left in the tail
                 _ = rest[0]
-                if isinstance(_, Operand):
+                if isinstance(_, Value):
                     rest[0] = Expression([_])  # <-------- each argument except first should be cast to Expression
                 rest[0].children().append(target)  # <- in case of last-threading-macro, append to the end of args
                 tail = [rest[0]] + rest[1:]  # <- override tail: modified expression and the tail rest with offset
@@ -155,7 +155,7 @@ class Expression:
 
         if head.token().value().startswith('.') and not head.token().value() == '...':  # special handling for ...
             assert len(tail) >= 1, 'Expression::execute(): dot-special-form: expected at least one argument there'
-            object_name: Operand
+            object_name: Value
             method_args: Children
             object_name, *method_args = tail
             method_name: str = head.token().value()[1:]
@@ -172,8 +172,16 @@ class Expression:
         if head.token().value() == 'when':
             assert len(tail) == 2, 'Expression::execute(): when-special-form: expected exactly two arguments here'
             cond, true = tail
-            false = Operand(Token(Token.Nil, 'nil'))
-            return true.execute(environ, False) if cond.execute(environ, False) else false.execute(environ, False)
+            return true.execute(environ, False) if cond.execute(environ, False) else None  # <-- false is just nil
+
+        if head.token().value() == 'cond':
+            assert len(tail) % 2 == 0, 'Expression::execute(): cond-special-form: length of forms have to be even'
+            if not tail:
+                return None  # <------------------------------------------ if nothing has been passed, return None
+            for cond, expr in (tail[i:i + 2] for i in range(0, len(tail), 2)):
+                if cond.execute(environ, False):
+                    return expr.execute(environ, False)
+            return None  # <------------------------------------------------------ if nothing is true, return None
 
         if head.token().value() == 'let':
             assert len(tail) >= 1, 'Expression::execute(): let-special-form: expected at least one argument there'
@@ -192,7 +200,7 @@ class Expression:
             assert len(tail) >= 1, "Expression::execute(): fn-special-form: expected at least two arguments there"
             parameters, *body = tail
             if not body:
-                body = [Operand(Token(Token.Nil, 'nil'))]
+                body = [None]
             assert isinstance(parameters, Expression), 'Expression::execute(): fn-special-form: params not a form'
             names = []
             children = parameters.children()
@@ -252,7 +260,7 @@ class Expression:
             assert len(tail) >= 2, 'Expression::execute(): defn-special-form: wrong arity, at least two args here'
             name, parameters, *body = tail
             if not body:
-                body = [Operand(Token(Token.Nil, 'nil'))]
+                body = [None]
             assert isinstance(parameters, Expression), 'Expression::execute() defn-special-form: params\'re wrong'
             assert is_identifier(name), 'Expression::execute() defn-special-form: function name is not Identifier'
             names = []
