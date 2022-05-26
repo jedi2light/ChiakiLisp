@@ -15,7 +15,7 @@ ENVIRONMENT = {
                             for idx in range(0, len(args), 2)},
     'prn': pprint,
     'print': pprint,
+    'apply': lambda fn, args: fn(*args),  # built-in apply func
     'println': pprint,  # we need more aliases for _print!  \O/
-    'contains?': lambda coll, x: x in coll,  # requires keyword
     '...': Ellipsis  # make it possible to write '...' for user
 }
