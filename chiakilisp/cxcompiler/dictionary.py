@@ -1,4 +1,4 @@
-CPP_ENVIRON = {
+DICTIONARY = {
     '+': 'chiakilisp::add', '-': 'chiakilisp::sub',
     '/': 'chiakilisp::div', '*': 'chiakilisp::mul',
     'listy': 'chiakilisp::vec', 'dicty': 'chiakilisp::map',
