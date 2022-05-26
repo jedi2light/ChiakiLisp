@@ -3,20 +3,20 @@
 
 from typing import List
 from chiakilisp.models.token import Token
-from chiakilisp.models.operand import Operand
+from chiakilisp.models.value import Value
 from chiakilisp.models.expression import Expression
 
 
-Child = Operand or Expression  # define a type for the single child
+Child = Value or Expression  # define the type for the single child
 Children = List[Child]  # define a type describing list of children
 
 
 class Parser:
 
-    """Parser is the class that takes a list of tokens and produces a wood of Expressions or Operands"""
+    """Parser is the class that takes a list of tokens and produces a wood of Expressions or Values"""
 
+    _wood: Children
     _tokens: List[Token]
-    _wood: List[Operand or Expression]
 
     def __init__(self, tokens: List[Token]) -> None:
 
@@ -25,17 +25,17 @@ class Parser:
         self._tokens = tokens
         self._wood = []
 
+    def wood(self) -> Children:
+
+        """Its a getter for private _wood field"""
+
+        return self._wood
+
     def parse(self) -> None:
 
         """Process a list of tokens in order to populate complete wood"""
 
         self._wood = read(self._tokens)  # utilizes dedicated read() func
-
-    def wood(self) -> List[Operand or Expression]:
-
-        """Its a getter for private _wood field"""
-
-        return self._wood
 
 
 def find_nearest_closing_bracket(filtered: list, visited: list) -> tuple:
@@ -94,7 +94,7 @@ def boundary(lst: List[Token]) -> int:
 
 def read(tokens: List[Token]) -> Children:
 
-    """This function produces wood of Expressions/Operands"""
+    """This function produces wood of Expressions/Values"""
 
     if not tokens:
         return []  # allow empty expressions, useful for defn
@@ -110,7 +110,7 @@ def read(tokens: List[Token]) -> Children:
             children.append(Expression(read(tokens[left_boundary:right_boundary])))  # an expression children list
             idx = right_boundary + 1  # and then let the read() function to advance to the next one token instance
         else:
-            children.append(Operand(current_token))  # in case current token is a regular one, treat it as Operand
+            children.append(Value(current_token))  # in case current token is a regular one, treat it as the Value
             idx += 1  # and let the read() function to advance to the next one token by incrementing an index to 1
 
-    return children  # in the end return a list of an Expression children (Operands or child Expression instances)
+    return children  # in the end, return list of Expression class children (Values or child Expression instances)
