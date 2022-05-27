@@ -2,6 +2,8 @@
 # pylint: disable=missing-module-docstring
 # pylint: disable=too-many-return-statements  # it is fine dear
 
+from typing import Callable, Iterable
+
 FORMATTERS = {'True': 'true', 'False': 'false',  'None': 'nil'}
 
 
@@ -61,3 +63,29 @@ def pprint(*args: list) -> None:
     """Overrides stock print() function"""
 
     print(' '.join(map(wrap, args)))  # white-space' joined str
+
+
+def simple_fuzzy_matched(item: str, glossary: Iterable) -> tuple:
+
+    """This returns most fuzzy matched strings in the glossary"""
+
+    scored = tuple(map(
+        lambda possible: (len(set(possible) - set(item)), possible),
+        glossary
+    ))  # <- returns something like ((1, 'foo'), 2, 'bar') and so on
+
+    lowest = min(tuple(map(
+        lambda pair: pair[0],
+        scored
+    )))  # <----- returns the most lower score in the `scored` tuple
+
+    return tuple(filter(
+        lambda candidate: (
+                len(candidate) - len(item) >= 5  # <-- tune it later
+                or len(item) - len(candidate) <= 5   # tune it later
+        ),
+        map(
+            lambda pair: pair[1],
+            filter(lambda pair: pair[0] == lowest, scored)
+        )
+    ))  # <--- returns a tuple of candidates with the `lowest` score
