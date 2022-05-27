@@ -145,7 +145,13 @@ if __name__ == '__main__':
 
     rc_file = os.path.join(os.environ.get('HOME', os.environ.get('USER')), '.chiakilang-repl-rc.cl')
     if os.path.exists(rc_file):
-        require(rc_file, merge=True)
+        try:
+            require(rc_file, merge=True)
+        except (Exception,) as exc:
+            if os.environ.get('CHIAKILISP__REPL_RC_FILE_SHOW_ERRORS'):
+                print(exc)
+            else:
+                print('REPL rc file has errors. Set CHIAKILISP__REPL_RC_FILE_SHOW_ERRORS=1 to see em')
     else:
         with open(rc_file, 'w', encoding='utf-8') as w:
             w.write('(def repl-show-traceback false) ;; set to true to see the exception\' traceback')
