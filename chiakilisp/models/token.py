@@ -17,13 +17,15 @@ class Token:
 
     _type: str
     _value: str
+    _position: tuple
 
-    def __init__(self, _type: str, _value: str) -> None:
+    def __init__(self, _type: str, _value: str, _pos: tuple) -> None:
 
         """Initializes Token instance"""
 
         self._type = _type
         self._value = _value
+        self._position = _pos  # <- will include ln, cn and file name
 
     def type(self) -> str:
 
@@ -36,6 +38,18 @@ class Token:
         """Return token value"""
 
         return self._value
+
+    def position(self) -> tuple:
+
+        """Return token position"""
+
+        return self._position
+
+    def position_formatted(self) -> str:
+
+        """Return formatted token position"""
+
+        return ':'.join(map(str, self._position))
 
     def __str__(self) -> str:
 
