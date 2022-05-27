@@ -220,6 +220,8 @@ class Expression:
         if head.token().value() == 'let':
             AR_ASSERT(where, len(tail) >= 1,          'Expression[execute]: let: expected at least bindings form')
             bindings, *body = tail
+            if not body:
+                body = [Nil]  # <----------- let the ... let have an empty body, in this case, result would be nil
             SE_ASSERT(where, isinstance(bindings, Expression), 'Expression[execute]: let: bindings is not a form')
             let = {}
             items = bindings.children()  # once again, lexically, that sounds a bit weird, we have to deal with it
@@ -234,7 +236,7 @@ class Expression:
             AR_ASSERT(where, len(tail) >= 1,               'Expression[execute]: fn: expected at least 1 operand')
             parameters, *body = tail
             if not body:
-                body = [None]  # <- let a function be defined with empty body, in such a case, it will return None
+                body = [Nil]  # <-- let a function be defined with empty body, in such a case, it will return None
             SE_ASSERT(where, isinstance(parameters, Expression), 'Expression[execute]: fn: parameters not a form')
             names = []
             children = parameters.children()
@@ -303,7 +305,7 @@ class Expression:
             AR_ASSERT(where, len(tail) >= 2,            'Expression[execute]: defn: expected at least 2 operands')
             name, parameters, *body = tail
             if not body:
-                body = [None]  # <- let a function be defined with empty body, in such a case, it will return None
+                body = [Nil]  # <-- let a function be defined with empty body, in such a case, it will return None
             SE_ASSERT(where, isinstance(parameters, Expression),   'Expression[execute]: defn: params not a form')
             IDENTIFIER_ASSERT(name,               'Expression[execute]: defn: function name should be Identifier')
             names = []
