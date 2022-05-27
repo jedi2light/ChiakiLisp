@@ -16,15 +16,17 @@ class Lexer:
     """
 
     _source: str
-    _pointer: int
+    _file_name: str   # the name of source file we're lexing
+    _pointer: int = 0  # default pointer pos
     _tokens: List[Token]
+    _line_num, _char_num = 1, 0   # defaults
 
-    def __init__(self, source: str) -> None:
+    def __init__(self, source: str, file_name: str) -> None:
 
         """Initialize Lexer instance"""
 
         self._source = source
-        self._pointer = 0
+        self._file_name = file_name
         self._tokens = []
 
     def tokens(self) -> List[Token]:
@@ -32,6 +34,25 @@ class Lexer:
         """Returns list of tokens"""
 
         return self._tokens
+
+    def _increment_char_number(self) -> None:
+
+        """Increments character number by 1"""
+
+        self._char_num += 1
+
+    def _increment_line_number_with_char_number_reset(self) -> None:
+
+        """Increments line number by 1 and resets character number"""
+
+        self._char_num = 0
+        self._line_num += 1
+
+    def _pos(self) -> tuple:
+
+        """Returns a tuple containing current char and line number"""
+
+        return tuple((self._file_name, self._line_num, self._char_num))
 
     def lex(self) -> None:  # pylint: disable=R0912, disable=R0915  # >_<
 
@@ -47,74 +68,92 @@ class Lexer:
                         break
                     self._advance()
                 self._advance()
+                self._increment_line_number_with_char_number_reset()
 
             elif self._current_symbol_is_number():
                 value = self._current_symbol()
                 self._advance()
+                self._increment_char_number()
                 while self._has_next_symbol():
                     if self._current_symbol_is_number():
                         value += self._current_symbol()
                         self._advance()
+                        self._increment_char_number()
                     else:
                         break
-                self._tokens.append(Token(Token.Number, value))
+                self._tokens.append(Token(Token.Number, value, self._pos()))
 
             elif self._current_symbol_is_letter():
                 value = self._current_symbol()
                 self._advance()
+                self._increment_char_number()
                 while self._has_next_symbol():
                     if self._current_symbol_is_letter() or \
                             self._current_symbol_is_number():
                         value += self._current_symbol()
                         self._advance()
+                        self._increment_char_number()
                     else:
                         break
                 if value == 'nil':
-                    self._tokens.append(Token(Token.Nil, 'nil'))
+                    self._tokens.append(Token(Token.Nil, 'nil', self._pos()))
                 elif value in ['true', 'false']:
-                    self._tokens.append(Token(Token.Boolean, value))
+                    self._tokens.append(Token(Token.Boolean, value, self._pos()))
                 else:
-                    self._tokens.append(Token(Token.Identifier, value))
+                    self._tokens.append(Token(Token.Identifier, value, self._pos()))
 
             elif self._current_symbol_is_double_quote():
                 value = ''
                 while self._has_next_symbol():
                     self._advance()
+                    self._increment_char_number()
                     if not self._current_symbol_is_double_quote():
                         value += self._current_symbol()
                     else:
-                        self._tokens.append(Token(Token.String, value))
+                        self._tokens.append(Token(Token.String, value, self._pos()))
                         break
-                self._advance()  # _advance(): to skip leading '"' char
+                self._advance()  # <-- call _advance()  to skip the leading '"' char
+                self._increment_char_number()  # <-- increment character num as well
 
             elif self._current_symbol_is_opening_bracket():
-                self._tokens.append(Token(Token.OpeningBracket,   '('))
+                self._tokens.append(Token(Token.OpeningBracket,   '(', self._pos()))
                 self._advance()
+                self._increment_char_number()
 
             elif self._current_symbol_is_closing_bracket():
-                self._tokens.append(Token(Token.ClosingBracket,   ')'))
+                self._tokens.append(Token(Token.ClosingBracket,   ')', self._pos()))
                 self._advance()
+                self._increment_char_number()
 
             elif self._current_symbol_is_cr_opening_bracket():
-                self._tokens.append(Token(Token.OpeningBracket,   '('))
-                self._tokens.append(Token(Token.Identifier,   'dicty'))
+                self._tokens.append(Token(Token.OpeningBracket,   '(', self._pos()))
+                self._tokens.append(Token(Token.Identifier,   'dicty', self._pos()))
                 self._advance()
+                self._increment_char_number()
 
             elif self._current_symbol_is_cr_closing_bracket():
-                self._tokens.append(Token(Token.ClosingBracket,   ')'))
+                self._tokens.append(Token(Token.ClosingBracket,   ')', self._pos()))
                 self._advance()
+                self._increment_char_number()
 
             elif self._current_symbol_is_sq_opening_bracket():
-                self._tokens.append(Token(Token.OpeningBracket,   '('))
-                self._tokens.append(Token(Token.Identifier,   'listy'))
+                self._tokens.append(Token(Token.OpeningBracket,   '(', self._pos()))
+                self._tokens.append(Token(Token.Identifier,   'listy', self._pos()))
                 self._advance()
+                self._increment_char_number()
 
             elif self._current_symbol_is_sq_closing_bracket():
-                self._tokens.append(Token(Token.ClosingBracket,   ')'))
+                self._tokens.append(Token(Token.ClosingBracket,   ')', self._pos()))
                 self._advance()
+                self._increment_char_number()
+
+            elif self._current_symbol_is_nl():
+                self._advance()
+                self._increment_line_number_with_char_number_reset()  # inc line num
 
             else:
-                self._advance()  # skip over all the garbage characters
+                self._advance()  # <----------- skip over all the garbage characters
+                self._increment_char_number()  # <---with character number increment
 
     def _advance(self) -> None:
 
