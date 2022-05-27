@@ -154,11 +154,11 @@
 (defn juxt (& functions)
  ;; basically, this function behaves like the clojure `juxt` function
  (fn (x) (map (fn (f) (f x)) functions)))
-(defn select-keys (coll keys)
- ;; allows to select concrete keys from the given dictionary instance
- (when (and (dict? coll) (or (list? coll) (tuple? coll) (set? coll)))
-  (filter (fn (kvp)
-           (let (k (first kvp)) (contains? keys k))) (.items coll))))
+(defn select-strs (coll strs)
+ ;; allows to select concrete strs from the given dictionary instance
+ (when (and (dict? coll) (or (list? strs) (tuple? strs) (set? coll)))
+  (filter (fn (kv-pair)
+           (let ((k _) kv-pair) (contains? strs k))) (.items coll))))
 (defn eval (source)
  ;; evaluates a ChiakiLisp program ... inside of a ChiakiLisp program
  ;; TODO: investigate a bug, related to 'source' argument duplication
