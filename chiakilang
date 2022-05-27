@@ -11,6 +11,7 @@ from chiakilisp.utils import pprint
 from chiakilisp.lexer import Lexer
 from chiakilisp.parser import Parser
 from chiakilisp.environment import ENVIRONMENT
+from chiakilisp.linter.linter import BuiltinLinter
 from chiakilisp.cxcompiler.dictionary import DICTIONARY
 from chiakilisp.cxcompiler.cgen import CPPCodeGenerator
 
@@ -149,6 +150,23 @@ if __name__ == '__main__':
         with open(rc_file, 'w', encoding='utf-8') as w:
             w.write('(def repl-show-traceback false) ;; set to true to see the exception\' traceback')
 
+    linter_config: dict = {}  # <--- if we could not load linter config from user prefs, use a default
+
+    rc_file = os.path.join(os.environ.get('HOME', os.environ.get('USER')), '.chiakilang-linter-rc.cl')
+    if os.path.exists(rc_file):
+        try:
+            linter_config = require(rc_file, merge=False)  # <- prevent global env from updating there
+            if not linter_config.get('Rules'):
+                linter_config = {}  # <-- actually, we should manually check linter config correctness
+        except (Exception,) as exc:
+            if os.environ.get('CHIAKILISP__LINTER_RC_FILE_SHOW_ERRORS'):
+                print(exc)
+            else:
+                print('Linter rc is broken. Set CHIAKILISP__LINTER_RC_FILE_SHOW_ERRORS=1 to see more')
+    else:
+        with open(rc_file, 'w', encoding='utf-8') as w:
+            w.write(';; this is the ChiakiLisp linter rc-file\n(def Rules ["UnusedGlobalVariables"])')
+
     if os.path.exists('chiakilisp/corelib/core.cl'):
         require('chiakilisp/corelib/core.cl', merge=True)  # <---------------- load chiakilisp corelib
     else:
@@ -162,7 +180,13 @@ if __name__ == '__main__':
         assert os.path.isfile(file_path) or os.path.islink(file_path), f'{self}: {file_path}: invalid pathnode'
         with open(file_path, 'r', encoding='utf-8') as r:
 
-            if os.environ.get('CHIAKILISP__GENERATE_CPP'):
+            if os.environ.get('CHIAKILISP__LINTER_MODE'):
+                linter = BuiltinLinter(wood(r.read()), ENVIRONMENT, linter_config)  # <-- initialize the linter
+                linter.run()
+                linter.fancy_print_report()  # <----------------- this will fancy print generated linter report
+                sys.exit(0)  # <----------------------- exit chiakilang after showing report of built-in linter
+
+            if os.environ.get('CHIAKILISP__COMPILER_MODE'):
                 generate(r.read(), 'generated.cpp')  # <----------------- generate CPP file named generated.cpp
                 sys.exit(0)  # <------------------------------ exit chiakilang after successful code-generation
 
