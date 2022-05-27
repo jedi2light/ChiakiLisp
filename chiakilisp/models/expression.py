@@ -6,25 +6,30 @@
 # pylint: disable=too-many-return-statements
 
 from typing import List, Any, Callable
-from chiakilisp.models.token import Token
+from chiakilisp.utils import get_assertion_closure
 from chiakilisp.models.value import Value, NotFound
 
 Child = Value or 'Expression'  # define the type for a single child
 Children = List[Child]  # define a type describing list of children
 
 
-def is_identifier(x) -> bool:  # pylint: disable=invalid-name  # x is fine
+class ArityError(SyntaxError):
 
-    """
-    Whether x is:
-     - Value (not Expression instance)
-     - its token().type() is Token.Identifier
+    """ArityError (just for name)"""
 
-    :param x: literally any valid Python type
-    :return: method returns comparison result
-    """
 
-    return isinstance(x, Value) and x.token().type() == Token.Identifier
+NE_ASSERT = get_assertion_closure(NameError)  # <------ raises a NameError
+AR_ASSERT = get_assertion_closure(ArityError)  # <--- raises an ArityError
+SE_ASSERT = get_assertion_closure(SyntaxError)  # <-- raises a SyntaxError
+
+
+def IDENTIFIER_ASSERT(value: Value, message: str) -> None:
+
+    """A handy shortcut to make assertion that Value is Identifier"""
+
+    token = value.token()
+
+    SE_ASSERT(token.position_formatted(), token.is_identifier(), message)
 
 
 class Expression:
@@ -54,16 +59,20 @@ class Expression:
         head: Value
         tail: Children
         head, *tail = self.children()
+        assert isinstance(head, Value),     'Expression[lint]: head should be a Value, not an Expression instance'
 
-        assert is_identifier(head),               'Expression::lint(): head of expression should be an Identifier'
+        where = head.token().position_formatted()
+
+        IDENTIFIER_ASSERT(head,                       'Expression[lint]: head of expression should be Identifier')
 
         if head.token().value() == 'def':
-            assert len(tail) == 2,    'Expression::lint(): def-special-form: incorrect arity, exactly 2 args here'
-            name, _ = tail
-            assert is_identifier(name),    'Expression::lint() def-special-form binding name is not an Identifier'
+            AR_ASSERT(where, len(tail) == 2,                    'Expression[lint]: def: expected exactly 2 forms')
+            name: Value = tail[0]
+            assert isinstance(name, Value), 'Expression[lint]: name should be a Value, not an Expression instance'
+            IDENTIFIER_ASSERT(name,                         'Expression[lint]: def: name should be an Identifier')
 
             if rule == 'UnusedGlobalVariables':
-                storage[name.token().value()] = 0  # <--- since we define global variable with def, add to storage
+                storage[name.token().value()] = 0    # since we define global variable with def, add it to storage
 
     def generate(self, _e: dict, _, inline: bool):
 
@@ -73,9 +82,11 @@ class Expression:
         rest: Children
         head, *rest = self.children()
 
-        assert is_identifier(head), 'Expression::generate(): head of expression should be an Identifier'
+        assert isinstance(head, Value),   'Expression[generate]: head should be a Value object instance'
 
-        cpp_function_name = _e.get(head.token().value())
+        IDENTIFIER_ASSERT(head,      'Expression[generate]: head of expression should be an Identifier')
+
+        cpp_function_name = _e.get(head.token().value())  # <--- get the CPP function name from glossary
 
         lines = [f'{cpp_function_name}(']  # <--- start with the function call: name and opening bracket
 
@@ -92,15 +103,17 @@ class Expression:
 
     def execute(self, environ: dict, top: bool = True) -> Any:
 
-        """Execute here, is the return Python value related to the expression: string, number and vice versa"""
+        """Execute here, is the return Python value 3 related to the expression: string, number, and vice versa"""
 
         head: Value
         tail: Children
 
-        assert self.children(),    'Expression::execute(): current expression has no values, unable to execute it'
+        assert self.children(),      'Expression[execute]: current expression has no values, unable to execute it'
 
         head, *tail = self.children()
-        assert is_identifier(head), 'Expression::execute(): expression head have to be a Token of type Identifier'
+        where = head.token().position_formatted()  # <-- when make assertions on expression head, this can be used
+
+        IDENTIFIER_ASSERT(head,             'Expression[execute]: head of the expression should be an Identifier')
 
         if head.token().value() == 'or':
             if not tail:
@@ -123,15 +136,15 @@ class Expression:
             return result  # <------ if all conditions have been evaluated to truthy ones, return the last of them
 
         if head.token().value() == 'try':
-            assert len(tail) == 2, 'Expression::execute(): try: expected 2 expressions: main, and the catch block'
+            AR_ASSERT(where, len(tail) == 2,        'Expression[execute]: try: expected main and and catch forms')
             main, catch = tail
-            assert isinstance(catch, Expression), 'Expression::execute(): try: the catch block have to be a form'
-            assert len(catch.children()) == 4, 'Expression::execute(): try: expected exactly three operands here'
+            SE_ASSERT(where, isinstance(catch, Expression),    'Expression[execute]: try: catch should be a form')
+            AR_ASSERT(where, len(catch.children()) == 4,   'Expression[execute]: try: catch: expected 4 operands')
             kind, klass, alias, block = catch.children()
-            assert is_identifier(kind), 'Expression::execute(): try: handle name have to be Identifier'
-            assert kind.token().value() == 'catch', "Expression::execute(): try: only supports a 'catch' handle"
-            assert is_identifier(klass), 'Expression::execute(): try: class name have to be Identifier'
-            assert is_identifier(alias), 'Expression::execute(): try: alias name have to be Identifier'
+            IDENTIFIER_ASSERT(kind,                      'Expression[execute]: try: kind should be an Identifier')
+            SE_ASSERT(where, kind.token().value == 'catch',    "Expression[execute]: try: kind should be 'catch'")
+            IDENTIFIER_ASSERT(klass,                       'Expression[execute]: try: klass should be Identifier')
+            IDENTIFIER_ASSERT(alias,                       'Expression[execute]: try: alias should be Identifier')
             obj = klass.execute(environ, False)  # <---------------------------------- get actual exception object
             closure = {}
             closure.update(environ)  # <-- we do not want to modify global environment to store exception instance
@@ -171,29 +184,31 @@ class Expression:
 
             return target.execute(environ, False)  # <----- at the end, return target' expression execution result
 
-        if head.token().value().startswith('.') and not head.token().value() == '...':  # special handling for ...
-            assert len(tail) >= 1, 'Expression::execute(): dot-special-form: expected at least one argument there'
+        if head.token().value().startswith('.') and not head.token().value() == '...':   # it could be an Ellipsis
+            AR_ASSERT(where, len(tail) >= 1,        'Expression[execute]: dot-form: expected at least 1 operands')
             object_name: Value
             method_args: Children
             object_name, *method_args = tail
             method_name: str = head.token().value()[1:]
             object_instance = object_name.execute(environ, False)
-            method_handler: Callable = getattr(object_instance, method_name, NotFound)  # NotFound is a stub class
-            assert method_handler is not NotFound, 'Expression::execute(): dot-special-form: can\'t find a method'
-            return method_handler(*(child.execute(environ, False) for child in method_args))  # execute the method
+            object_m_object: Callable = getattr(object_instance, method_name, NotFound)  # <---- could be NotFound
+            NE_ASSERT(where,
+                      object_m_object is not NotFound,
+                      f"Expression[execute]: dot-form: no method named '{method_name}' found in '{object_name}'.")
+            return object_m_object(*(child.execute(environ, False) for child in method_args))  # return its result
 
         if head.token().value() == 'if':
-            assert len(tail) == 3, 'Expression::execute(): if-special-form: expected exactly three arguments here'
+            AR_ASSERT(where, len(tail) == 3,                  'Expression[execute]: if: expected exactly 2 forms')
             cond, true, false = tail
             return true.execute(environ, False) if cond.execute(environ, False) else false.execute(environ, False)
 
         if head.token().value() == 'when':
-            assert len(tail) == 2, 'Expression::execute(): when-special-form: expected exactly two arguments here'
+            AR_ASSERT(where, len(tail) == 2,                  'Expression[execute]: if: expected exactly 2 forms')
             cond, true = tail
             return true.execute(environ, False) if cond.execute(environ, False) else None  # <-- false is just nil
 
         if head.token().value() == 'cond':
-            assert len(tail) % 2 == 0, 'Expression::execute(): cond-special-form: length of forms have to be even'
+            AR_ASSERT(where, len(tail) % 2 == 0,       'Expression[execute]: cond: expected even number of forms')
             if not tail:
                 return None  # <------------------------------------------ if nothing has been passed, return None
             for cond, expr in (tail[i:i + 2] for i in range(0, len(tail), 2)):
@@ -202,41 +217,45 @@ class Expression:
             return None  # <------------------------------------------------------ if nothing is true, return None
 
         if head.token().value() == 'let':
-            assert len(tail) >= 1, 'Expression::execute(): let-special-form: expected at least one argument there'
+            AR_ASSERT(where, len(tail) >= 1,          'Expression[execute]: let: expected at least bindings form')
             bindings, *body = tail
-            assert isinstance(bindings, Expression), 'Expression::execute() let-special-form: wrong bindings type'
+            SE_ASSERT(where, isinstance(bindings, Expression), 'Expression[execute]: let: bindings is not a form')
             let = {}
-            items = bindings.children()  # once again, lexically, this sounds a bit weird, we have to deal with it
-            assert len(items) % 2 == 0, 'Expression::execute() let-special-form: bindings should have even length'
+            items = bindings.children()  # once again, lexically, that sounds a bit weird, we have to deal with it
+            AR_ASSERT(where, len(tail) % 2 == 0,          'Expression[execute]: let: binding form should be even')
             let.update(environ)  # we can't just bootstrap 'let' environ, because we do not want instances linking
             for name, value in (items[i:i + 2] for i in range(0, len(items), 2)):
-                assert is_identifier(name), 'Expression::execute() let-special-form: name should be an Identifier'
-                let.update({name.token().value(): value.execute(let, False)})
+                IDENTIFIER_ASSERT(name,          'Expression[execute]: let: binding name should be an Identifier')
+                let.update({name.token().value(): value.execute(let, False)})  # <- be able to reference by a name
             return [child.execute(let, False) for child in body][-1]  # <- then return the last calculation result
 
         if head.token().value() == 'fn':
-            assert len(tail) >= 1, "Expression::execute(): fn-special-form: expected at least two arguments there"
+            AR_ASSERT(where, len(tail) >= 1,               'Expression[execute]: fn: expected at least 1 operand')
             parameters, *body = tail
             if not body:
-                body = [None]
-            assert isinstance(parameters, Expression), 'Expression::execute(): fn-special-form: params not a form'
+                body = [None]  # <- let a function be defined with empty body, in such a case, it will return None
+            SE_ASSERT(where, isinstance(parameters, Expression), 'Expression[execute]: fn: parameters not a form')
             names = []
             children = parameters.children()
-            ampersand_found = tuple(filter(lambda pair: is_identifier(pair[1]) and pair[1].token().value() == '&',
+            ampersand_found = tuple(filter(lambda pr: (isinstance(pr[1], Value) and pr[1].token().value() == '&'),
                                            enumerate(children)))  # <- find a tuple, where 0 - pos, 1 - an operand
             ampersand_position: int = ampersand_found[0][0] if ampersand_found else -1  # <---- 0 - tuple, 1 - pos
             positional_parameters = children[:ampersand_position] if ampersand_found else children  # <-- before &
             for parameter in positional_parameters:
-                assert is_identifier(parameter), 'Expression::execute() fn-special-form: parameter not Identifier'
-                names.append(parameter.token().value())
+                IDENTIFIER_ASSERT(parameter,            'Expression[execute]: fn: parameter should be Identifier')
+                names.append(parameter.token().value())  # <------- append name of the parameter to the names list
             can_take_extras = False  # <-------------------- by default, function can not take any extra arguments
             if ampersand_found:
-                assert len(children) - 1 != ampersand_position  # <--- ensure that the ampersand is not at the end
-                assert len(children) - 2 == ampersand_position  # <--  ensure that the only one param goes after &
+                SE_ASSERT(where,
+                          len(children) - 1 != ampersand_position,
+                          'Expression[execute]: fn: you can only mention one alias for the extra arguments tuple')
+                SE_ASSERT(where,
+                          len(children) - 2 == ampersand_position,
+                          'Expression[execute]: fn: you have to mention alias name for the extra arguments tuple')
                 operand = children[-1]
-                assert is_identifier(operand), 'Expression::execute(): defn-special-form: param is not Identifier'
-                can_take_extras = True  # <- now we set this to true, as the function now can take extra arguments
-                names.append(operand.token().value())  # <- append extra parameter names to all fn parameter names
+                IDENTIFIER_ASSERT(operand, 'Expression[execute]: fn: extra-args-tuple alias should be Identifier')
+                can_take_extras = True  # <- now we set this to true, as the function can now take extra arguments
+                names.append(operand.token().value())  # <---- append extra args param name to all parameter names
 
             def handle(*c_arguments, **kwargs):
 
@@ -244,60 +263,69 @@ class Expression:
 
                 arity = len(names)
                 if can_take_extras:
-                    arity = arity - 1  # <-------------- because the last parameter is not actually a required one
-                    assert len(c_arguments) >= arity,    f'fn: wrong arity, expected at least {arity} argument(s)'
+                    arity = arity - 1  # <------ because the last parameter is not actually a required one
+                    AR_ASSERT(where,
+                              len(c_arguments) >= arity,
+                              f'<anonymous function>: wrong arity, expected at least {arity} argument(s)')
                 else:
-                    assert len(c_arguments) == arity,     f'fn: wrong arity, expected exactly {arity} argument(s)'
+                    AR_ASSERT(where,
+                              len(c_arguments) == arity,
+                              f'<anonymous function>: wrong arity, expected exactly {arity} argument(s).')
 
                 if can_take_extras:
                     if len(c_arguments) > arity:
-                        extra_arguments = c_arguments[arity:]
-                        c_arguments = c_arguments[:arity] + (extra_arguments,)
+                        e_arguments = c_arguments[arity:]
+                        c_arguments = c_arguments[:arity] + (e_arguments,)  # <- can't be rewritten in a short way
                     else:
                         c_arguments = c_arguments + (tuple(),)  # <- if extras are possible but missing, set to ()
 
-                closure = {}
-                closure.update(environ)  # <------ update (not bootstrap!) closure environment with the global one
-                closure.update(dict(zip(names, c_arguments)))  # <--------- update closure environ with parameters
-                closure.update({'kwargs': kwargs})  # <--- currently, there is no way to pass them from ChiakiLisp
-                return [child.execute(closure, False) for child in body][-1]  # return the last calculation result
+                fn = {}
+                fn.update(environ)  # <--------- update (not bootstrap) fn closure environment with the global one
+                fn.update(dict(zip(names, c_arguments)))  # <------------------- update fn closure with parameters
+                fn.update({'kwargs': kwargs})  # <-------- currently, there is no way to pass them from ChiakiLisp
+                return [child.execute(fn, False) for child in body][-1]  # <--- return the last calculation result
 
-            return handle
+            handle.x__custom_name__x = '<anonymous function>'  # <-- set function name to the <anonymous function>
+            return handle  # <---------------------- return the closure (anonymous function handler) to the caller
 
         if head.token().value() == 'def':
-            assert top, 'Expression::execute(); def-special-form: unable to use (def) on current scope, use (let)'
-            assert len(tail) == 2, 'Expression::execute(): def-special-form: incorrect arity, exactly 2 args here'
+            SE_ASSERT(where, top,   'Expression[execute]: def: can only use (def) form at the top of the program')
+            AR_ASSERT(where, len(tail) == 2,  'Expression[execute]: def: expected binding name and binding value')
             name, value = tail
-            assert is_identifier(name), 'Expression::execute() def-special-form binding name is not an Identifier'
+            IDENTIFIER_ASSERT(name,                 'Expression[execute]: def: binding name should be Identifier')
             executed = value.execute(environ, False)
             environ.update({name.token().value(): executed})
-            return executed
+            return executed   # so the reason, we write environment update is that we want to return binding value
 
         if head.token().value() == 'defn':
-            assert top, 'Expression::execute(): defn-special-form, unable to use (defn)  there, use (fn)  instead'
-            assert len(tail) >= 2, 'Expression::execute(): defn-special-form: wrong arity, at least two args here'
+            SE_ASSERT(where, top, 'Expression[execute]: defn: can only use (defn) form at the top of the program')
+            AR_ASSERT(where, len(tail) >= 2,            'Expression[execute]: defn: expected at least 2 operands')
             name, parameters, *body = tail
             if not body:
-                body = [None]
-            assert isinstance(parameters, Expression), 'Expression::execute() defn-special-form: params\'re wrong'
-            assert is_identifier(name), 'Expression::execute() defn-special-form: function name is not Identifier'
+                body = [None]  # <- let a function be defined with empty body, in such a case, it will return None
+            SE_ASSERT(where, isinstance(parameters, Expression),   'Expression[execute]: defn: params not a form')
+            IDENTIFIER_ASSERT(name,               'Expression[execute]: defn: function name should be Identifier')
             names = []
             children = parameters.children()
-            ampersand_found = tuple(filter(lambda pair: is_identifier(pair[1]) and pair[1].token().value() == '&',
+            ampersand_found = tuple(filter(lambda pr: (isinstance(pr[1], Value) and pr[1].token().value() == '&'),
                                            enumerate(children)))  # <- find a tuple, where 0 - pos, 1 - an operand
             ampersand_position: int = ampersand_found[0][0] if ampersand_found else -1  # <---- 0 - tuple, 1 - pos
             positional_parameters = children[:ampersand_position] if ampersand_found else children  # <-- before &
             for parameter in positional_parameters:
-                assert is_identifier(parameter), 'Expression::execute() defn-special-form param\'s not Identifier'
+                IDENTIFIER_ASSERT(parameter,          'Expression[execute]: defn: parameter should be Identifier')
                 names.append(parameter.token().value())
             can_take_extras = False  # <-------------------- by default, function can not take any extra arguments
             if ampersand_found:
-                assert len(children) - 1 != ampersand_position  # <--- ensure that the ampersand is not at the end
-                assert len(children) - 2 == ampersand_position  # <--  ensure that the only one param goes after &
+                SE_ASSERT(where,
+                          len(children) - 1 != ampersand_position,
+                          'Expression[execute]: defn: you can only mention one alias for the extra args\' tuple.')
+                SE_ASSERT(where,
+                          len(children) - 2 == ampersand_position,
+                          'Expression[execute]: defn: you have to mention alias name for the extra args\' tuple.')
                 operand = children[-1]
-                assert is_identifier(operand), 'Expression::execute(): defn-special-form: param is not Identifier'
-                can_take_extras = True  # <- now we set this to true, as the function now can take extra arguments
-                names.append(operand.token().value())  # <- append extra parameter names to all fn parameter names
+                IDENTIFIER_ASSERT(operand, 'Expression[execute]: defn: extra-args-list name should be Identifier')
+                can_take_extras = True  # <- now we set this to true, as the function can now take extra arguments
+                names.append(operand.token().value())  # <---- append extra args param name to all parameter names
 
             def handle(*c_arguments, **kwargs):  # pylint: disable=E0102  # <- handle object couldn't be redefined
 
@@ -305,44 +333,47 @@ class Expression:
 
                 arity = len(names)
                 if can_take_extras:
-                    arity = arity - 1  # <-------------- because the last parameter is not actually a required one
-                    assert len(c_arguments) >= arity,    f'fn: wrong arity, expected at least {arity} argument(s)'
+                    arity = arity - 1  # <-------- because the last parameter is not actually a required one
+                    AR_ASSERT(where,
+                              len(c_arguments) >= arity,
+                              f'{name.token().value()}: wrong arity, expected at least {arity} argument(s)')
                 else:
-                    assert len(c_arguments) == arity,     f'fn: wrong arity, expected exactly {arity} argument(s)'
-
-                closure = {}
-                closure.update(environ)  # <- update closure environment with the global one, not bootstrapping it
+                    AR_ASSERT(where,
+                              len(c_arguments) == arity,
+                              f'{name.token().value()}: wrong arity, expected exactly {arity} argument(s).')
 
                 if can_take_extras:
                     if len(c_arguments) > arity:
-                        extra_arguments = c_arguments[arity:]
-                        c_arguments = c_arguments[:arity] + (extra_arguments,)
+                        e_arguments = c_arguments[arity:]
+                        c_arguments = c_arguments[:arity] + (e_arguments,)  # <- can't be rewritten in a short way
                     else:
                         c_arguments = c_arguments + (tuple(),)  # <- if extras are possible but missing, set to ()
 
-                closure.update(dict(zip(names, c_arguments)))  # <- update closure dictionary with parameter names
-                closure.update({'kwargs': kwargs})  # <--- currently, there is no way to pass them from ChiakiLisp
-                return [child.execute(closure, False) for child in body][-1]  # <-- return last calculation result
+                defn = {}
+                defn.update(environ)  # <------- update (not bootstrap) fn closure environment with the global one
+                defn.update(dict(zip(names, c_arguments)))  # <--------------- update defn closure with parameters
+                defn.update({'kwargs': kwargs})  # <------ currently, there is no way to pass them from ChiakiLisp
+                return [child.execute(defn, False) for child in body][-1]  # <--=== return last calculation result
 
             handle.x__custom_name__x = name.token().value()  # assign custom function name to display it by pprint
             environ.update({name.token().value(): handle})  # in case of 'defn', we also need to update global env
-            return handle
+            return handle  # <---------------------- return the closure (anonymous function handler) to the caller
 
         if head.token().value() == 'import':
-            assert top, 'Expression::execute(): import: you should only call \'import\' at the top of the program'
-            assert len(tail) == 1, 'Expression::execute() import: expected exactly one argument: Identifier token'
+            SE_ASSERT(where, top,    'Expression[execute]: import: you should place all the (import)s at the top')
+            AR_ASSERT(where, len(tail) == 1, 'Expression[execute]: import: expected name of the module to import')
             name = tail[0]
-            assert is_identifier(name), 'Expression::execute() import: module name should be a type of Identifier'
+            IDENTIFIER_ASSERT(name,      'Expression[execute]: import: Python 3 module name should be Identifier')
             environ[name.token().value()] = __import__(name.token().value())  # <- update env with a module object
             return None  # <--------------------------------------------------------------------------- return nil
 
         if head.token().value() == 'require':
-            assert top, 'Expression::execute(): require: you should only call \'require\' at the top of a program'
-            assert len(tail) == 1, 'Expression::execute() require: expected exactly one argument Identifier token'
+            SE_ASSERT(where, top,  'Expression[execute]: require: you should place all the (require)s at the top')
+            AR_ASSERT(where, len(tail) == 1,   'Expression[execute]: require: expected name of ChiakiLisp module')
             name = tail[0]
-            assert is_identifier(name), 'Expression::execute() require module name should be a type of Identifier'
+            IDENTIFIER_ASSERT(name,   'Expression[execute]: require: ChiakiLisp module name should be Identifier')
             module = type(name.token().value(), (object,), environ['require'](name.token().value() + '.cl'))  # -|
-            environ[name.token().value().split('/')[-1]] = module  # <--update global environ with required module
+            environ[name.token().value().split('/')[-1]] = module  # <- update global environ with required module
             return None  # <--------------------------------------------------------------------------- return nil
 
         handle = head.execute(environ, False)
