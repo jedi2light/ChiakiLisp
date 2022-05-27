@@ -5,6 +5,14 @@
 FORMATTERS = {'True': 'true', 'False': 'false',  'None': 'nil'}
 
 
+def ASSERT(condition, e_object, *e_object_args) -> None:
+
+    """Helps to write assertions with custom objects"""
+
+    if not condition:
+        raise e_object(*e_object_args)
+
+
 def wrap(arg) -> str:
 
     """Wraps any Python 3 value (safely) into string"""
