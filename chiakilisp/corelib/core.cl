@@ -123,14 +123,13 @@
 (defn get-in (& args)
  ;; allows to safely (get ...) a value from a collection by its path
  (when args
-  (let (coll (first args)
-        path (second args)
+  (let ((coll path) args)
         (cond (= 2 (count args)) (get-in coll path nil)
               (= 3 (count args))
               (let (default (third args))
                (functools/reduce (fn (acc new))
                                   (get acc new default)
-                path coll)))))))
+                path coll))))))
 (defn conj (& args)
  ;; basically, this function behaves like the clojure 'conj' function
  (when args
