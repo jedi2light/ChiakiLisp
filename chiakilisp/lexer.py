@@ -3,7 +3,7 @@
 
 import re
 from typing import List
-from chiakilisp.models.token import Token  # Lexer needs Token :*)
+from chiakilisp.models.token import Token  # Lexer needs Token      :*)
 
 
 ALPHABET = ['+', '-', '*', '/', '=', '<', '>', '?', '!', '.', '_', '&']
