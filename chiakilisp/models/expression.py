@@ -47,6 +47,24 @@ class Expression:
 
         return self._children
 
+    def lint(self, env: dict, rule: str, storage: dict) -> None:
+
+        """React to the builtin linter visit"""
+
+        head: Value
+        tail: Children
+        head, *tail = self.children()
+
+        assert is_identifier(head),               'Expression::lint(): head of expression should be an Identifier'
+
+        if head.token().value() == 'def':
+            assert len(tail) == 2,    'Expression::lint(): def-special-form: incorrect arity, exactly 2 args here'
+            name, _ = tail
+            assert is_identifier(name),    'Expression::lint() def-special-form binding name is not an Identifier'
+
+            if rule == 'UnusedGlobalVariables':
+                storage[name.token().value()] = 0  # <--- since we define global variable with def, add to storage
+
     def generate(self, _e: dict, _, inline: bool):
 
         """Generate C++ representation of expression"""

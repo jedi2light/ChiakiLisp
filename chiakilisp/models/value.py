@@ -32,6 +32,15 @@ class Value:
 
         return self._token
 
+    def lint(self, env: dict, rule: str, storage: dict) -> None:
+
+        """React to the builtin linter visit"""
+
+        if rule == 'UnusedGlobalVariables' and self.token().type() == Token.Identifier:
+            name = self.token().value()
+            if name in storage:
+                storage[name] += 1  # <- if there is such a global variable, increment its referencing count
+
     def generate(self, _e: dict, name: str, inline: bool):  # pylint: disable=inconsistent-return-statements
 
         """Generate C++ representation of value"""
