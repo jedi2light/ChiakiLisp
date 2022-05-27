@@ -122,7 +122,7 @@ def repl() -> None:
             if ENVIRONMENT.get('repl-show-traceback'):
                 traceback.print_exc()
             else:
-                print(_exc)  # have to manually print error (and if user want to  print out exception traceback)
+                print(_exc)  # have to manually print error (and if user want to print out exception traceback)
 
 
 if __name__ == '__main__':
@@ -183,7 +183,7 @@ if __name__ == '__main__':
     if os.path.exists('chiakilisp/corelib/core.cl'):
         require('chiakilisp/corelib/core.cl', merge=True)  # <---------------- load chiakilisp corelib
     else:
-        execute(source=pkgutil.get_data('chiakilisp', 'corelib/core.cl').decode('utf-8'), silent=True)
+        execute('corelib.cl',  pkgutil.get_data('chiakilisp', 'corelib/core.cl').decode('utf-8'),  silent=True)
 
     if len(sys.argv) > 1:
         self: str = sys.argv[0]
@@ -206,4 +206,4 @@ if __name__ == '__main__':
             execute(r.read(), file_path.split('/')[-1],  silent=True)  # <-- set silent to avoid extra printing
     else:
         print('Press Ctrl+C to cancel input, press Ctrl+D to exit REPL, press Tab to see all global functions')
-        repl()
+        repl()  # <------------------------------------------------------------ start built-in REPL environment
