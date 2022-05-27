@@ -111,11 +111,11 @@ def repl() -> None:
             continue
         try:
             execute(source)  # execute function also prints result
-        except (Exception,) as exc:  # pylint: disable=W0703         # try to catch any possible exception here
+        except (Exception,) as _exc:  # pylint: disable=W0703        # try to catch any possible exception here
             if ENVIRONMENT.get('repl-show-traceback'):
                 traceback.print_exc()
             else:
-                print(exc)  # have to manually print error (and if user want to, print out exception traceback)
+                print(_exc)  # have to manually print error (and if user want to  print out exception traceback)
 
 
 if __name__ == '__main__':
@@ -147,7 +147,7 @@ if __name__ == '__main__':
     if os.path.exists(rc_file):
         try:
             require(rc_file, merge=True)
-        except (Exception,) as exc:
+        except (Exception,) as exc:  # pylint: disable=broad-except      # it's okay to this, pylint
             if os.environ.get('CHIAKILISP__REPL_RC_FILE_SHOW_ERRORS'):
                 print(exc)
             else:
@@ -164,7 +164,7 @@ if __name__ == '__main__':
             linter_config = require(rc_file, merge=False)  # <- prevent global env from updating there
             if not linter_config.get('Rules'):
                 linter_config = {}  # <-- actually, we should manually check linter config correctness
-        except (Exception,) as exc:
+        except (Exception,) as exc:   # pylint: disable=broad-except       # it's okay to this, pylint
             if os.environ.get('CHIAKILISP__LINTER_RC_FILE_SHOW_ERRORS'):
                 print(exc)
             else:

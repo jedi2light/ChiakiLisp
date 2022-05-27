@@ -32,7 +32,7 @@ class Value:
 
         return self._token
 
-    def lint(self, env: dict, rule: str, storage: dict) -> None:
+    def lint(self, _: dict, rule: str, storage: dict) -> None:
 
         """React to the builtin linter visit"""
 

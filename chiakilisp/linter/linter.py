@@ -1,7 +1,7 @@
 # pylint: disable=line-too-long
 # pylint: disable=missing-module-docstring
 
-from chiakilisp.parser import Children, Child
+from chiakilisp.parser import Children
 
 # Rules implemented right now:
 #  - UnusedGlobalVariables - check the source code for unused global variables
@@ -18,6 +18,8 @@ _DEFAULTS = {
 
 
 class BuiltinLinter:
+
+    """ChiakiLisp Linter"""
 
     _env: dict
     _wood: Children
