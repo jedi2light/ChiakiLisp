@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+SOURCE=$1
+
+[ -z $SOURCE ] && (echo 'No source'; exit 1)
+
+CHIAKILISP__LINTER_MODE=1 ./chiakilang $SOURCE

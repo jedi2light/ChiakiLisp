@@ -9,5 +9,5 @@ if [ -z $SOURCE ]; then echo 'No source'; exit 1; fi
 # shellcheck disable=SC2164
 cd ./runtime && make && ln -sf libChiakiLispRuntime.so libchiakilisp.so && cd ..
 
-CHIAKILISP__GENERATE_CPP=1 ./chiakilang $SOURCE \
+CHIAKILISP__COMPILER_MODE=1 ./chiakilang $SOURCE \
   && $CXX -Iruntime -Lruntime -lchiakilisp generated.cpp -std=c++20 -o generated
