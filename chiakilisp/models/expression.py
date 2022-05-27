@@ -7,7 +7,7 @@
 
 from typing import List, Any, Callable
 from chiakilisp.utils import get_assertion_closure
-from chiakilisp.models.value import Value, NotFound
+from chiakilisp.models.value import Value, NotFound, Nil
 
 Child = Value or 'Expression'  # define the type for a single child
 Children = List[Child]  # define a type describing list of children

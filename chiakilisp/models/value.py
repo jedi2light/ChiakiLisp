@@ -114,3 +114,6 @@ class Value:
             )
 
             return found  # <- return found Python 3 value (from the current environment) or raise NameError
+
+
+Nil = Value(Token(Token.Nil, 'nil', ()))  # predefined Nil value; (useful for empty defn, fn and let bodies)
