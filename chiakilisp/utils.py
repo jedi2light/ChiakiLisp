@@ -9,7 +9,7 @@ FORMATTERS = {'True': 'true', 'False': 'false',  'None': 'nil'}
 
 def get_assertion_closure(e_object) -> Callable:
 
-    def ASSERT(t_pos: tuple, condition, *args) -> None:
+    def ASSERT(t_pos: str, condition, *args) -> None:
         """Helps to raise custom exception when asserting"""
 
         if not condition:
