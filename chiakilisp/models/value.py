@@ -1,9 +1,20 @@
 # pylint: disable=line-too-long
 # pylint: disable=missing-module-docstring
 
-from typing import Any
-from chiakilisp.utils import ASSERT  # our lovely custom assert funct
+from functools import partial
+from typing import Any, Callable, Iterable
+from chiakilisp.utils import simple_fuzzy_matched  # <- for proposals
+from chiakilisp.utils import get_assertion_closure  # to get ASSERT()
 from chiakilisp.models.token import Token  # Value needs Token    :*)
+
+_ASSERT: Callable = get_assertion_closure(NameError)  # <---- closure
+
+
+def _proposals(glossary: Iterable, item: str) -> str:
+
+    """A little wrapper upon simple_fuzzy_matched()"""
+
+    return ', '.join(simple_fuzzy_matched(item, glossary))
 
 
 class NotFound:  # pylint: disable=too-few-public-methods  # shut up!
@@ -80,18 +91,26 @@ class Value:
         if self.token().type() == Token.Identifier:
 
             name = self.token().value()
+            where = self.token().position_formatted()  # <- assign to pretty formatted token position string
+
+            ASSERT = partial(_ASSERT, where)  # <---- create partial function to simplify ASSERT() func call
+            proposals = partial(_proposals, environment.keys())  # <------- simplify proposals function call
 
             if '/' in name:
                 obj_name, member_name = name.split('/')  # <---------- syntax is <object name>/<member name>
                 obj_object = environment.get(obj_name, NotFound)  # <------- assign found object or NotFound
-                ASSERT(obj_object is not NotFound, NameError, f"NameError: '{obj_name}' has not been found")
+                ASSERT(obj_object is not NotFound,
+                       f"no '{obj_name}' object/module in this scope. Possibilities: {proposals(obj_name)}")
                 member_object = getattr(obj_object, member_name, NotFound)  # <-------- assign member object
-                ASSERT(member_object is not NotFound, NameError, f"NameError: no'{obj_name}/{member_name}'")
+                ASSERT(member_object is not NotFound,
+                       f"object (or module) named '{obj_name}' has no such a member named '{member_name}'. "
+                       f"Possibilities: {_proposals(dir(member_object), member_name)}")  # <--- maybe cache?
                 return member_object  # <------------------ thus we return found module/object member object
 
-            found = environment.get(name, NotFound)
+            found = environment.get(name, NotFound)  # <-- handle case when identifier name is not qualified
 
-            # TODO: maybe implement simple fuzzy-matching algorithm to suggest known variable names in scope
-            ASSERT(found is not NotFound, NameError, f'NameError: there is no \'{name}\' in current scope.')
+            ASSERT(
+                found is not NotFound, f"no '{name}' symbol in this scope. Possibilities: {proposals(name)}"
+            )
 
             return found  # <- return found Python 3 value (from the current environment) or raise NameError
