@@ -21,6 +21,7 @@ class ArityError(SyntaxError):
 NE_ASSERT = get_assertion_closure(NameError)  # <------ raises a NameError
 AR_ASSERT = get_assertion_closure(ArityError)  # <--- raises an ArityError
 SE_ASSERT = get_assertion_closure(SyntaxError)  # <-- raises a SyntaxError
+RT_ASSERT = get_assertion_closure(RuntimeError)  # <-- raises RuntimeError
 
 
 def IDENTIFIER_ASSERT(value: Value, message: str) -> None:
