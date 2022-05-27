@@ -54,7 +54,7 @@ class Lexer:
 
         return tuple((self._file_name, self._line_num, self._char_num))
 
-    def lex(self) -> None:  # pylint: disable=R0912, disable=R0915  # >_<
+    def lex(self) -> None:  # pylint: disable=R0912, disable=R0915  #>_<
 
         """Process the source code, thus it populates the tokens list"""
 
