@@ -7,12 +7,17 @@ from typing import Callable, Iterable
 FORMATTERS = {'True': 'true', 'False': 'false',  'None': 'nil'}
 
 
-def ASSERT(condition, e_object, *e_object_args) -> None:
+def get_assertion_closure(e_object) -> Callable:
 
-    """Helps to write assertions with custom objects"""
+    def ASSERT(t_pos: tuple, condition, *args) -> None:
+        """Helps to raise custom exception when asserting"""
 
-    if not condition:
-        raise e_object(*e_object_args)
+        if not condition:
+            msg, *rst = args
+            raise e_object(
+                f'{t_pos} {e_object.__name__}: {msg}', *rst)
+
+    return ASSERT  # <---- thus, return an assertion closure
 
 
 def wrap(arg) -> str:
