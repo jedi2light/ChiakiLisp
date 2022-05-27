@@ -20,16 +20,17 @@ ENVIRONMENT.update({name: getattr(BUILTINS, name, None)
                     for name in dir(BUILTINS)})
 
 
-def wood(source: str) -> list:  # sadly, no exact types
+def wood(source: str, source_file_name: str) -> list:
 
     """
     wood() method converts source to a wood of children
 
     :param source: str instance, containing source code
+    :param source_file_name: the source code' file name
     :return: this method will return a wood of children
     """
 
-    lexer = Lexer(source)
+    lexer = Lexer(source, source_file_name)
     lexer.lex()
     parser = Parser(lexer.tokens())
     parser.parse()
@@ -51,33 +52,39 @@ def require(path: str, merge: bool = False) -> dict:
         environment = {} if not merge else ENVIRONMENT
         if not merge:
             environment.update(ENVIRONMENT)  # then do this
-        for child in wood(_r.read()):
+        for child in wood(_r.read(),  path.split('/')[-1]):
             child.execute(environment)
         return environment  # <---- return ready to use env
 
 
-def execute(source: str, silent: bool = False) -> None:
+def execute(source: str,
+            file_name: str,
+            silent: bool = False) -> None:
 
     """
     execute() method convert source to AST and executes its
 
     :param source: ChiakiLisp valid source code as a string
+    :param file_name:  the file name, source code came from
     :param silent: whether print executed expression or not
     :return: returns _nothing_, only prints each result out
     """
 
-    for child in wood(source):
+    for child in wood(source, file_name):
         result = child.execute(ENVIRONMENT)
         if not silent:
             pprint(result)  # with the custom formatting :D
 
 
-def generate(source: str, outfile_name: str) -> None:
+def generate(source: str,
+             infile_name: str,
+             outfile_name: str) -> None:
 
     """
     generate() method convert source to AST and executes it
 
     :param source: ChiakiLisp valid source code as a string
+    :param infile_name: file's name we take the source from
     :param outfile_name: file's name to write CPP code into
     :return: returns _nothing, it only generates a CPP code
     """
@@ -85,7 +92,7 @@ def generate(source: str, outfile_name: str) -> None:
     gvc = 0
     gss = []
 
-    for child in wood(source):
+    for child in wood(source, infile_name):
         name = f'_global_{gvc}'
         gss.append(child.generate(DICTIONARY, name, False))
         gvc += 1
@@ -110,7 +117,7 @@ def repl() -> None:
         if not source:  # if there is no source code for execute()
             continue
         try:
-            execute(source)  # execute function also prints result
+            execute(source, '<REPL>')  # <--------------------------------- execute function also prints result
         except (Exception,) as _exc:  # pylint: disable=W0703        # try to catch any possible exception here
             if ENVIRONMENT.get('repl-show-traceback'):
                 traceback.print_exc()
@@ -187,16 +194,16 @@ if __name__ == '__main__':
         with open(file_path, 'r', encoding='utf-8') as r:
 
             if os.environ.get('CHIAKILISP__LINTER_MODE'):
-                linter = BuiltinLinter(wood(r.read()), ENVIRONMENT, linter_config)  # <-- initialize the linter
+                linter = BuiltinLinter(wood(r.read(), '<linter>'), ENVIRONMENT, linter_config)  # <- initialize
                 linter.run()
                 linter.fancy_print_report()  # <----------------- this will fancy print generated linter report
                 sys.exit(0)  # <----------------------- exit chiakilang after showing report of built-in linter
 
             if os.environ.get('CHIAKILISP__COMPILER_MODE'):
-                generate(r.read(), 'generated.cpp')  # <----------------- generate CPP file named generated.cpp
+                generate(r.read(), file_path.split('/')[-1], 'generated.cpp')  # <------- produce generated.cpp
                 sys.exit(0)  # <------------------------------ exit chiakilang after successful code-generation
 
-            execute(r.read(), silent=True)  # <- when silent is set to True, only intentional (prn..) will work
+            execute(r.read(), file_path.split('/')[-1],  silent=True)  # <-- set silent to avoid extra printing
     else:
         print('Press Ctrl+C to cancel input, press Ctrl+D to exit REPL, press Tab to see all global functions')
         repl()
