@@ -142,7 +142,7 @@ class Expression:
             AR_ASSERT(where, len(catch.children()) == 4,   'Expression[execute]: try: catch: expected 4 operands')
             kind, klass, alias, block = catch.children()
             IDENTIFIER_ASSERT(kind,                      'Expression[execute]: try: kind should be an Identifier')
-            SE_ASSERT(where, kind.token().value == 'catch',    "Expression[execute]: try: kind should be 'catch'")
+            SE_ASSERT(where, kind.token().value() == 'catch',  "Expression[execute]: try: kind should be 'catch'")
             IDENTIFIER_ASSERT(klass,                       'Expression[execute]: try: klass should be Identifier')
             IDENTIFIER_ASSERT(alias,                       'Expression[execute]: try: alias should be Identifier')
             obj = klass.execute(environ, False)  # <---------------------------------- get actual exception object
