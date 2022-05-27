@@ -45,6 +45,12 @@ class Token:
 
         return self._position
 
+    def is_identifier(self) -> bool:
+
+        """Just a handy shortcut"""
+
+        return self._type == Token.Identifier
+
     def position_formatted(self) -> str:
 
         """Return formatted token position"""
