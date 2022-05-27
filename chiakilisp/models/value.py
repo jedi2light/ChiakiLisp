@@ -2,6 +2,7 @@
 # pylint: disable=missing-module-docstring
 
 from typing import Any
+from chiakilisp.utils import ASSERT  # our lovely custom assert funct
 from chiakilisp.models.token import Token  # Value needs Token    :*)
 
 
@@ -79,16 +80,18 @@ class Value:
         if self.token().type() == Token.Identifier:
 
             name = self.token().value()
+
+            if '/' in name:
+                obj_name, member_name = name.split('/')  # <---------- syntax is <object name>/<member name>
+                obj_object = environment.get(obj_name, NotFound)  # <------- assign found object or NotFound
+                ASSERT(obj_object is not NotFound, NameError, f"NameError: '{obj_name}' has not been found")
+                member_object = getattr(obj_object, member_name, NotFound)  # <-------- assign member object
+                ASSERT(member_object is not NotFound, NameError, f"NameError: no'{obj_name}/{member_name}'")
+                return member_object  # <------------------ thus we return found module/object member object
+
             found = environment.get(name, NotFound)
 
-            if found is NotFound and '/' in self.token().value():
-                _object, member = self.token().value().split('/')
-                _object = environment.get(_object, NotFound)
-                assert _object is not NotFound,        'Value::execute(): qualified identifier lookup error'
-                member = getattr(_object, member, NotFound)
-                assert member is not NotFound,         'Value::execute(): qualified identifier lookup error'
-                return member  # <--------------------------- thus we return member of an object or a module
+            # TODO: maybe implement simple fuzzy-matching algorithm to suggest known variable names in scope
+            ASSERT(found is not NotFound, NameError, f'NameError: there is no \'{name}\' in current scope.')
 
-            assert found is not NotFound, f'Value::execute(): no {name} in the current environment, a typo?'
-
-            return found  # return found Python 3 value (from the current environment), if not found, raise!
+            return found  # <- return found Python 3 value (from the current environment) or raise NameError
