@@ -81,7 +81,10 @@ def simple_fuzzy_matched(item: str, glossary: Iterable) -> tuple:
 
     lowest = min(tuple(map(
         lambda pair: pair[0],
-        scored
+        filter(
+            lambda pair: pair[0] != 0,  # skip over 0 scored results
+            scored
+        )
     )))  # <----- returns the most lower score in the `scored` tuple
 
     return tuple(filter(
