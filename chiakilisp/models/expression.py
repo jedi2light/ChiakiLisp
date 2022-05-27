@@ -224,12 +224,18 @@ class Expression:
                 body = [Nil]  # <----------- let the ... let have an empty body, in this case, result would be nil
             SE_ASSERT(where, isinstance(bindings, Expression), 'Expression[execute]: let: bindings is not a form')
             let = {}
-            items = bindings.children()  # once again, lexically, that sounds a bit weird, we have to deal with it
-            AR_ASSERT(where, len(tail) % 2 == 0,          'Expression[execute]: let: binding form should be even')
             let.update(environ)  # we can't just bootstrap 'let' environ, because we do not want instances linking
-            for name, value in (items[i:i + 2] for i in range(0, len(items), 2)):
-                IDENTIFIER_ASSERT(name,          'Expression[execute]: let: binding name should be an Identifier')
-                let.update({name.token().value(): value.execute(let, False)})  # <- be able to reference by a name
+            items = bindings.children()  # once again, lexically, that sounds a bit weird, we have to deal with it
+            AR_ASSERT(where, len(items) % 2 == 0,         'Expression[execute]: let: binding form should be even')
+            for raw, value in (items[i:i + 2] for i in range(0, len(items), 2)):
+                if isinstance(raw, Expression):
+                    get = environ.get('get')  # <------ here we go... should it be called like ChiakiLisp interop?
+                    RT_ASSERT(get,           "Expression[execute]: let: destructuring requires core/get function")
+                    executed = value.execute(let, False)  # <-- pre-execute value in order to treat it like a list
+                    for idx, alias in enumerate(map(lambda val: val.token().value(), raw.children())):  # map over
+                        let.update({alias: get(executed, idx, None)})  # <- for each alias get a coll value or nil
+                else:
+                    let.update({raw.token().value(): value.execute(let, False)})  # <---------- populate a closure
             return [child.execute(let, False) for child in body][-1]  # <- then return the last calculation result
 
         if head.token().value() == 'fn':
