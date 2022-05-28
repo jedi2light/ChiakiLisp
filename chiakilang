@@ -120,6 +120,7 @@ def repl() -> None:
         try:
             execute(source, '<REPL>')  # <--------------------------------- execute function also prints result
         except (Exception,) as _exc:  # pylint: disable=W0703        # try to catch any possible exception here
+            ENVIRONMENT['*e'] = _exc  # <------------------- like in clojure REPL, store exception object in *e
             if ENVIRONMENT.get('repl-show-traceback'):
                 traceback.print_exc()
             else:
