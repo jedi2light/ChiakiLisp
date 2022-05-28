@@ -72,6 +72,7 @@ def execute(source: str,
 
     for child in wood(source, file_name):
         result = child.execute(ENVIRONMENT)
+        # TODO: store results in *1, *2, and *3 global vars
         if not silent:
             pprint(result)  # with the custom formatting :D
 
