@@ -127,8 +127,8 @@
         (cond (= 2 (count args)) (get-in coll path nil)
               (= 3 (count args))
               (let (default (third args))
-               (functools/reduce (fn (acc new))
-                                  (get acc new default)
+               (functools/reduce (fn (acc new)
+                                  (get acc new default))
                 path coll))))))
 (defn conj (& args)
  ;; basically, this function behaves like the clojure 'conj' function
