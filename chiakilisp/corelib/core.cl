@@ -81,6 +81,7 @@
  (if x false true))
 (defn get (& args)
  ;; allows to safely get an item from: list, tuple, dict or a string
+ ;; hint for the future: could not use destructuring in get function
  (when (>= (count args) 2)
   (let (coll (.__getitem__ args 0)
         item (.__getitem__ args 1))
