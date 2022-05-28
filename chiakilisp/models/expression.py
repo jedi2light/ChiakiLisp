@@ -312,6 +312,16 @@ class Expression:
             environ.update({name.token().value(): executed})
             return executed   # so the reason, we write environment update is that we want to return binding value
 
+        if head.token().value() == 'def?':
+            SE_ASSERT(where, top, 'Expression[execute]: def?: can only use (def?) form at the top of the program')
+            AR_ASSERT(where, len(tail) == 2, 'Expression[execute]: def?: expected binding name and binding value')
+            name, value = tail
+            IDENTIFIER_ASSERT(name,                'Expression[execute]: def?: binding name should be Identifier')
+            from_env = environ.get(name.token().value()) if (name.token().value() in environ.keys()) else NotFound
+            executed = value.execute(environ, False) if from_env is NotFound else from_env  # existing or executed
+            environ.update({name.token().value(): executed})  # <--- update current scope' environment in any case
+            return executed   # so the reason, we write environment update is that we want to return binding value
+
         if head.token().value() == 'defn':
             SE_ASSERT(where, top, 'Expression[execute]: defn: can only use (defn) form at the top of the program')
             AR_ASSERT(where, len(tail) >= 2,            'Expression[execute]: defn: expected at least 2 operands')
