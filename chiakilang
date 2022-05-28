@@ -152,15 +152,15 @@ if __name__ == '__main__':
 
     readline.set_completer(completer)
 
-    rc_file = os.path.join(os.environ.get('HOME', os.environ.get('USER')), '.chiakilang-repl-rc.cl')
+    rc_file = os.path.join(os.environ.get('HOME', os.environ.get('USER')),   '.chiakilang-opts-rc.cl')
     if os.path.exists(rc_file):
         try:
             require(rc_file, merge=True)
-        except (Exception,) as exc:  # pylint: disable=broad-except      # it's okay to this, pylint
-            if os.environ.get('CHIAKILISP__REPL_RC_FILE_SHOW_ERRORS'):
+        except (Exception,) as exc:  # pylint: disable=broad-except        # it's okay to this, pylint
+            if os.environ.get('CHIAKILISP__OPTS_RC_FILE_SHOW_ERRORS'):
                 print(exc)
             else:
-                print('REPL rc file has errors. Set CHIAKILISP__REPL_RC_FILE_SHOW_ERRORS=1 to see em')
+                print("Options' rc is broken. Set CHIAKILISP__OPTS_RC_FILE_SHOW_ERRORS=1 to see more")
     else:
         with open(rc_file, 'w', encoding='utf-8') as w:
             w.write('(def repl-show-traceback false) ;; set to true to see the exception\' traceback')
