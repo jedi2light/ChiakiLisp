@@ -3,6 +3,7 @@
 
 from functools import reduce
 from chiakilisp.utils import pprint  # our lovely custom print
+import hashedcolls  # <---- to use hashed dict and hashed list
 
 ENVIRONMENT = {
     '+': lambda *args: reduce(lambda acc, cur: acc+cur,  args),
@@ -15,7 +16,7 @@ ENVIRONMENT = {
                             for idx in range(0, len(args), 2)},
     'prn': pprint,
     'print': pprint,
-    'apply': lambda fn, args: fn(*args),  # built-in apply func
     'println': pprint,  # we need more aliases for _print!  \O/
+    'apply': lambda fn, args: fn(*args),  # built-in apply func
     '...': Ellipsis  # make it possible to write '...' for user
 }
