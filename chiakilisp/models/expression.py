@@ -6,6 +6,7 @@
 # pylint: disable=too-many-statements
 # pylint: disable=too-many-return-statements
 
+from copy import deepcopy
 from typing import List, Any, Callable
 from chiakilisp.utils import get_assertion_closure
 from chiakilisp.models.value import Value, NotFound, Nil
@@ -160,6 +161,8 @@ class Expression:
             if len(tail) == 1:
                 return tail[-1].execute(environ, False)  # <------------ if there is only one argument, execute it
 
+            tail = deepcopy(tail)  # <--------- it could be slow when tail is really complex nested data structure
+
             target, *rest = tail  # <------- split tail for the first time to initialize target and rest variables
             while len(tail) > 1:  # <-- do not leave the loop while there is at least one element left in the tail
                 _ = rest[0]
@@ -174,6 +177,8 @@ class Expression:
         if head.token().value() == '->>':
             if len(tail) == 1:
                 return tail[-1].execute(environ, False)  # <------------ if there is only one argument, execute it
+
+            tail = deepcopy(tail)  # <--------- it could be slow when tail is really complex nested data structure
 
             target, *rest = tail  # <------- split tail for the first time to initialize target and rest variables
             while len(tail) > 1:  # <-- do not leave the loop while there is at least one element left in the tail
