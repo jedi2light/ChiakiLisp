@@ -2,6 +2,8 @@
 
 SOURCE=$1
 
-[ -z $SOURCE ] && (echo 'No source'; exit 1)
+[ -z $SOURCE ] && (
+  echo "Usage: $0: <source-file-name>"; exit 1
+)
 
 CHIAKILISP__LINTER_MODE=1 ./chiakilang $SOURCE
