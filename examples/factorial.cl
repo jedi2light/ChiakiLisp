@@ -4,4 +4,4 @@
   (* n (fac (- n 1)))))
 
 (prn (fac 4)) ;; _=> 24
-(prn (fac 165)) ; limit
+(prn (fac 164)) ; limit
