@@ -6,8 +6,20 @@ CXX=${CXX:-clang++}
 
 if [ -z $SOURCE ]; then echo 'No source'; exit 1; fi
 
+echo "$0: [runtime::build]"
+
 # shellcheck disable=SC2164
-cd ./runtime && make && ln -sf libChiakiLispRuntime.so libchiakilisp.so && cd ..
+cd ./runtime && make && ln -sf libChiakiLispRuntime.so libchiakilisp.so && cd -
+
+SRC_FILENAME="./generated.cpp"
+BIN_FILENAME="./generated"
+
+CXX_FLAGS="-Iruntime -std=c++20"
+LD_FLAGS="-Lruntime -lchiakilisp"
+
+LD_LIBRARY_PATH+=":runtime"
+
+echo "$0: [source::compile-and-then-execute]"
 
 CHIAKILISP__COMPILER_MODE=1 ./chiakilang $SOURCE \
-  && $CXX -Iruntime -Lruntime -lchiakilisp generated.cpp -std=c++20 -o generated
+  && $CXX $CXX_FLAGS $LD_FLAGS $SRC_FILENAME -o $BIN_FILENAME && $BIN_FILENAME
