@@ -159,12 +159,10 @@
            (let ((k _) kv-pair) (contains? strs k))) (.items coll))))
 (defn eval (source)
  ;; evaluates a ChiakiLisp program ... inside of a ChiakiLisp program
- ;; TODO: investigate a bug, related to 'source' argument duplication
  (let (lexer  (lexer/Lexer source "<eval>")
        _      (.lex lexer)
        parser (parser/Parser (.tokens lexer))
        _      (.parse parser)
        wood   (.wood parser))
   (->> wood
-       ;; TODO: this is very hackish way to solve a pretty stange bug
-       (map (fn (tre & _) (.execute tre environment/ENVIRONMENT))))))
+       (map (fn (piece) (.execute piece environment/ENVIRONMENT))))))
