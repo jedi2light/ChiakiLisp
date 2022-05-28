@@ -1,24 +1,70 @@
+#include <iostream>
 #include <vector>
-#include <map>
-#include <any>
 
 namespace chiakilisp {
 
-typedef std::vector<std::any> vec_t;
-typedef std::map<std::any, std::any> map_t;
+template<typename T>
+class vector : public std::vector<T> {
+public:
+    friend std::ostream& operator<<(std::ostream& os, const vector<T>& self);
+};
 
-float add(...);
+template<typename T>
+std::ostream& operator<<(std::ostream& os, const vector<T>& self) {
+    for (auto& item : self) os << item << ' ';
+    return os;
+}
 
-float sub(...);
+template<typename T>
+T add(T v) {
+    return v;
+}
 
-float div(...);
+template<typename T, typename... Args>
+T add(T first, Args... args) {
+    return first + add(args...);
+}
 
-float mul(...);
+template<typename T>
+T sub(T v) {
+    return v;
+}
 
-void print(...);
+template<typename T, typename... Args>
+T sub(T first, Args... args) {
+    return first - sub(args...);
+}
 
-vec_t* vec(...);
+template<typename T>
+T div(T v) {
+    return v;
+}
 
-map_t* map(...);
+template<typename T, typename... Args>
+T div(T first, Args... args) {
+    return first / div(args...);
+}
+
+template<typename T>
+T mul(T v) {
+    return v;
+}
+
+template<typename T, typename... Args>
+T mul(T first, Args... args) {
+    return first * mul(args...);
+}
+
+template<typename... Args>
+void println(Args... args) {
+    // prints all the given arguments separated by a 'white-space' character
+    ((std::cout << args << ' '), ...);
+    std::cout << std::endl;
+}
+
+//template<typename T, typename... Args>
+//vector<T> vec(Args... args) {
+//    return ((args), ...);
+//}
 
 }
