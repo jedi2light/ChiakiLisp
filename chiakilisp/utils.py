@@ -1,3 +1,4 @@
+# pylint: disable=invalid-name
 # pylint: disable=line-too-long
 # pylint: disable=missing-module-docstring
 # pylint: disable=too-many-return-statements  # it is fine dear
@@ -8,6 +9,8 @@ FORMATTERS = {'True': 'true', 'False': 'false',  'None': 'nil'}
 
 
 def get_assertion_closure(e_object) -> Callable:
+
+    """Returns the 'ASSERT()' function for the 'e_object'"""
 
     def ASSERT(t_pos: str, condition, *args) -> None:
         """Helps to raise custom exception when asserting"""
