@@ -14,6 +14,8 @@ ENVIRONMENT = {
     'listy': lambda *args: list(args),    # <-------- list cast
     'dicty': lambda *args: {args[idx]: args[idx+1]  # dict cast
                             for idx in range(0, len(args), 2)},
+    'hashed-dict': hashedcolls.HashedDict,  # <---- embed later
+    'hashed-list': hashedcolls.HashedList,  # <---- embed later
     'prn': pprint,
     'print': pprint,
     'println': pprint,  # we need more aliases for _print!  \O/
