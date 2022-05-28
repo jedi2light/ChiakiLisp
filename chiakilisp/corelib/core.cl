@@ -162,10 +162,11 @@
 (defn eval (source)
  ;; evaluates a ChiakiLisp program ... inside of a ChiakiLisp program
  ;; TODO: investigate a bug, related to 'source' argument duplication
- (let (lexer  (lexer/Lexer source)
+ (let (lexer  (lexer/Lexer source "<eval>")
        _      (.lex lexer)
        parser (parser/Parser (.tokens lexer))
        _      (.parse parser)
        wood   (.wood parser))
   (->> wood
-       (map (fn (-tree) (.execute -tree environment/ENVIRONMENT))))))
+       ;; TODO: this is very hackish way to solve a pretty stange bug
+       (map (fn (tre & _) (.execute tre environment/ENVIRONMENT))))))
