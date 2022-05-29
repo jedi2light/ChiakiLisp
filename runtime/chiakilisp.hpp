@@ -3,6 +3,8 @@
 #include <iterator>
 #include <type_traits>
 
+#define nil NULL;
+
 namespace chiakilisp {
 
 template<typename T>
