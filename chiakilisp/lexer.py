@@ -96,7 +96,7 @@ class Lexer:
                     else:
                         break
                 if value == 'nil':
-                    self._tokens.append(Token(Token.Nil, 'nil', self._pos()))
+                    self._tokens.append(Token(Token.Nil, value, self._pos()))
                 elif value in ['true', 'false']:
                     self._tokens.append(Token(Token.Boolean, value, self._pos()))
                 else:
