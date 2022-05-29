@@ -100,7 +100,17 @@ class Expression:
 
         IDENTIFIER_ASSERT(head,      'Expression[generate]: head of expression should be an Identifier')
 
-        cpp_function_name = _e.get(head.token().value())  # <--- get the CPP function name from glossary
+        where = head.token().position_formatted()  # <-- remember current expression head token position
+
+        if head.token().value() == 'def':
+            AR_ASSERT(where, len(rest) == 2, 'Expression[generate]: def: expected name, value operands')
+            name, value = rest
+            IDENTIFIER_ASSERT(name,           'Expression[generate]: def: name should be an Identifier')
+            SE_ASSERT(where, not value.token().is_nil(), "Expression[generate]: def: nil not supported")
+            cfg['DEFS'].update({name: value})  # <---- add global variable definition to the config.defs
+            return ''  # <- def-form is not supposed to generate a line of code, only append to the defs
+
+        cpp_function_name = dictionary.get(head.token().value())  # <--- get the function name from dict
 
         lines = [f'{cpp_function_name}(']  # <--- start with the function call: name and opening bracket
 
