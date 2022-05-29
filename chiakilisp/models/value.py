@@ -74,7 +74,7 @@ class Value:
 
         if token.type() == Token.String:
             representation = f'"{token.value()}"'
-        if token.type() in [Token.Nil, Token.Number, Token.Boolean]:    # return raw value-string for others
+        if token.type() in [Token.Nil, Token.Number, Token.Boolean, Token.Identifier]:  # return raw val-str
             representation = token.value()
 
         return f'{representation}{";" if not inline else ""}'  # <- append semicolon character if not inline
