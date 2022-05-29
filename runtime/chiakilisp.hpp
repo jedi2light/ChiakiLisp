@@ -26,42 +26,42 @@ public:
 };
 
 template<typename T>
-T add(T v) {
+float add(T v) {
     return v;
 }
 
 template<typename T, typename... Args>
-T add(T first, Args... args) {
+float add(T first, Args... args) {
     return first + add(args...);
 }
 
 template<typename T>
-T sub(T v) {
+float sub(T v) {
     return v;
 }
 
 template<typename T, typename... Args>
-T sub(T first, Args... args) {
+float sub(T first, Args... args) {
     return first - sub(args...);
 }
 
 template<typename T>
-T div(T v) {
+float div(T v) {
     return v;
 }
 
 template<typename T, typename... Args>
-T div(T first, Args... args) {
+float div(T first, Args... args) {
     return first / div(args...);
 }
 
 template<typename T>
-T mul(T v) {
+float mul(T v) {
     return v;
 }
 
 template<typename T, typename... Args>
-T mul(T first, Args... args) {
+float mul(T first, Args... args) {
     return first * mul(args...);
 }
 
