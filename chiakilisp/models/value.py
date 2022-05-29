@@ -39,6 +39,16 @@ class Value:
 
         self._token = token
 
+    def dump(self, indent: int) -> None:
+
+        """Dumps a single expression value"""
+
+        value = self.token().value()
+
+        print(' ' * indent, (f'"{value}"'
+                             if self.token().is_string()
+                             else value))
+
     def token(self) -> Token:
 
         """Returns related token"""

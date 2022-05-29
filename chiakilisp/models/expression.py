@@ -55,6 +55,17 @@ class Expression:
 
         return self._children
 
+    def dump(self, indent: int) -> None:
+
+        """Dumps the entire expression"""
+
+        children = self.children()
+        if children:
+            first, *rest = children
+            first.dump(indent)
+            for argument in rest:
+                argument.dump(indent + 1)
+
     def lint(self, _: dict, rule: str, storage: dict) -> None:
 
         """React to the builtin linter visit"""

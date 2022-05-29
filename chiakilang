@@ -21,6 +21,21 @@ ENVIRONMENT.update({name: getattr(BUILTINS, name, None)
                     for name in dir(BUILTINS)})
 
 
+def dump(source: str,
+         source_file_name: str) -> None:
+
+    """
+    Simple enough function just to dump the AST out
+
+    :param source: (valid?) ChiakiLisp' source code
+    :param source_file_name: source code file' name
+    :return: this only dumps AST, nothing to return
+    """
+
+    for tree in wood(source, source_file_name):
+        tree.dump(0)
+
+
 def wood(source: str, source_file_name: str) -> list:
 
     """
@@ -195,6 +210,10 @@ if __name__ == '__main__':
         assert os.path.exists(file_path), f'{self}: {file_path}: no such file or directory'
         assert os.path.isfile(file_path) or os.path.islink(file_path), f'{self}: {file_path}: invalid pathnode'
         with open(file_path, 'r', encoding='utf-8') as r:
+
+            if os.environ.get('CHIAKILISP__AST_DUMPER'):
+                dump(r.read(), file_path.split('/')[-1])  # <------ this will dump out AST and exit the program
+                sys.exit(0)
 
             if os.environ.get('CHIAKILISP__LINTER_MODE'):
                 linter = BuiltinLinter(wood(r.read(), '<linter>'), ENVIRONMENT, linter_config)  # <- initialize
