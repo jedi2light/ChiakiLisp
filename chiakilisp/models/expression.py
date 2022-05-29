@@ -88,9 +88,9 @@ class Expression:
             if rule == 'UnusedGlobalVariables':
                 storage[name.token().value()] = 0    # since we define global variable with def, add it to storage
 
-    def generate(self, _e: dict, _, inline: bool):
+    def generate(self, dictionary: dict, cfg: dict, inline: bool):
 
-        """Generate C++ representation of expression"""
+        """Generate C++ representation of the ChiakiLisp expression"""
 
         head: Value
         rest: Children

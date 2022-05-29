@@ -106,18 +106,16 @@ def generate(source: str,
     :return: returns _nothing, it only generates a CPP code
     """
 
-    gvc = 0
     gss = []
+    cfg = {'DEFS': {}}
 
     for child in wood(source, infile_name):
-        name = f'_global_{gvc}'
-        gss.append(child.generate(DICTIONARY, name, False))
-        gvc += 1
+        gss.append(child.generate(DICTIONARY, cfg, False))
 
-    _config = {}
-
-    with open(outfile_name, 'w', encoding='utf-8') as wrtr:
-        wrtr.write(CPPCodeGenerator(gss).generate(_config))
+    with open(outfile_name,
+              'w',
+              encoding='utf-8') as fwriter:
+        fwriter.write(CPPCodeGenerator(gss).generate(cfg))
 
 
 def repl() -> None:
