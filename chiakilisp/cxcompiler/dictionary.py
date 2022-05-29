@@ -4,6 +4,8 @@
 DICTIONARY = {
     '+': 'chiakilisp::add', '-': 'chiakilisp::sub',
     '/': 'chiakilisp::div', '*': 'chiakilisp::mul',
+    'mod': 'chiakilisp::mod',
+    'identity': 'chiakilisp::identity',
     'listy': 'chiakilisp::vec', 'dicty': 'chiakilisp::map',
     'prn': 'chiakilisp::println',
     'print': 'chiakilisp::println', 'println': 'chiakilisp::println',

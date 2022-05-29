@@ -26,6 +26,11 @@ public:
 };
 
 template<typename T>
+T identity(T v) {
+    return v;
+}
+
+template<typename T>
 float add(T v) {
     return v;
 }
@@ -63,6 +68,16 @@ float mul(T v) {
 template<typename T, typename... Args>
 float mul(T first, Args... args) {
     return first * mul(args...);
+}
+
+template<typename T>
+float mod(T v) {
+    return v;
+}
+
+template<typename T, typename... Args>
+float mod(T first, Args... args) {
+    return (int)first % (int)mod(args...);  // requires explicit float' cast
 }
 
 template<typename... Args>
