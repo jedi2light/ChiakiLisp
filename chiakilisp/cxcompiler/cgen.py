@@ -1,6 +1,17 @@
 # pylint: disable=line-too-long
 # pylint: disable=missing-module-docstring
 
+from chiakilisp.models.token import Token     # :)
+from chiakilisp.utils import get_assertion_closure
+
+
+class CompileError(AssertionError):
+
+    """Stub class just for the name"""
+
+
+ASSERT = get_assertion_closure(CompileError)
+
 
 class CPPCodeGenerator:
 
