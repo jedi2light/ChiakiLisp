@@ -20,16 +20,20 @@ class CPPCodeGenerator:
 
         return self._source
 
-    def generate(self) -> str:
+    def generate(self, config: dict) -> str:
 
         """Actually returns a complete CPP code string"""
+
+        last = self._source[-1] if self._source else '0;'
+
+        body = self._source[:-1]
 
         return '\n'.join([
             '#include <string>',  # <----- include string
             '#include <chiakilisp.hpp>',  # <---- runtime
-            'int main()',  # <---- wrap program in main()
-            '{',  # <---  block starting character in CPP
-            *self._source,  # <-- include  generated code
-            'return 0;',  # <-- always return 0 to system
-            '}'  # <---- block finishing character in CPP
+            'int main()',  # <----- wrap source in main()
+            '{',  # <------- block starting marker in CPP
+            *body,  # <----------- include generated code
+            f'return {last}',  # <-- return last expr res
+            '}\n'  # <----- block finishing marker in CPP
         ])

@@ -114,8 +114,10 @@ def generate(source: str,
         gss.append(child.generate(DICTIONARY, name, False))
         gvc += 1
 
+    _config = {}
+
     with open(outfile_name, 'w', encoding='utf-8') as wrtr:
-        wrtr.write(CPPCodeGenerator(source=gss).generate())
+        wrtr.write(CPPCodeGenerator(gss).generate(_config))
 
 
 def repl() -> None:
