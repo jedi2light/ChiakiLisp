@@ -31,7 +31,7 @@ class CPPCodeGenerator:
         return '\n'.join([
             '#include <string>',  # <----- include string
             '#include <chiakilisp.hpp>',  # <---- runtime
-            'int main()',  # <----- wrap source in main()
+            'int main(int argc, char* argv[])',  # main()
             '{',  # <------- block starting marker in CPP
             *body,  # <----------- include generated code
             f'return {last}',  # <-- return last expr res
