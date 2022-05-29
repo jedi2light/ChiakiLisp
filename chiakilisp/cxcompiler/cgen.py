@@ -42,9 +42,31 @@ class CPPCodeGenerator:
         return '\n'.join([
             '#include <string>',  # <----- include string
             '#include <chiakilisp.hpp>',  # <---- runtime
+            *self._process_defs(config),  # <-- variables
             'int main(int argc, char* argv[])',  # main()
             '{',  # <------- block starting marker in CPP
             *body,  # <----------- include generated code
             f'return {last}',  # <-- return last expr res
             '}\n'  # <----- block finishing marker in CPP
         ])
+
+    @staticmethod
+    def _process_defs(config: dict) -> list:
+
+        """This function generates the global-defs loc"""
+
+        retval = []
+
+        for name, value in config['DEFS'].items():
+            n_value: str = name.token().value()
+            v_token: Token = value.token()
+            v_value: str = v_token.value()
+            formatted = (f'"{v_value}"'
+                         if v_token.is_string()
+                         else v_value)
+            retval.append(
+                f'auto {n_value} = {formatted};'
+            )
+
+        return retval  # <------- return the compiled body
+
