@@ -17,7 +17,7 @@ BIN_FILENAME="./generated"
 CXX_FLAGS="-Iruntime -std=c++20"
 LD_FLAGS="-Lruntime -lchiakilisp"
 
-LD_LIBRARY_PATH+=":runtime"
+export LD_LIBRARY_PATH+=":runtime"
 
 echo "$0: [source::compile-and-then-execute]"
 
