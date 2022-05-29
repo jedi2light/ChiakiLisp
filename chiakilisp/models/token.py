@@ -45,6 +45,30 @@ class Token:
 
         return self._position
 
+    def is_nil(self) -> bool:
+
+        """Just a handy shortcut"""
+
+        return self._type == Token.Nil
+
+    def is_number(self) -> bool:
+
+        """Just a handy shortcut"""
+
+        return self._type == Token.Number
+
+    def is_string(self) -> bool:
+
+        """Just a handy shortcut"""
+
+        return self._type == Token.String
+
+    def is_boolean(self) -> bool:
+
+        """Just a handy shortcut"""
+
+        return self._type == Token.Boolean
+
     def is_identifier(self) -> bool:
 
         """Just a handy shortcut"""
