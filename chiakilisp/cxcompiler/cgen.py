@@ -42,7 +42,8 @@ class CPPCodeGenerator:
         return '\n'.join([
             '#include <string>',  # <----- include string
             '#include <chiakilisp.hpp>',  # <---- runtime
-            *self._process_defs(config),  # <-- variables
+            *self._process_includes(config),   # includes
+            *config.get('DEFS'),  # <--- global variables
             'int main(int argc, char* argv[])',  # main()
             '{',  # <------- block starting marker in CPP
             *body,  # <----------- include generated code
