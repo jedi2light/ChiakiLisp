@@ -1,9 +1,8 @@
 ;; this file is the ChiakiLisp core library, feel free to update it!
 (import functools)
-(import chiakilisp)
-(def lexer chiakilisp/lexer)
-(def parser chiakilisp/parser)
-(def runtime chiakilisp/runtime)
+(import chiakilisp.lexer)
+(import chiakilisp.parser)
+(import chiakilisp.runtime)
 ;; set of general purpose functions like (identity ...) or something
 (defn identity (x)
  x)
