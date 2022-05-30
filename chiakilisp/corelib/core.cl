@@ -3,7 +3,7 @@
 (import chiakilisp)
 (def lexer chiakilisp/lexer)
 (def parser chiakilisp/parser)
-(def environment chiakilisp/environment)
+(def runtime chiakilisp/runtime)
 ;; set of general purpose functions like (identity ...) or something
 (defn identity (x)
  x)
@@ -165,4 +165,4 @@
        _      (.parse parser)
        wood   (.wood parser))
   (->> wood
-       (map (fn (piece) (.execute piece environment/ENVIRONMENT))))))
+       (map (fn (an-expr) (.execute an-expr runtime/ENVIRONMENT))))))
