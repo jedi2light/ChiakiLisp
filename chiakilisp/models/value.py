@@ -75,7 +75,16 @@ class Value:
         if token.type() == Token.String:
             representation = f'"{token.value()}"'
         if token.type() in [Token.Nil, Token.Number, Token.Boolean, Token.Identifier]:  # return raw val-str
-            representation = token.value()
+            if token.type() == Token.Identifier:
+                # A bit of demangle processing here for LISPy names
+                representation = token.value()\
+                    .replace('-', '_DASH_')\
+                    .replace('?', '_QUESTION_MARK')\
+                    .replace('!', '_EXCLAMATION_MARK')
+                if not token.value() == '/' or not token.value().endswith('/'):  # TODO: !make this smarter!
+                    representation = representation.replace('/', '::')  # <-- replace LISP accessor with C++
+            else:
+                representation = token.value()  # <-- in all the other cases, return raw string token' value
 
         return f'{representation}{";" if not inline else ""}'  # <- append semicolon character if not inline
 
