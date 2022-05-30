@@ -51,21 +51,11 @@ class CPPCodeGenerator:
         ])
 
     @staticmethod
-    def _process_defs(config: dict) -> list:
+    def _process_includes(config: dict) -> list:
 
-        """This function generates the global-defs loc"""
+        """This function generates include statements"""
 
-        retval = []
-
-        for name, value in config['DEFS'].items():
-            n_value: str = name.token().value()
-            v_token: Token = value.token()
-            v_value: str = v_token.value()
-            formatted = (f'"{v_value}"'
-                         if v_token.is_string()
-                         else v_value)
-            retval.append(
-                f'auto {n_value} = {formatted};'
-            )
-
-        return retval  # <------- return the compiled body
+        return [
+            f'#include <{include}>'
+            for include in config.get('SOURCE_INCLUDING')
+        ]
