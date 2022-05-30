@@ -106,8 +106,12 @@ class Expression:
             AR_ASSERT(where, len(rest) == 2, 'Expression[generate]: def: expected name, value operands')
             name, value = rest
             IDENTIFIER_ASSERT(name,           'Expression[generate]: def: name should be an Identifier')
-            SE_ASSERT(where, not value.token().is_nil(), "Expression[generate]: def: nil not supported")
-            cfg['DEFS'].update({name: value})  # <---- add global variable definition to the config.defs
+            SE_ASSERT(where,
+                      True if isinstance(value, Expression) else not value.token().is_nil(),
+                      "Expression[generate]: def: unable to define global variable assigned to \'nil\'")
+            generated = name.generate({}, {}, True)
+            value = value.generate(dictionary, cfg, False)
+            cfg['DEFS'].append(f'auto {generated} = {value}')  # <------- add global variable definition
             return ''  # <- def-form is not supposed to generate a line of code, only append to the defs
 
         cpp_function_name = dictionary.get(head.token().value())  # <--- get the function name from dict
