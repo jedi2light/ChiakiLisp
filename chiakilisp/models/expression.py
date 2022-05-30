@@ -102,6 +102,18 @@ class Expression:
 
         where = head.token().position_formatted()  # <-- remember current expression head token position
 
+        if head.token().value().startswith('.'):
+            AR_ASSERT(where,
+                      len(rest) >= 1, 'Expression[generate]: dot-form: at least 1 operand was expected')
+            name, *args = rest
+            IDENTIFIER_ASSERT(name,  'Expression[generate]: dot-form: object name should be Identifier')
+            generated = name.generate({}, {}, True)  # <----- get the generated C++ name of the variable
+            accessor = '->' if generated in cfg['KNOWN_POINTERS'] else '.'   # '->' accessor for pointer
+            return f'{generated}{accessor}{head.token().value()[1:]}(' \
+                   + ', '.join(map(lambda a: a.generate(dictionary, cfg, True),
+                                   args)) + ')' \
+                   + (';' if not inline else '')  # <---- return generated dot-expression representation
+
         if head.token().value() == 'def':
             AR_ASSERT(where, len(rest) == 2, 'Expression[generate]: def: expected name, value operands')
             name, value = rest
@@ -114,7 +126,71 @@ class Expression:
             cfg['DEFS'].append(f'auto {generated} = {value}')  # <------- add global variable definition
             return ''  # <- def-form is not supposed to generate a line of code, only append to the defs
 
-        cpp_function_name = dictionary.get(head.token().value())  # <--- get the function name from dict
+        if head.token().value() == 'hpp-base-dir':
+            AR_ASSERT(where, len(rest) == 1, 'Expression[generate]: hpp-base-dir: path string expected')
+            path = rest[0]
+            SE_ASSERT(path.token().position_formatted(),
+                      path.token().is_string(),
+                      'Expression[generate]: hpp-base-dir: the path to the headers have to be a String')
+            cfg['CXX_INCLUDE_DIRS'].append(path.token().value())  # <--- append path to CXX_INCLUDE_DIRS
+            return ''  # <----------------- hpp-base-dir form is not supposed to generate a line of code
+
+        if head.token().value() == 'lib-base-dir':
+            AR_ASSERT(where, len(rest) == 1, 'Expression[generate]: lib-base-dir: path string expected')
+            path = rest[0]
+            SE_ASSERT(path.token().position_formatted(),
+                      path.token().is_string(),
+                      'Expression[generate]: lib-base-dir: the path to the library have to be a String')
+            cfg['CXX_LIBRARY_DIRS'].append(path.token().value())  # <--- append path to CXX_LIBRARY_DIRS
+            return ''  # <----------------- lib-base-dir form is not supposed to generate a line of code
+
+        if head.token().value() == 'link':
+            AR_ASSERT(where, len(rest) == 1,  'Expression[generate]: link: a library name was expected')
+            name = rest[0]
+            IDENTIFIER_ASSERT(name,         'Expression[generate]: a library name should be Identifier')
+            cfg['LD_LINK_SRC_WITH'].append(name.token().value())  # <--- append name to LD_LINK_SRC_WITH
+            return ''  # <------------------------- link form is not supposed to generate a line of code
+
+        if head.token().value() == 'include':
+            AR_ASSERT(where, len(rest) == 1,  'Expression[generate]: include: header path was expected')
+            path = rest[0]
+            IDENTIFIER_ASSERT(path,          'Expression[generate]: a header path should be Identifier')
+            cfg['SOURCE_INCLUDING'].append(path.token().value())  # <--- append name to SOURCE_INCLUDING
+            return ''  # <---------------------- include form is not supposed to generate a line of code
+
+        if head.token().value() == 'new':
+            AR_ASSERT(where, len(rest) == 1,     'Expression[generate]: new: expected exactly one form')
+            definition = rest[0]
+            SE_ASSERT(where,
+                      isinstance(definition, Expression),
+                      'Expression[generate]: new: definition have to be dynamic object allocation form')
+            return f'new {definition.generate(dictionary, cfg, inline)}'  # <-- return a 'new' statement
+
+        if head.token().value() == 'let':
+            AR_ASSERT(where, len(rest) >= 1,    'Expression[generate]: let: at least one form expected')
+            bindings, *body = rest
+            items = bindings.children()
+            AR_ASSERT(where,
+                      len(items) % 2 == 0,
+                      'Expression[generate]: let: the bindings form is expected to have an even length')
+            lines = []  # <----------------------------------------------------- resulting lines of code
+            for name, value in (items[i:i + 2] for i in range(0, len(items), 2)):
+                IDENTIFIER_ASSERT(name,    'Expression[generate]: binding name should be an Identifier')
+                SE_ASSERT(where,
+                          True if isinstance(value, Expression) else not value.token().is_nil(),
+                          "Expression[generate]: let: binding right-hand-side could not be a nil value")
+                rhs = value.generate(dictionary, cfg,  False)  # <------- right-hand-side generated code
+                generated = name.generate({}, {}, True)  # <-------- get the generated C++ variable name
+                lhs = f'auto{"*" if rhs.startswith("new") else ""} {generated}'  # <- and left-hand-side
+                if rhs.startswith("new"):
+                    cfg['KNOWN_POINTERS'].append(generated)  # <------ append to the known pointers list
+                lines.append(f'{lhs} = {rhs}')  # <----- append generated variable definition expression
+            for each in body:
+                lines.append(each.generate(dictionary, cfg, False))  # <--- let this to be simple enough
+            return '({' + '\n'.join(lines) + '})' + (';' if not inline else '')  # <----generate a block
+
+        int_function_name = head.generate({}, {}, True)  # <-------- get the generated C++ function name
+        cpp_function_name = dictionary.get(int_function_name, int_function_name)  # <- C++ function name
 
         lines = [f'{cpp_function_name}(']  # <--- start with the function call: name and opening bracket
 
