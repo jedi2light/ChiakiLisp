@@ -3,16 +3,16 @@
 
 import re
 from typing import List
-from chiakilisp.models.token import Token  # Lexer needs Token      :*)
+from chiakilisp.models.token import Token  # Lexer needs Token           :*)
 
 
-ALPHABET = ['+', '-', '*', '/', '=', '<', '>', '?', '!', '.', '_', '&']
+ALPHABET = ['+', '-', '*', '/', '=', '<', '>', '?', '!', '.', '_', '&', ':']
 
 
 class Lexer:
 
     """
-    Lexer is the class that takes source code and produces a list of tokens
+    Lexer is the class that takes source code, and produces a list of tokens
     """
 
     _source: str
