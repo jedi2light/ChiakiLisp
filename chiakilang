@@ -117,6 +117,25 @@ def generate(source: str,
     for child in wood(source, infile_name):
         gss.append(child.generate(DICTIONARY, cfg, False))
 
+    gss = list(filter(lambda x: x, gss))  # <--- clean up!
+
+    CXX_FLAGS = ' '.join(map(lambda x: f'-I{x}',
+                             cfg['CXX_INCLUDE_DIRS']))
+
+    LD_FLAGS = ' '.join(map(lambda x: f'-L{x}',
+                            cfg['CXX_LIBRARY_DIRS']))
+
+    LD_FLAGS += LD_FLAGS or ' '
+    LD_FLAGS += ' '.join(map(lambda x: f'-l{x}',
+                             cfg['LD_LINK_SRC_WITH']))
+
+    with open('generated.env',
+              'w',
+              encoding='utf-8') as fwriter:
+        fwriter.write(
+            f'export CXX_FLAGS="{CXX_FLAGS}"'
+            f'\nexport LD_FLAGS="{LD_FLAGS}"\n')
+
     with open(outfile_name,
               'w',
               encoding='utf-8') as fwriter:
