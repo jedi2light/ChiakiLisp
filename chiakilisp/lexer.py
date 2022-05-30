@@ -237,7 +237,7 @@ class Lexer:
 
         """Returns whether current symbol is a number, valid number is from 0 to 9"""
 
-        return re.match(r'[0-9]', self._current_symbol()) is not None
+        return re.match(r'\d', self._current_symbol()) is not None
 
     def _current_symbol_is_letter(self) -> bool:
 
