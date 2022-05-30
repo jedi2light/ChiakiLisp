@@ -64,7 +64,7 @@ class Value:
             if name in storage:
                 storage[name] += 1  # <- if there is such a global variable, increment its referencing count
 
-    def generate(self, dictionary: dict, cfg: dict, inline: bool):
+    def generate(self, dictionary: dict, cfg: dict, inline: bool):         # pylint: disable=unused-argument
 
         """Generate C++ representation of the single ChiakiLisp value"""
 
