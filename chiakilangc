@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+. generated.env  # <------ load for CXX and LD FLAGS
+
 SOURCE=$1
 
 CXX=${CXX:-clang++}
