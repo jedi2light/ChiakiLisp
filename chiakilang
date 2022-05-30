@@ -107,7 +107,12 @@ def generate(source: str,
     """
 
     gss = []
-    cfg = {'DEFS': {}}
+    cfg = {'DEFS': [],
+           'KNOWN_POINTERS': [],
+           'CXX_INCLUDE_DIRS': [],
+           'CXX_LIBRARY_DIRS': [],
+           'LD_LINK_SRC_WITH': [],
+           'SOURCE_INCLUDING': []}
 
     for child in wood(source, infile_name):
         gss.append(child.generate(DICTIONARY, cfg, False))
