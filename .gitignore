@@ -4,6 +4,7 @@ __pycache__
 /chiakilisp.egg-info/
 /generated
 /generated.cpp
+/generated.env
 /runtime/Makefile
 /runtime/.qtc_clangd
 /runtime/.qmake.stash
