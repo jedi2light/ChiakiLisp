@@ -1,7 +1,6 @@
 # pylint: disable=line-too-long
 # pylint: disable=missing-module-docstring
 
-from chiakilisp.models.token import Token     # :)
 from chiakilisp.utils import get_assertion_closure
 
 
