@@ -410,7 +410,14 @@ class Expression:
             AR_ASSERT(where, len(tail) == 1, 'Expression[execute]: import: expected name of the module to import')
             name = tail[0]
             IDENTIFIER_ASSERT(name,      'Expression[execute]: import: Python 3 module name should be Identifier')
-            environ[name.token().value()] = __import__(name.token().value())  # <- update env with a module object
+            name = name.token().value()
+            parts = name.split('.')  # <----------------- split the name of importable module by the dot-character
+            unqualified = parts[-1]  # <----------------- store the unqualified name of importable Python 3 module
+            identifiers = iter(parts[1:])  # <----------------- make it possible to iterate over parts with next()
+            module = __import__(name)  # <--------------------------- import Python 3 module by its qualified name
+            while module.__name__.split('.')[-1] != unqualified:
+                module = getattr(module, next(identifiers), None)   # <--- while not matching, go deep into module
+            environ[unqualified] = module  # <------------------------------------------ update global environment
             return None  # <--------------------------------------------------------------------------- return nil
 
         if head.token().value() == 'require':
