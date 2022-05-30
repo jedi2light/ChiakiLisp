@@ -1,5 +1,14 @@
 # ChiakiLisp - LISPy syntax for Python 3
 
+## Qt5 Demo
+
+![alt Qt 5 Demo App](demos/qt5-demo-app.png)
+
+## Demo Source
+
+1. [Evaluation Mode (Python 3 API)](examples/eval-mode/qt5-simple-app-window.cl)
+2. [Code Generation' Mode (C++ API)](examples/cxx-only/qt5-simple-app-window.cl)
+
 ## Description
 
 [ChiakiLisp](https://chiakilisp.jedi2light.moe) - yet another LISP syntax over the Python 3 core
