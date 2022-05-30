@@ -225,6 +225,9 @@ if __name__ == '__main__':
                 generate(r.read(), file_path.split('/')[-1], 'generated.cpp')  # <------- produce generated.cpp
                 sys.exit(0)  # <------------------------------ exit chiakilang after successful code-generation
 
+            ENVIRONMENT['argc'] = len(sys.argv) - 1  # <------------------ do not count "./chiakilang" argument
+            ENVIRONMENT['argv'] = sys.argv[1:]  # <--------------------- skip the first "./chiakilang" argument
+
             execute(r.read(), file_path.split('/')[-1],  silent=True)  # <-- set silent to avoid extra printing
     else:
         print('Press Ctrl+C to cancel input, press Ctrl+D to exit REPL, press Tab to see all global functions')
