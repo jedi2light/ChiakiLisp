@@ -138,3 +138,4 @@ class Value:
 
 
 Nil = Value(Token(Token.Nil, 'nil', ()))  # predefined Nil value; (useful for empty defn, fn and let bodies)
+Zero = Value(Token(Token.Number, '0', ()))  # predefined Zero value, (useful for empty body of the let/defn)
