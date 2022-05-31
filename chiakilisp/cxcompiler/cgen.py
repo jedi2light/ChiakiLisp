@@ -43,12 +43,25 @@ class CPPCodeGenerator:
             '#include <chiakilisp.hpp>',  # <---- runtime
             *self._process_includes(config),   # includes
             *config.get('DEFS'),  # <--- global variables
-            'int main(int argc, char* argv[])',  # main()
+            *config.get('DEFUNCTIONS'),  # <--- functions
+            'int main(int argc, char* ARGV[])',  # main()
             '{',  # <------- block starting marker in CPP
+            *self._argv_definition(),  # <-- ARGV -> argv
             *body,  # <----------- include generated code
             f'return {last}',  # <-- return last expr res
             '}\n'  # <----- block finishing marker in CPP
         ])
+
+    @staticmethod
+    def _argv_definition() -> list:
+
+        """Enables cmdline arguments access via (get)"""
+
+        return [
+            'chiakilisp::vector < char * > argv;'
+            'for (int i = 0; i < argc; ++i)'
+            'argv.push_back(ARGV[i]);'
+        ]
 
     @staticmethod
     def _process_includes(config: dict) -> list:
