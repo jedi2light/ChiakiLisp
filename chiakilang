@@ -109,6 +109,7 @@ def generate(source: str,
 
     gss = []
     cfg = {'DEFS': [],
+           'DEFUNCTIONS': [],
            'KNOWN_POINTERS': [],
            'CXX_INCLUDE_DIRS': [],
            'CXX_LIBRARY_DIRS': [],
