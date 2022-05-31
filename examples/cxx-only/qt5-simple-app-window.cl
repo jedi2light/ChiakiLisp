@@ -27,8 +27,14 @@
 ;; way object member access should be expressed in a C++ code
 ;; so you do not need to write '->' instead of '.' explicilty
 
+;; we implicitly cast main()' argv char* array to the vector,
+;; (eval-mode compatibility; allows to use (get) to get item)
+
+;; taking that into account, if you need to access argv, then
+;; reference to the 'ARGV' instead of 'argv'
+
 ;; the last expression result of (let) block will be returned
-(let (application (QApplication argc argv)
+(let (application (QApplication argc ARGV)
       window      (new (QWidget))
       layout      (new (QVBoxLayout window))
       title       (new (QLabel "ChiakiLisp"))
