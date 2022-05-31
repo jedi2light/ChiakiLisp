@@ -114,6 +114,37 @@ class Expression:
                                    args)) + ')' \
                    + (';' if not inline else '')  # <---- return generated dot-expression representation
 
+        if head.token().value() == 'defn':
+            AR_ASSERT(where, len(rest) >= 2, 'Expression[generate]: defn: expected at least 2 operands')
+            name, parameters, *body = rest
+            IDENTIFIER_ASSERT(name,    'Expression[generate]: defn: function name should be Identifier')
+            returns = name.property() or 'auto'  # <- if user have specified property, take into account
+            built_name = name.generate(dictionary, cfg, True)  # <----------- generate C++ function name
+            for each in parameters.children():
+                IDENTIFIER_ASSERT(each,  'Expression[generate]: each parameter should be an Identifier')
+            built_parameters = '(' + \
+                               ', '.join(map(lambda p: f'{p.property() or "auto"} '
+                                                       f'{p.generate(dictionary, cfg, True)}',  # pm def
+                                             parameters.children())) \
+                               + ')'  # <---------------------------------- generate function parameters
+            if not body:
+                body = [Zero]
+            built_body = f'return ({{{" ".join([e.generate(dictionary, cfg, False) for e in body])}}});'
+            cfg['DEFUNCTIONS'].append(f'{returns} {built_name} {built_parameters} {{  {built_body}  }}')
+            return ''  # <--- defn function is not supposed to return generated code, only update config
+
+        if head.token().value() == 'if':
+            AR_ASSERT(where, len(rest) == 3,  'Expression[generate]: if: expected exactly 3 forms here')
+            cond, true, false = rest
+            return f'({{{cond.generate(dictionary, cfg, True)} ' \
+                   f'? {true.generate(dictionary, cfg, True)}' \
+                   f': {false.generate(dictionary, cfg, False)}}})' + ('' if inline else ';')  # ternary
+
+        if head.token().value() == '=':
+            AR_ASSERT(where, len(rest) == 2,   'Expression[generate]: =: expected exactly 2 forms here')
+            lhs, rhs = rest
+            return f'{lhs.generate(dictionary, cfg, inline)} == {rhs.generate(dictionary, cfg, inline)}'
+
         if head.token().value() == 'def':
             AR_ASSERT(where, len(rest) == 2, 'Expression[generate]: def: expected name, value operands')
             name, value = rest
