@@ -7,6 +7,9 @@ DICTIONARY = {
     'mod': 'chiakilisp::mod',
     'identity': 'chiakilisp::identity',
     'listy': 'chiakilisp::vec', 'dicty': 'chiakilisp::map',
+    'get': 'chiakilisp::get',
+    'int': 'chiakilisp::_int',
+    'str': 'chiakilisp::_str',
     'prn': 'chiakilisp::println',
     'print': 'chiakilisp::println', 'println': 'chiakilisp::println',
 }
