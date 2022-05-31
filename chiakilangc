@@ -1,26 +1,24 @@
 #!/usr/bin/env bash
 
-. generated.env  # <------ load for CXX and LD FLAGS
-
 SOURCE=$1
-
-CXX=${CXX:-clang++}
 
 if [ -z $SOURCE ]; then echo 'No source'; exit 1; fi
 
-echo "$0: [runtime::build]"
+export CXX=${CXX:-clang++}
 
-# shellcheck disable=SC2164
-cd ./runtime && make && ln -sf libChiakiLispRuntime.so libchiakilisp.so && cd -
+if [ "$REBUILD_RUNTIME" == "1" ]; then
+  ./build-cxx-runtime.sh
+fi
 
 SRC_FILENAME="./generated.cpp"
 BIN_FILENAME="./generated"
 
-export LD_LIBRARY_PATH+=":runtime"
-
-echo "$0: [source::compile-and-then-execute]"
+echo "Chiakilisp Compiler Script"
+echo "    => Source File Name: $SOURCE"
+echo "    => Backend: $CXX"
+echo "    => Arguments To Executable:" ${@:2}
 
 CHIAKILISP__COMPILER_MODE=1 ./chiakilang $SOURCE && clang-format -i generated.cpp \
   && . generated.env \
   && $CXX -std=c++20 -pipe $CXX_FLAGS -Iruntime \
-          -Lruntime $LD_FLAGS -lchiakilisp $SRC_FILENAME -o $BIN_FILENAME && $BIN_FILENAME
+          -Lruntime $LD_FLAGS -lchiakilisp $SRC_FILENAME -o $BIN_FILENAME && $BIN_FILENAME ${@:2}
