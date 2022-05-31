@@ -13,6 +13,9 @@ upload: lint build
 install: lint build
 	pip install --force-reinstall dist/chiakilisp-*.whl  # force reinstall pkg
 
+cxx-runtime: runtime/
+	./build-cxx-runtime.sh
+
 build-upload-install: lint build
 	python -m twine upload --repository pypi --verbose ./dist/chiakilisp-*.whl
 	pip install --force-reinstall dist/chiakilisp-*.whl  # force reinstall pkg
