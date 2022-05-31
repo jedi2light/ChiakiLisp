@@ -1,14 +1,8 @@
 /.idea
 __pycache__
 /dist
-/chiakilisp.egg-info/
 /generated
 /generated.cpp
 /generated.env
-/runtime/Makefile
-/runtime/.qtc_clangd
-/runtime/.qmake.stash
-/runtime/chiakilisp.o
-/runtime/libchiakilisp.so*
-/runtime/libChiakiLispRuntime.so*
-/runtime/ChiakiLispRuntime.pro.user
+/runtime/build
+/chiakilisp.egg-info/
