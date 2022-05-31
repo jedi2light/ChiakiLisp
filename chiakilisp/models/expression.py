@@ -186,6 +186,8 @@ class Expression:
                 if rhs.startswith("new"):
                     cfg['KNOWN_POINTERS'].append(generated)  # <------ append to the known pointers list
                 lines.append(f'{lhs} = {rhs}')  # <----- append generated variable definition expression
+            if not body:
+                body = [Zero]
             for each in body:
                 lines.append(each.generate(dictionary, cfg, False))  # <--- let this to be simple enough
             return '({' + '\n'.join(lines) + '})' + (';' if not inline else '')  # <----generate a block
