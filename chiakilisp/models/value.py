@@ -59,9 +59,13 @@ class Value:
 
     def set_property(self, _property: str) -> None:
 
+        """Allows to set a value property (i.e.: type)"""
+
         self._property = _property
 
     def property(self) -> str:
+
+        """Returns self._property"""
 
         return self._property
 
