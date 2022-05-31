@@ -33,6 +33,7 @@ class Value:
     """
 
     _token: Token
+    _property: str = ''
 
     def __init__(self, token: Token) -> None:
 
@@ -55,6 +56,14 @@ class Value:
         """Returns related token"""
 
         return self._token
+
+    def set_property(self, _property: str) -> None:
+
+        self._property = _property
+
+    def property(self) -> str:
+
+        return self._property
 
     def lint(self, _: dict, rule: str, storage: dict) -> None:
 

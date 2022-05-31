@@ -100,8 +100,8 @@ def read(tokens: List[Token]) -> Children:
         return []  # allow empty expressions, useful for defn
 
     children: Children = []
-
     idx: int = 0
+    _property: str = ''
     while idx < len(tokens):
         current_token = tokens[idx]
         if current_token.type() == Token.OpeningBracket:  # if read() function has encountered an expression start
@@ -110,7 +110,13 @@ def read(tokens: List[Token]) -> Children:
             children.append(Expression(read(tokens[left_boundary:right_boundary])))  # an expression children list
             idx = right_boundary + 1  # and then let the read() function to advance to the next one token instance
         else:
+            if current_token.is_identifier() and current_token.value().startswith('^'):   # when property detected
+                _property = current_token.value()[1:]  # <--- get the name of the property by removing leading '^'
+                assert _property,  'Parser[parse]: property was intended to be assigned, but it\'s value\'s empty'
+                idx += 1  # <------------------------------------------------------------------- move pointer next
+                continue  # <--------------------------------------------------------- and continue parsing tokens
             children.append(Value(current_token))  # in case current token is a regular one, treat it as the Value
+            children[-1].set_property(_property)  # <-------------------------------------- set the value property
             idx += 1  # and let the read() function to advance to the next one token by incrementing an index to 1
 
     return children  # in the end, return list of Expression class children (Values or child Expression instances)
