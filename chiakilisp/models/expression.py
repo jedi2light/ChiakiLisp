@@ -127,8 +127,6 @@ class Expression:
                                                        f'{p.generate(dictionary, cfg, True)}',  # pm def
                                              parameters.children())) \
                                + ')'  # <---------------------------------- generate function parameters
-            if not body:
-                body = [Zero]
             built_body = f'return ({{{" ".join([e.generate(dictionary, cfg, False) for e in body])}}});'
             cfg['DEFUNCTIONS'].append(f'{returns} {built_name} {built_parameters} {{  {built_body}  }}')
             return ''  # <--- defn function is not supposed to return generated code, only update config
