@@ -88,9 +88,10 @@ class Value:
             if token.type() == Token.Identifier:
                 # A bit of demangle processing here for LISPy names
                 representation = token.value()\
-                    .replace('-', '_DASH_')\
                     .replace('?', '_QUESTION_MARK')\
                     .replace('!', '_EXCLAMATION_MARK')
+                if not token.value() == '-':
+                    representation = representation.replace('-', '_DASH_')  # <--- replace '-' with '_DASH_'
                 if not token.value() == '/' or not token.value().endswith('/'):  # TODO: !make this smarter!
                     representation = representation.replace('/', '::')  # <-- replace LISP accessor with C++
             else:
