@@ -170,6 +170,7 @@ class Expression:
             AR_ASSERT(where, len(rest) >= 1,    'Expression[generate]: let: at least one form expected')
             bindings, *body = rest
             items = bindings.children()
+            AR_ASSERT(where, items,  'Expression[generate]: let: you should provide at least 1 binding')
             AR_ASSERT(where,
                       len(items) % 2 == 0,
                       'Expression[generate]: let: the bindings form is expected to have an even length')
