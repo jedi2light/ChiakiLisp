@@ -33,13 +33,14 @@ class Value:
     """
 
     _token: Token
-    _property: str = ''
+    _properties: dict
 
     def __init__(self, token: Token) -> None:
 
         """Initialize Value instance"""
 
         self._token = token
+        self._properties = {}
 
     def dump(self, indent: int) -> None:
 
@@ -57,17 +58,28 @@ class Value:
 
         return self._token
 
-    def set_property(self, _property: str) -> None:
+    def set_properties(self, _properties: list) -> None:
 
         """Allows to set a value property (i.e.: type)"""
 
-        self._property = _property
+        self._properties = {
+            key: value for key, value in map(
+                lambda prop: prop.split(':'), _properties
+            )
+        }
 
-    def property(self) -> str:
+    def property(self,
+                 name: str, default=None) -> str:
 
-        """Returns self._property"""
+        """Returns the property by its own name"""
 
-        return self._property
+        return self._properties.get(name, default)
+
+    def properties(self) -> dict:
+
+        """Returns all the value props"""
+
+        return self._properties
 
     def lint(self, _: dict, rule: str, storage: dict) -> None:
 
