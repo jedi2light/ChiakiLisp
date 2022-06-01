@@ -139,7 +139,7 @@ float mod(T v) {
 
 template<typename T, typename... Args>
 float mod(T first, Args... args) {
-    return (int)first % (int)mod(args...);  // requires explicit float' cast
+    return (int)first % (int)mod(args...);  /* explicitly cast it to int. */
 }
 
 // 'int' function implementations
