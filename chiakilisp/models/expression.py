@@ -228,6 +228,34 @@ class Expression:
                 lines.append(each.generate(dictionary, cfg, False))  # <--- let this to be simple enough
             return '({' + '\n'.join(lines) + '})' + (';' if not inline else '')  # <----generate a block
 
+        if head.token().value() == '->':
+            if len(rest) == 1:
+                return rest[-1].generate(dictionary, cfg, inline)  # <---- if only one form, generate it
+
+            target, *tail = rest  # <----------------------------- initialize target and _rest variables
+            while len(rest) > 1:  # <----- do not leave loop while there is at least one element in tail
+                _ = tail[0]
+                if isinstance(_, Value):
+                    tail[0] = Expression([_])  # <------- cast each argument from the tail to Expression
+                rest[0].children().insert(1, target)  # <---------------------------- insert an argument
+                rest = [tail[0]] + tail[1:]  # <------------------------------------------ override tail
+                target, *tail = rest  # <----------------- do the same we did before entering while-loop
+
+        if head.token().value() == '->>':
+            if len(rest) == 1:
+                return rest[-1].generate(dictionary, cfg, inline)  # <---- if only one form, generate it
+
+            target, *tail = rest  # <----------------------------- initialize target and _rest variables
+            while len(rest) > 1:  # <----- do not leave loop while there is at least one element in tail
+                _ = tail[0]
+                if isinstance(_, Value):
+                    tail[0] = Expression([_])  # <------- cast each argument from the tail to Expression
+                tail[0].children().append(target)  # <----------------------- append argument to the end
+                rest = [tail[0]] + tail[1:]  # <------------------------------------------ override tail
+                target, *tail = rest  # <----------------- do the same we did before entering while-loop
+
+            return target.generate(dictionary, cfg, inline)  # <------------ return generated expression
+
         int_function_name = head.generate({}, {}, True)  # <-------- get the generated C++ function name
         cpp_function_name = dictionary.get(int_function_name, int_function_name)  # <- C++ function name
 
