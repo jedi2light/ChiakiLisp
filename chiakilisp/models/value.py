@@ -98,8 +98,13 @@ class Value:
             representation = f'"{token.value()}"'
         if token.type() in [Token.Nil, Token.Number, Token.Boolean, Token.Identifier]:  # return raw val-str
             if token.type() == Token.Identifier:
+                # Try to resolve a C++ name from a dictionary first
+                raw = token.value()
+                found = dictionary.get(raw)
+                if found:
+                    return found
                 # A bit of demangle processing here for LISPy names
-                representation = token.value()\
+                representation = raw\
                     .replace('?', '_QUESTION_MARK')\
                     .replace('!', '_EXCLAMATION_MARK')
                 if not token.value() == '-':
