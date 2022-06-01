@@ -480,6 +480,8 @@ class Expression:
                 body = [Nil]  # <-- let a function be defined with empty body, in such a case, it will return None
             SE_ASSERT(where, isinstance(parameters, Expression),   'Expression[execute]: defn: params not a form')
             IDENTIFIER_ASSERT(name,               'Expression[execute]: defn: function name should be Identifier')
+            expected_ret_type = TYPES.get(name.property('t'), object)  # <---- store function expected return type
+            expected_ret_tname = expected_ret_type.__name__  # <-- store the name of expected function return type
             names = []
             types = []
             children = parameters.children()
@@ -538,7 +540,12 @@ class Expression:
                 defn.update(environ)  # <------- update (not bootstrap) fn closure environment with the global one
                 defn.update(dict(zip(names, c_arguments)))  # <--------------- update defn closure with parameters
                 defn.update({'kwargs': kwargs})  # <------ currently, there is no way to pass them from ChiakiLisp
-                return [child.execute(defn, False) for child in body][-1]  # <--=== return last calculation result
+                retval = [child.execute(defn, False) for child in body][-1]    # store the last calculation result
+                actual_ret_tname = getattr(retval, '__name__', retval.__class__.__name__)
+                TE_ASSERT(where,
+                          isinstance(retval, expected_ret_type),
+                          f'{name.token().value()} have to return: {expected_ret_tname}, not: {actual_ret_tname}')
+                return retval  # <--------------------------------------------- return the last calculation result
 
             handle.x__custom_name__x = name.token().value()  # assign custom function name to display it by pprint
             environ.update({name.token().value(): handle})  # in case of 'defn', we also need to update global env
