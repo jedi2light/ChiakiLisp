@@ -60,13 +60,9 @@ class Value:
 
     def set_properties(self, _properties: list) -> None:
 
-        """Allows to set a value property (i.e.: type)"""
+        """Allows to set a value property (i.e.: (defn ^t:int () 1))"""
 
-        self._properties = {
-            key: value for key, value in map(
-                lambda prop: prop.split(':'), _properties
-            )
-        }
+        self._properties = dict(map(lambda prop: prop.split(':'), _properties))
 
     def property(self,
                  name: str, default=None) -> str:
