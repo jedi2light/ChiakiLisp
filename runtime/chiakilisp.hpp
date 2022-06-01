@@ -3,6 +3,8 @@
 #include <iterator>
 #include <type_traits>
 #include <typeinfo>
+#include <functional>
+#include <numeric>
 
 #define nil NULL;
 
@@ -51,6 +53,40 @@ std::string _str(vector<T> first);
 template<typename... Args>
 std::string _str(vector<typename std::common_type<Args...>::type> first,
                  Args... args);
+
+// map function implementation
+
+template<typename Predicate, typename T>
+vector<T> map(const Predicate& callback, const vector<T>& sourcev) {
+    vector<T> out;
+    out.resize(sourcev.size());
+    std::transform (begin(sourcev), end(sourcev), begin(out), callback);
+    return out;
+}
+
+// filter function implementation
+
+template<typename Predicate, typename T>
+vector<T> filter(const Predicate& callback, const vector<T>& sourcev) {
+    vector<T> out;
+    std::remove_copy_if(begin(sourcev), end(sourcev),
+                        std::back_inserter(out), std::not_fn(callback));
+    return out;
+}
+
+// reduce function implementation
+
+template<typename Predicate, typename T>
+auto reduce(const Predicate& callback, const vector<T>& sourcev) {
+    auto init = sourcev[0];  /* TODO: test what happens if no elements */
+    auto _begin_sourcev = std::next(begin(sourcev));
+    return std::accumulate(_begin_sourcev, end(sourcev), init, callback);
+}
+
+template<typename Predicate, typename T>
+auto reduce(const Predicate& callback, T init, const vector<T>& sourcev){
+    return std::accumulate(begin(sourcev), end(sourcev), init, callback);
+}
 
 // custom vector<T> implementation
 
