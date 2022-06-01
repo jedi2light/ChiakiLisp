@@ -14,15 +14,10 @@
 ;; to run this example in cxx-mode run:
 ;; $ ./chiakilangc examples/factorial.cl
 
-;; in eval-mode '^float' property wil be ignored, but in
-;; cxx-mode we can assign function-returning-type. Also,
-;; we can assign a parameter type the same way, although
-;; it's not such a requirement (at least in _this_ case)
-
-(defn ^float fac (n)
+(defn ^t:int fac (n)
  (if (= n 1)
   n
   (* n (fac (- n 1)))))
 
 (prn (fac 4))
-(prn (fac 164)) ;; in eval-mode, it's max possible value
+(prn (fac 20)) ;; max possible value for both C++/Python
