@@ -391,6 +391,7 @@ class Expression:
                 body = [Nil]  # <-- let a function be defined with empty body, in such a case, it will return None
             SE_ASSERT(where, isinstance(parameters, Expression), 'Expression[execute]: fn: parameters not a form')
             names = []
+            types = []
             children = parameters.children()
             ampersand_found = tuple(filter(lambda pr: (isinstance(pr[1], Value) and pr[1].token().value() == '&'),
                                            enumerate(children)))  # <- find a tuple, where 0 - pos, 1 - an operand
@@ -398,6 +399,7 @@ class Expression:
             positional_parameters = children[:ampersand_position] if ampersand_found else children  # <-- before &
             for parameter in positional_parameters:
                 IDENTIFIER_ASSERT(parameter,            'Expression[execute]: fn: parameter should be Identifier')
+                types.append(TYPES.get(parameter.property('t'), object))  # <-- append parameter type to type list
                 names.append(parameter.token().value())  # <------- append name of the parameter to the names list
             can_take_extras = False  # <-------------------- by default, function can not take any extra arguments
             if ampersand_found:
@@ -410,6 +412,7 @@ class Expression:
                 operand = children[-1]
                 IDENTIFIER_ASSERT(operand, 'Expression[execute]: fn: extra-args-tuple alias should be Identifier')
                 can_take_extras = True  # <- now we set this to true, as the function can now take extra arguments
+                types.append(tuple)  # <---------------------- append extra args param type to all parameter types
                 names.append(operand.token().value())  # <---- append extra args param name to all parameter names
 
             def handle(*c_arguments, **kwargs):
@@ -433,6 +436,13 @@ class Expression:
                         c_arguments = c_arguments[:arity] + (e_arguments,)  # <- can't be rewritten in a short way
                     else:
                         c_arguments = c_arguments + (tuple(),)  # <- if extras are possible but missing, set to ()
+
+                for arg_value, arg_name, arg_type in zip(c_arguments, names, types):
+                    arg_tname = arg_type.__name__
+                    arg_value_tname = getattr(arg_value, '__name__', arg_value.__class__.__name__)
+                    TE_ASSERT(where,
+                              isinstance(arg_value, arg_type),
+                              f'<anonymous function..>: {arg_name}: {arg_tname} expected, got: {arg_value_tname}')
 
                 fn = {}
                 fn.update(environ)  # <--------- update (not bootstrap) fn closure environment with the global one
@@ -471,6 +481,7 @@ class Expression:
             SE_ASSERT(where, isinstance(parameters, Expression),   'Expression[execute]: defn: params not a form')
             IDENTIFIER_ASSERT(name,               'Expression[execute]: defn: function name should be Identifier')
             names = []
+            types = []
             children = parameters.children()
             ampersand_found = tuple(filter(lambda pr: (isinstance(pr[1], Value) and pr[1].token().value() == '&'),
                                            enumerate(children)))  # <- find a tuple, where 0 - pos, 1 - an operand
@@ -478,7 +489,8 @@ class Expression:
             positional_parameters = children[:ampersand_position] if ampersand_found else children  # <-- before &
             for parameter in positional_parameters:
                 IDENTIFIER_ASSERT(parameter,          'Expression[execute]: defn: parameter should be Identifier')
-                names.append(parameter.token().value())
+                types.append(TYPES.get(parameter.property('t'), object))  # <-- append parameter type to type list
+                names.append(parameter.token().value())  # <------- append name of the parameter to the names list
             can_take_extras = False  # <-------------------- by default, function can not take any extra arguments
             if ampersand_found:
                 SE_ASSERT(where,
@@ -490,6 +502,7 @@ class Expression:
                 operand = children[-1]
                 IDENTIFIER_ASSERT(operand, 'Expression[execute]: defn: extra-args-list name should be Identifier')
                 can_take_extras = True  # <- now we set this to true, as the function can now take extra arguments
+                types.append(tuple)  # <---------------------- append extra args param type to all parameter types
                 names.append(operand.token().value())  # <---- append extra args param name to all parameter names
 
             def handle(*c_arguments, **kwargs):  # pylint: disable=E0102  # <- handle object couldn't be redefined
@@ -513,6 +526,13 @@ class Expression:
                         c_arguments = c_arguments[:arity] + (e_arguments,)  # <- can't be rewritten in a short way
                     else:
                         c_arguments = c_arguments + (tuple(),)  # <- if extras are possible but missing, set to ()
+
+                for arg_value, arg_name, arg_type in zip(c_arguments, names, types):
+                    arg_tname = arg_type.__name__
+                    arg_value_tname = getattr(arg_value, '__name__', arg_value.__class__.__name__)
+                    TE_ASSERT(where,
+                              isinstance(arg_value, arg_type),
+                              f'{name.token().value()}: {arg_name}: {arg_tname} expected, got: {arg_value_tname}')
 
                 defn = {}
                 defn.update(environ)  # <------- update (not bootstrap) fn closure environment with the global one
