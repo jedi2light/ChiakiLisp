@@ -125,12 +125,12 @@ class Expression:
             AR_ASSERT(where, len(rest) >= 2, 'Expression[generate]: defn: expected at least 2 operands')
             name, parameters, *body = rest
             IDENTIFIER_ASSERT(name,    'Expression[generate]: defn: function name should be Identifier')
-            returns = name.property() or 'auto'  # <- if user have specified property, take into account
+            returns = CXX_TYPES.get(name.property("t"), "auto")  # <- take into account func return type
             built_name = name.generate(dictionary, cfg, True)  # <----------- generate C++ function name
             for each in parameters.children():
                 IDENTIFIER_ASSERT(each,  'Expression[generate]: each parameter should be an Identifier')
             built_parameters = '(' + \
-                               ', '.join(map(lambda p: f'{p.property() or "auto"} '
+                               ', '.join(map(lambda p: f'{CXX_TYPES.get(p.property("t"), "auto")} '
                                                        f'{p.generate(dictionary, cfg, True)}',  # pm def
                                              parameters.children())) \
                                + ')'  # <---------------------------------- generate function parameters
