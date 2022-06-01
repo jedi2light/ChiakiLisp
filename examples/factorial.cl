@@ -1,4 +1,4 @@
-;; this program prints recursivelly calculated factorial
+;;; this program prints recursively calculated factorial
 
 ;; you can run this example via both eval, and cxx modes
 
