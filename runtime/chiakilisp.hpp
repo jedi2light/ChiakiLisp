@@ -48,7 +48,7 @@ std::string _str(std::string first, Args... args);
 // 'str' function prototypes for custom vector<T>
 
 template<typename T>
-std::string _str(vector<T> first);
+std::string _str(vector<T> v);
 
 template<typename... Args>
 std::string _str(vector<typename std::common_type<Args...>::type> first,

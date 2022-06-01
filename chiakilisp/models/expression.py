@@ -264,7 +264,7 @@ class Expression:
         arguments = []  # <------------------ a list holding all the generated "arguments" to a function
 
         for each in rest:
-            arguments.append(each.generate(dictionary, {}, True))  # <----- populate a list of arguments
+            arguments.append(each.generate(dictionary, cfg, True))  # <---- populate a list of arguments
 
         lines.append(', '.join(arguments))  # <--- join all the function "arguments" by a coma character
 
