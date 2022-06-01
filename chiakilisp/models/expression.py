@@ -24,6 +24,13 @@ NE_ASSERT = get_assertion_closure(NameError)  # <------ raises a NameError
 AR_ASSERT = get_assertion_closure(ArityError)  # <--- raises an ArityError
 SE_ASSERT = get_assertion_closure(SyntaxError)  # <-- raises a SyntaxError
 RE_ASSERT = get_assertion_closure(RuntimeError)  # <-- raises RuntimeError
+TE_ASSERT = get_assertion_closure(TypeError)  # <-------- raises TypeError
+
+TYPES = {'int': int, 'float': float,
+         'str': str,
+         'list': list, 'tuple': tuple, 'dict': dict, 'set': set}
+
+CXX_TYPES = {'int': 'long', 'float': 'float', 'str': 'std::string'}
 
 
 def IDENTIFIER_ASSERT(value: Value, message: str) -> None:
