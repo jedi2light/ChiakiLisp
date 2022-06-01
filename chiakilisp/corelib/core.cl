@@ -3,6 +3,8 @@
 (import chiakilisp.lexer)
 (import chiakilisp.parser)
 (import chiakilisp.runtime)
+;; be able to reference already imported 'functools/reduce' function
+(def reduce functools/reduce)
 ;; set of general purpose functions like (identity ...) or something
 (defn identity (x)
  x)
