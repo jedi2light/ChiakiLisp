@@ -256,8 +256,7 @@ class Expression:
 
             return target.generate(dictionary, cfg, inline)  # <------------ return generated expression
 
-        int_function_name = head.generate({}, {}, True)  # <-------- get the generated C++ function name
-        cpp_function_name = dictionary.get(int_function_name, int_function_name)  # <- C++ function name
+        cpp_function_name = head.generate(dictionary, cfg, True)  # <--- get generated C++ function name
 
         lines = [f'{cpp_function_name}(']  # <--- start with the function call: name and opening bracket
 
