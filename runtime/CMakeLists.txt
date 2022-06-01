@@ -5,6 +5,8 @@ project(chiakilisp VERSION 1.0.0
 
 add_library(chiakilisp SHARED chiakilisp.cpp)
 
+set_property(TARGET chiakilisp PROPERTY CXX_STANDARD 20)
+
 set_target_properties(chiakilisp PROPERTIES
                                  PUBLIC_HEADER chiakilisp.hpp)
 
