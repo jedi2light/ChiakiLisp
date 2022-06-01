@@ -421,14 +421,14 @@ class Expression:
 
                 arity = len(names)
                 if can_take_extras:
-                    arity = arity - 1  # <------ because the last parameter is not actually a required one
+                    arity = arity - 1  # <-------- because the last parameter is not actually a required one
                     AR_ASSERT(where,
                               len(c_arguments) >= arity,
-                              f'<anonymous function>: wrong arity, expected at least {arity} argument(s)')
+                              f'<anonymous function..>: wrong arity, expected at least {arity} argument(s)')
                 else:
                     AR_ASSERT(where,
                               len(c_arguments) == arity,
-                              f'<anonymous function>: wrong arity, expected exactly {arity} argument(s).')
+                              f'<anonymous function..>: wrong arity, expected exactly {arity} argument(s).')
 
                 if can_take_extras:
                     if len(c_arguments) > arity:
