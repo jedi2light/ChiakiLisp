@@ -4,8 +4,13 @@
 
 # sudo is not required in Termux; its CMAKE_INSTALL_PREFIX is a bit different
 
+# on MacOS we only allowed to write to /usr/local/ and it's fine, as it works
+
 if [ -d /data/data/com.termux/files/ ]; then
   PREF=/data/data/com.termux/files/usr
+elif [ "$(uname)" == "Darwin" ]; then
+  PREF=/usr/local
+  SUDO=sudo
 else
   PREF=/usr
   SUDO=sudo
