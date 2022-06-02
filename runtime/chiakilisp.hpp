@@ -1,10 +1,10 @@
-#include <iostream>
 #include <vector>
+#include <numeric>
 #include <iterator>
-#include <type_traits>
+#include <iostream>
 #include <typeinfo>
 #include <functional>
-#include <numeric>
+#include <type_traits>
 
 #define nil NULL;
 
@@ -24,6 +24,13 @@ std::string _str(int v);
 template<typename... Args>
 std::string _str(int first, Args... args);
 
+// 'str' function prototypes for long
+
+std::string _str(long v);
+
+template<typename... Args>
+std::string _str(long first, Args... args);
+
 // 'str' function prototypes for bool
 
 std::string _str(bool v);
@@ -31,12 +38,19 @@ std::string _str(bool v);
 template<typename... Args>
 std::string _str(bool first, Args... args);
 
-// 'str' function prototypes for char*
+// 'str' function prototypes for float
 
-std::string _str(char* v);
+std::string _str(float v);
 
 template<typename... Args>
-std::string _str(char* first, Args... args);
+std::string _str(float first, Args... args);
+
+// 'str' function prototypes for const char*
+
+std::string _str(const char* v);
+
+template<typename... Args>
+std::string _str(const char* first, Args... args);
 
 // 'str' function prototypes for std::string
 
@@ -54,7 +68,60 @@ template<typename... Args>
 std::string _str(vector<typename std::common_type<Args...>::type> first,
                  Args... args);
 
-// map function implementation
+// '_fmt' function prototypes
+
+// '_fmt' function prototypes for int
+
+std::string _fmt(int v);
+
+template<typename... Args>
+std::string _fmt(int first, Args... args);
+
+// '_fmt' function prototypes for long
+
+std::string _fmt(long v);
+
+template<typename... Args>
+std::string _fmt(long first, Args... args);
+
+// '_fmt' function prototypes for bool
+
+std::string _fmt(bool v);
+
+template<typename... Args>
+std::string _fmt(bool first, Args... args);
+
+// '_fmt' function prototypes for float
+
+std::string _fmt(float v);
+
+template<typename... Args>
+std::string _fmt(float first, Args... args);
+
+// '_fmt' function prototypes for const char*
+
+std::string _fmt(const char* v);
+
+template<typename... Args>
+std::string _fmt(const char* first, Args... args);
+
+// '_fmt' function prototypes for std::string
+
+std::string _fmt(std::string v);
+
+template<typename... Args>
+std::string _fmt(std::string first, Args... args);
+
+// '_fmt' function prototypes for custom vector<T>
+
+template<typename T>
+std::string _fmt(vector<T> v);
+
+template<typename... Args>
+std::string _fmt(vector<typename std::common_type<Args...>::type> first,
+                 Args... args);
+
+// 'map' function implementation
 
 template<typename Predicate, typename T>
 vector<T> map(const Predicate& callback, const vector<T>& sourcev) {
@@ -64,7 +131,7 @@ vector<T> map(const Predicate& callback, const vector<T>& sourcev) {
     return out;
 }
 
-// filter function implementation
+// 'filter' function implementation
 
 template<typename Predicate, typename T>
 vector<T> filter(const Predicate& callback, const vector<T>& sourcev) {
@@ -74,7 +141,7 @@ vector<T> filter(const Predicate& callback, const vector<T>& sourcev) {
     return out;
 }
 
-// reduce function implementation
+// 'reduce' function implementation
 
 template<typename Predicate, typename T>
 auto reduce(const Predicate& callback, const vector<T>& sourcev) {
@@ -102,19 +169,20 @@ public:
         to_return.append(_str(*it)).append("]");
         return to_return;
     }
-
-    friend std::ostream& operator<<(std::ostream& os, const vector<T>& s) {
-        std::cout << "[";
-
-        for (auto iter = s.begin(); iter != std::prev(s.end()); ++iter) {
-          std::cout << _str(*iter) << " ";
+    T get(int idx, T default_value) {
+        return idx < this->size() ? this->at(idx) : default_value;
+    }
+    T get(int idx) {
+        return idx < this->size() ? this->at(idx) : (T){};
+    }
+    std::string to_fmt() {
+        std::string to_return = "[";
+        for (auto it = this->begin(); it != std::prev(this->end()); ++it) {
+          to_return.append(_fmt(*it)).append(" ");
         }
-
-        auto iter = std::prev(s.end());
-
-        std::cout << _str(*iter) << "]";
-
-        return os;
+        auto it = std::prev(this->end());
+        to_return.append(_fmt(*it)).append("]");
+        return to_return;
     }
 };
 
@@ -186,15 +254,27 @@ int _int(int v) {
     return v;
 }
 
+// 'int' function implementation for long
+
+int _int(long v) {
+    return (int)v;
+}
+
 // 'int' function implementation for bool
 
 int _int(bool v) {
     return 1 ? v : 0;
 }
 
-// 'int' function implementation for char*
+// 'int' function implementation for float
 
-int _int(char* v) {
+int _int(float v) {
+    return (int)v;
+}
+
+// 'int' function implementation for const char*
+
+int _int(const char* v) {
     return std::stoi(v);
 }
 
@@ -217,6 +297,17 @@ std::string _str(int first, Args... args) {
     return std::to_string(first).append(" ").append(_str(args...));
 }
 
+// 'str' function implementations for long
+
+std::string _str(long v) {
+    return std::to_string(v);
+}
+
+template<typename... Args>
+std::string _str(long first, Args... args) {
+    return std::to_string(first).append(" ").append(_str(args...));
+}
+
 // 'str' function implementations for bool
 
 std::string _str(bool v) {
@@ -228,26 +319,37 @@ std::string _str(bool first, Args... args) {
     return _str(first).append(" ").append(_str(args...));
 }
 
-// 'str' function implementations for char*
+// 'str' function implementations for float
 
-std::string _str(char* v) {
+std::string _str(float v) {
+    return std::to_string(v);
+}
+
+template<typename... Args>
+std::string _str(float first, Args... args) {
+    return std::to_string(first).append(" ").append(_str(args...));
+}
+
+// 'str' function implementations for const char*
+
+std::string _str(const char* v) {
     return std::string(v);
 }
 
 template<typename... Args>
-std::string _str(char* first, Args... args) {
+std::string _str(const char* first, Args... args) {
     return std::string(first).append(" ").append(_str(args...));
 }
 
 // 'str' function implementations for std::string
 
 std::string _str(std::string v) {
-    return std::string(v);
+    return v;
 }
 
 template<typename... Args>
 std::string _str(std::string first, Args... args) {
-    return std::string(first).append(" ").append(_str(args...));
+    return first.append(" ").append(_str(args...));
 }
 
 // 'str' function implementations for custom vector<T>
@@ -263,11 +365,104 @@ std::string _str(vector<typename std::common_type<Args...>::type> first,
     return first.to_str().append(_str(args...));
 }
 
+// '_fmt' function implementations
+
+// '_fmt' function implementations for int
+
+std::string _fmt(int v) {
+    return _str(v);
+}
+
+template<typename... Args>
+std::string _fmt(int first, Args... args) {
+    return _str(first).append(" ").append(_str(args...));
+}
+
+// '_fmt' function implementations for long
+
+std::string _fmt(long v) {
+    return _str(v);
+}
+
+template<typename... Args>
+std::string _fmt(long first, Args... args) {
+    return _str(first).append(" ").append(_str(args...));
+}
+
+// '_fmt' function implementations for bool
+
+std::string _fmt(bool v) {
+    return _str(v);
+}
+
+template<typename... Args>
+std::string _fmt(bool first, Args... args) {
+    return _str(first).append(" ").append(_str(args...));
+}
+
+// '_fmt' function implementations for float
+
+std::string _fmt(float v) {
+    return _str(v);
+}
+
+template<typename... Args>
+std::string _fmt(float first, Args... args) {
+    return _str(first).append(" ").append(_str(args...));
+}
+
+// '_fmt' function implementations for const char*
+
+std::string _fmt(const char* v) {
+    return "\"" + _str(v) + "\"";
+}
+
+template<typename... Args>
+std::string _fmt(const char* first, Args... args) {
+    return _fmt(first).append(" ").append(_fmt(args...));
+}
+
+// '_fmt' function implementations for std::string
+
+std::string _fmt(std::string v) {
+    return "\"" + v + "\"";
+}
+
+template<typename... Args>
+std::string _fmt(std::string first, Args... args) {
+    return _fmt(first).append(" ").append(_fmt(args...));
+}
+
+// '_fmt' function implementations for custom vector<T>
+
+template<typename T>
+std::string _fmt(vector<T> first) {
+    return first.to_fmt();
+}
+
+template<typename... Args>
+std::string _fmt(vector<typename std::common_type<Args...>::type> first,
+                 Args... args) {
+    return first.to_fmt().append(_fmt(args...));
+}
+
 // 'identity' function implementation
 
 template<typename T>
-T identity(T v) {
+T identity(const T& v) {
     return v;
+}
+
+// 'get' function implementations
+
+template<typename S, typename K>
+auto get(S& structure, K key, auto default_value) {
+    return structure.get(key, default_value);
+}
+
+template<typename S, typename K>
+auto get(S& structure, K key) {
+    return structure.get(key);
 }
 
 // 'println' function implementation
@@ -275,7 +470,7 @@ T identity(T v) {
 template<typename... Args>
 int println(Args... args) {
     // prints all the given arguments separated by a 'white-space' character
-    ((std::cout << args << ' '), ...);
+    ((std::cout << _fmt(args) << ' '), ...);
     std::cout << std::endl;
     return 0;
 }
@@ -290,18 +485,6 @@ vector<typename std::common_type<Args...>::type> vec(Args... args) {
         vector_to_return.push_back(item);
     }
     return vector_to_return;
-}
-
-// 'get' function implementations
-
-template<typename T>
-T get(vector<T>& v, int idx, T def) {
-    return idx < v.size() ? v[idx] : def;
-}
-
-template<typename T>
-T get(vector<T>& v, int idx) {
-    return get(v, idx, NULL);
 }
 
 }
