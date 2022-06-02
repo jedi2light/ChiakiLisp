@@ -76,7 +76,8 @@
  (.__len__ x))
 (defn contains? (coll item)
  ;; returns true if collection contains item
- (.__contains__ coll item))
+ (when (set? coll)
+  (.__contains__ coll item)))
 (defn not (x)
  ;; returns false if X is "truthy", otherwise returns false
  (if x false true))
