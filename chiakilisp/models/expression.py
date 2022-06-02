@@ -365,6 +365,7 @@ class Expression:
             object_name, *method_args = tail
             method_name: str = head.token().value()[1:]
             object_instance = object_name.execute(environ, False)
+            object_name = getattr(object_instance, '__name__', object_instance.__class__.__name__)   # actual name
             object_m_object: Callable = getattr(object_instance, method_name, NotFound)  # <---- could be NotFound
             NE_ASSERT(where,
                       object_m_object is not NotFound,
