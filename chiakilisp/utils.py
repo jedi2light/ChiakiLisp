@@ -1,3 +1,4 @@
+# pylint: disable=unreachable
 # pylint: disable=invalid-name
 # pylint: disable=line-too-long
 # pylint: disable=missing-module-docstring
