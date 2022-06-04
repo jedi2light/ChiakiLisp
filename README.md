@@ -1,4 +1,4 @@
-# ChiakiLisp - LISPy syntax for Python 3
+# ChiakiLisp, LISP syntax over Python && C++
 
 ## Qt5 Demo
 
@@ -6,19 +6,19 @@
 
 ## Demo Source
 
-1. [Evaluation Mode (Python 3 API)](examples/eval-mode/qt5-simple-app-window.cl)
-2. [Code Generation' Mode (C++ API)](examples/cxx-only/qt5-simple-app-window.cl)
+1. [AST Evaluate Mode (Python3 API)](examples/ast-mode/qt5-simple-app-window.cl)
+2. [Code Generation' Mode (C++ API)](examples/cxx-mode/qt5-simple-app-window.cl)
 
 ## Other Demos
 
-### There example both supports eval-mode/cxx-mode
+### There examples support ast-mode/cxx-mode
 
 1. [Recursively Calculated Factorial](examples/factorial.cl)
 2. [A short example for a Functional Programming Style](./examples/funcional.cl)
 
 ## Description
 
-[ChiakiLisp](https://chiakilisp.jedi2light.moe) - yet another LISP syntax over the Python 3 core
+[ChiakiLisp](https://chiakilisp.jedi2light.moe) - yet another LISP syntax for the Python 3 && C++
 
 There are few similar projects already exist:
  - [HyLang](https://hylang.org) - pretty cool project, compiles LISP into Python 3 bytecode, cool
