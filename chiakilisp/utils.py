@@ -90,6 +90,8 @@ def simple_fuzzy_matched(item: str, glossary: Iterable) -> tuple:
         )
     )))  # <----- returns the most lower score in the `scored` tuple
 
+    return tuple()
+
     return tuple(filter(
         lambda candidate: (
                 len(candidate) - len(item) >= 5  # <-- tune it later
