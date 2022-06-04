@@ -20,11 +20,17 @@ class ArityError(SyntaxError):
     """ArityError (just for name)"""
 
 
+class NotSupportedError(SyntaxError):
+
+    """NotSupportedError (just for name)"""
+
+
 NE_ASSERT = get_assertion_closure(NameError)  # <------ raises a NameError
 AR_ASSERT = get_assertion_closure(ArityError)  # <--- raises an ArityError
 SE_ASSERT = get_assertion_closure(SyntaxError)  # <-- raises a SyntaxError
 RE_ASSERT = get_assertion_closure(RuntimeError)  # <-- raises RuntimeError
 TE_ASSERT = get_assertion_closure(TypeError)  # <-------- raises TypeError
+NS_ASSERT = get_assertion_closure(NotSupportedError)   # NotSupportedError
 
 TYPES = {'int': int, 'float': float,
          'str': str,
@@ -108,6 +114,14 @@ class Expression:
         IDENTIFIER_ASSERT(head,      'Expression[generate]: head of expression should be an Identifier')
 
         where = head.token().position_formatted()  # <-- remember current expression head token position
+
+        NS_ASSERT(
+            where,
+            head.token().value() not in [
+                'or', 'and', 'try', '...', 'cond', 'fn', 'def?', 'import', 'require'
+            ],
+            f"Expression[generate]: '{head.token().value()}' special form: is not supported in cxx-mode"
+        )
 
         if head.token().value().startswith('.'):
             AR_ASSERT(where,
@@ -284,6 +298,14 @@ class Expression:
         where = head.token().position_formatted()  # <-- when make assertions on expression head, this can be used
 
         IDENTIFIER_ASSERT(head,             'Expression[execute]: head of the expression should be an Identifier')
+
+        NS_ASSERT(
+            where,
+            head.token().value() not in [
+                'hpp-base-dir', 'lib-base-dir', 'lib', 'include', 'new'
+            ],
+            f"Expression[generate]: '{head.token().value()}' special form: is not supported in ast-mode"
+        )
 
         if head.token().value() == 'or':
             if not tail:
