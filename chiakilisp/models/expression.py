@@ -26,7 +26,7 @@ class NotSupportedError(SyntaxError):
 
 
 NE_ASSERT = get_assertion_closure(NameError)  # <------ raises a NameError
-AR_ASSERT = get_assertion_closure(ArityError)  # <--- raises an ArityError
+AE_ASSERT = get_assertion_closure(ArityError)  # <--- raises an ArityError
 SE_ASSERT = get_assertion_closure(SyntaxError)  # <-- raises a SyntaxError
 RE_ASSERT = get_assertion_closure(RuntimeError)  # <-- raises RuntimeError
 TE_ASSERT = get_assertion_closure(TypeError)  # <-------- raises TypeError
@@ -93,7 +93,7 @@ class Expression:
         IDENTIFIER_ASSERT(head,                       'Expression[lint]: head of expression should be Identifier')
 
         if head.token().value() == 'def':
-            AR_ASSERT(where, len(tail) == 2,                    'Expression[lint]: def: expected exactly 2 forms')
+            AE_ASSERT(where, len(tail) == 2,                    'Expression[lint]: def: expected exactly 2 forms')
             name: Value = tail[0]
             assert isinstance(name, Value), 'Expression[lint]: name should be a Value, not an Expression instance'
             IDENTIFIER_ASSERT(name,                         'Expression[lint]: def: name should be an Identifier')
@@ -124,7 +124,7 @@ class Expression:
         )
 
         if head.token().value().startswith('.'):
-            AR_ASSERT(where,
+            AE_ASSERT(where,
                       len(rest) >= 1, 'Expression[generate]: dot-form: at least 1 operand was expected')
             name, *args = rest
             IDENTIFIER_ASSERT(name,  'Expression[generate]: dot-form: object name should be Identifier')
@@ -136,7 +136,7 @@ class Expression:
                    + (';' if not inline else '')  # <---- return generated dot-expression representation
 
         if head.token().value() == 'defn':
-            AR_ASSERT(where, len(rest) >= 2, 'Expression[generate]: defn: expected at least 2 operands')
+            AE_ASSERT(where, len(rest) >= 2, 'Expression[generate]: defn: expected at least 2 operands')
             name, parameters, *body = rest
             IDENTIFIER_ASSERT(name,    'Expression[generate]: defn: function name should be Identifier')
             returns = CXX_TYPES.get(name.property("t"), "auto")  # <- take into account func return type
@@ -153,7 +153,7 @@ class Expression:
             return ''  # <--- defn function is not supposed to return generated code, only update config
 
         if head.token().value() == 'if':
-            AR_ASSERT(where, len(rest) == 3,  'Expression[generate]: if: expected exactly 3 forms here')
+            AE_ASSERT(where, len(rest) == 3,  'Expression[generate]: if: expected exactly 3 forms here')
             cond, true, false = rest
             return f'({{{cond.generate(dictionary, cfg, True)} ' \
                    f'? {true.generate(dictionary, cfg, True)}' \
@@ -167,12 +167,12 @@ class Expression:
                    f': NULL;}})' + ('' if inline else ';')  # <- ternary expression, but 'false' is NULL
 
         if head.token().value() == '=':
-            AR_ASSERT(where, len(rest) == 2,   'Expression[generate]: =: expected exactly 2 forms here')
+            AE_ASSERT(where, len(rest) == 2,   'Expression[generate]: =: expected exactly 2 forms here')
             lhs, rhs = rest
             return f'{lhs.generate(dictionary, cfg, inline)} == {rhs.generate(dictionary, cfg, inline)}'
 
         if head.token().value() == 'def':
-            AR_ASSERT(where, len(rest) == 2, 'Expression[generate]: def: expected name, value operands')
+            AE_ASSERT(where, len(rest) == 2, 'Expression[generate]: def: expected name, value operands')
             name, value = rest
             IDENTIFIER_ASSERT(name,           'Expression[generate]: def: name should be an Identifier')
             SE_ASSERT(where,
@@ -184,7 +184,7 @@ class Expression:
             return ''  # <- def-form is not supposed to generate a line of code, only append to the defs
 
         if head.token().value() == 'hpp-base-dir':
-            AR_ASSERT(where, len(rest) == 1, 'Expression[generate]: hpp-base-dir: path string expected')
+            AE_ASSERT(where, len(rest) == 1, 'Expression[generate]: hpp-base-dir: path string expected')
             path = rest[0]
             SE_ASSERT(path.token().position_formatted(),
                       path.token().is_string(),
@@ -193,7 +193,7 @@ class Expression:
             return ''  # <----------------- hpp-base-dir form is not supposed to generate a line of code
 
         if head.token().value() == 'lib-base-dir':
-            AR_ASSERT(where, len(rest) == 1, 'Expression[generate]: lib-base-dir: path string expected')
+            AE_ASSERT(where, len(rest) == 1, 'Expression[generate]: lib-base-dir: path string expected')
             path = rest[0]
             SE_ASSERT(path.token().position_formatted(),
                       path.token().is_string(),
@@ -202,21 +202,21 @@ class Expression:
             return ''  # <----------------- lib-base-dir form is not supposed to generate a line of code
 
         if head.token().value() == 'link':
-            AR_ASSERT(where, len(rest) == 1,  'Expression[generate]: link: a library name was expected')
+            AE_ASSERT(where, len(rest) == 1,  'Expression[generate]: link: a library name was expected')
             name = rest[0]
             IDENTIFIER_ASSERT(name,         'Expression[generate]: a library name should be Identifier')
             cfg['LD_LINK_SRC_WITH'].append(name.token().value())  # <--- append name to LD_LINK_SRC_WITH
             return ''  # <------------------------- link form is not supposed to generate a line of code
 
         if head.token().value() == 'include':
-            AR_ASSERT(where, len(rest) == 1,  'Expression[generate]: include: header path was expected')
+            AE_ASSERT(where, len(rest) == 1,  'Expression[generate]: include: header path was expected')
             path = rest[0]
             IDENTIFIER_ASSERT(path,          'Expression[generate]: a header path should be Identifier')
             cfg['SOURCE_INCLUDING'].append(path.token().value())  # <--- append name to SOURCE_INCLUDING
             return ''  # <---------------------- include form is not supposed to generate a line of code
 
         if head.token().value() == 'new':
-            AR_ASSERT(where, len(rest) == 1,     'Expression[generate]: new: expected exactly one form')
+            AE_ASSERT(where, len(rest) == 1,     'Expression[generate]: new: expected exactly one form')
             definition = rest[0]
             SE_ASSERT(where,
                       isinstance(definition, Expression),
@@ -224,11 +224,11 @@ class Expression:
             return f'new {definition.generate(dictionary, cfg, inline)}'  # <-- return a 'new' statement
 
         if head.token().value() == 'let':
-            AR_ASSERT(where, len(rest) >= 1,    'Expression[generate]: let: at least one form expected')
+            AE_ASSERT(where, len(rest) >= 1,    'Expression[generate]: let: at least one form expected')
             bindings, *body = rest
             items = bindings.children()
-            AR_ASSERT(where, items,  'Expression[generate]: let: you should provide at least 1 binding')
-            AR_ASSERT(where,
+            AE_ASSERT(where, items,  'Expression[generate]: let: you should provide at least 1 binding')
+            AE_ASSERT(where,
                       len(items) % 2 == 0,
                       'Expression[generate]: let: the bindings form is expected to have an even length')
             lines = []  # <----------------------------------------------------- resulting lines of code
@@ -335,10 +335,10 @@ class Expression:
             return result  # <------ if all conditions have been evaluated to truthy ones, return the last of them
 
         if head.token().value() == 'try':
-            AR_ASSERT(where, len(tail) == 2,        'Expression[execute]: try: expected main and and catch forms')
+            AE_ASSERT(where, len(tail) == 2,        'Expression[execute]: try: expected main and and catch forms')
             main, catch = tail
             SE_ASSERT(where, isinstance(catch, Expression),    'Expression[execute]: try: catch should be a form')
-            AR_ASSERT(where, len(catch.children()) == 4,   'Expression[execute]: try: catch: expected 4 operands')
+            AE_ASSERT(where, len(catch.children()) == 4,   'Expression[execute]: try: catch: expected 4 operands')
             kind, klass, alias, block = catch.children()
             IDENTIFIER_ASSERT(kind,                      'Expression[execute]: try: kind should be an Identifier')
             SE_ASSERT(where, kind.token().value() == 'catch',  "Expression[execute]: try: kind should be 'catch'")
@@ -388,7 +388,7 @@ class Expression:
             return target.execute(environ, False)  # <----- at the end, return target' expression execution result
 
         if head.token().value().startswith('.') and not head.token().value() == '...':   # it could be an Ellipsis
-            AR_ASSERT(where, len(tail) >= 1,        'Expression[execute]: dot-form: expected at least 1 operands')
+            AE_ASSERT(where, len(tail) >= 1,        'Expression[execute]: dot-form: expected at least 1 operands')
             object_name: Value
             method_args: Children
             object_name, *method_args = tail
@@ -402,17 +402,17 @@ class Expression:
             return object_m_object(*(child.execute(environ, False) for child in method_args))  # return its result
 
         if head.token().value() == 'if':
-            AR_ASSERT(where, len(tail) == 3,                  'Expression[execute]: if: expected exactly 2 forms')
+            AE_ASSERT(where, len(tail) == 3,                  'Expression[execute]: if: expected exactly 2 forms')
             cond, true, false = tail
             return true.execute(environ, False) if cond.execute(environ, False) else false.execute(environ, False)
 
         if head.token().value() == 'when':
-            AR_ASSERT(where, len(tail) == 2,                  'Expression[execute]: if: expected exactly 2 forms')
+            AE_ASSERT(where, len(tail) == 2,                  'Expression[execute]: if: expected exactly 2 forms')
             cond, true = tail
             return true.execute(environ, False) if cond.execute(environ, False) else None  # <-- false is just nil
 
         if head.token().value() == 'cond':
-            AR_ASSERT(where, len(tail) % 2 == 0,       'Expression[execute]: cond: expected even number of forms')
+            AE_ASSERT(where, len(tail) % 2 == 0,       'Expression[execute]: cond: expected even number of forms')
             if not tail:
                 return None  # <------------------------------------------ if nothing has been passed, return None
             for cond, expr in (tail[i:i + 2] for i in range(0, len(tail), 2)):
@@ -421,7 +421,7 @@ class Expression:
             return None  # <------------------------------------------------------ if nothing is true, return None
 
         if head.token().value() == 'let':
-            AR_ASSERT(where, len(tail) >= 1,          'Expression[execute]: let: expected at least bindings form')
+            AE_ASSERT(where, len(tail) >= 1,          'Expression[execute]: let: expected at least bindings form')
             bindings, *body = tail
             if not body:
                 body = [Nil]  # <----------- let the ... let have an empty body, in this case, result would be nil
@@ -429,7 +429,7 @@ class Expression:
             let = {}
             let.update(environ)  # we can't just bootstrap 'let' environ, because we do not want instances linking
             items = bindings.children()  # once again, lexically, that sounds a bit weird, we have to deal with it
-            AR_ASSERT(where, len(items) % 2 == 0,         'Expression[execute]: let: binding form should be even')
+            AE_ASSERT(where, len(items) % 2 == 0,         'Expression[execute]: let: binding form should be even')
             for raw, value in (items[i:i + 2] for i in range(0, len(items), 2)):
                 if isinstance(raw, Expression):
                     get = environ.get('get')  # <------ here we go... should it be called like ChiakiLisp interop?
@@ -442,7 +442,7 @@ class Expression:
             return [child.execute(let, False) for child in body][-1]  # <- then return the last calculation result
 
         if head.token().value() == 'fn':
-            AR_ASSERT(where, len(tail) >= 1,               'Expression[execute]: fn: expected at least 1 operand')
+            AE_ASSERT(where, len(tail) >= 1,               'Expression[execute]: fn: expected at least 1 operand')
             parameters, *body = tail
             if not body:
                 body = [Nil]  # <-- let a function be defined with empty body, in such a case, it will return None
@@ -479,11 +479,11 @@ class Expression:
                 arity = len(names)
                 if can_take_extras:
                     arity = arity - 1  # <-------- because the last parameter is not actually a required one
-                    AR_ASSERT(where,
+                    AE_ASSERT(where,
                               len(c_arguments) >= arity,
                               f'<anonymous function..>: wrong arity, expected at least {arity} argument(s)')
                 else:
-                    AR_ASSERT(where,
+                    AE_ASSERT(where,
                               len(c_arguments) == arity,
                               f'<anonymous function..>: wrong arity, expected exactly {arity} argument(s).')
 
@@ -512,7 +512,7 @@ class Expression:
 
         if head.token().value() == 'def':
             SE_ASSERT(where, top,   'Expression[execute]: def: can only use (def) form at the top of the program')
-            AR_ASSERT(where, len(tail) == 2,  'Expression[execute]: def: expected binding name and binding value')
+            AE_ASSERT(where, len(tail) == 2,  'Expression[execute]: def: expected binding name and binding value')
             name, value = tail
             IDENTIFIER_ASSERT(name,                 'Expression[execute]: def: binding name should be Identifier')
             executed = value.execute(environ, False)
@@ -521,7 +521,7 @@ class Expression:
 
         if head.token().value() == 'def?':
             SE_ASSERT(where, top, 'Expression[execute]: def?: can only use (def?) form at the top of the program')
-            AR_ASSERT(where, len(tail) == 2, 'Expression[execute]: def?: expected binding name and binding value')
+            AE_ASSERT(where, len(tail) == 2, 'Expression[execute]: def?: expected binding name and binding value')
             name, value = tail
             IDENTIFIER_ASSERT(name,                'Expression[execute]: def?: binding name should be Identifier')
             from_env = environ.get(name.token().value()) if (name.token().value() in environ.keys()) else NotFound
@@ -531,7 +531,7 @@ class Expression:
 
         if head.token().value() == 'defn':
             SE_ASSERT(where, top, 'Expression[execute]: defn: can only use (defn) form at the top of the program')
-            AR_ASSERT(where, len(tail) >= 2,            'Expression[execute]: defn: expected at least 2 operands')
+            AE_ASSERT(where, len(tail) >= 2,            'Expression[execute]: defn: expected at least 2 operands')
             name, parameters, *body = tail
             if not body:
                 body = [Nil]  # <-- let a function be defined with empty body, in such a case, it will return None
@@ -571,11 +571,11 @@ class Expression:
                 arity = len(names)
                 if can_take_extras:
                     arity = arity - 1  # <-------- because the last parameter is not actually a required one
-                    AR_ASSERT(where,
+                    AE_ASSERT(where,
                               len(c_arguments) >= arity,
                               f'{name.token().value()}: wrong arity, expected at least {arity} argument(s)')
                 else:
-                    AR_ASSERT(where,
+                    AE_ASSERT(where,
                               len(c_arguments) == arity,
                               f'{name.token().value()}: wrong arity, expected exactly {arity} argument(s).')
 
@@ -610,7 +610,7 @@ class Expression:
 
         if head.token().value() == 'import':
             SE_ASSERT(where, top,    'Expression[execute]: import: you should place all the (import)s at the top')
-            AR_ASSERT(where, len(tail) == 1, 'Expression[execute]: import: expected name of the module to import')
+            AE_ASSERT(where, len(tail) == 1, 'Expression[execute]: import: expected name of the module to import')
             name = tail[0]
             IDENTIFIER_ASSERT(name,      'Expression[execute]: import: Python 3 module name should be Identifier')
             name = name.token().value()
@@ -625,7 +625,7 @@ class Expression:
 
         if head.token().value() == 'require':
             SE_ASSERT(where, top,  'Expression[execute]: require: you should place all the (require)s at the top')
-            AR_ASSERT(where, len(tail) == 1,   'Expression[execute]: require: expected name of ChiakiLisp module')
+            AE_ASSERT(where, len(tail) == 1,   'Expression[execute]: require: expected name of ChiakiLisp module')
             name = tail[0]
             IDENTIFIER_ASSERT(name,   'Expression[execute]: require: ChiakiLisp module name should be Identifier')
             module = type(name.token().value(), (object,), environ['require'](name.token().value() + '.cl'))  # -|
