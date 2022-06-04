@@ -242,9 +242,9 @@ if __name__ == '__main__':
             w.write('(def repl-show-traceback false) ;; set to true to see the exception\' traceback')
 
     if os.path.exists('chiakilisp/corelib/core.cl'):
-        require('chiakilisp/corelib/core.cl', merge=True)  # <--------------------- load chiakilisp core library
+        require('chiakilisp/corelib/core.cl', merge=True)  # <-------------------- load chiakilisp core library
     else:
-        execute('corelib.cl',  pkgutil.get_data('chiakilisp', 'corelib/core.cl').decode('utf-8'),  silent=True)
+        execute(pkgutil.get_data('chiakilisp', 'corelib/core.cl').decode('utf-8'),  'corelib.cl',  silent=True)
 
     if args.source:
 
