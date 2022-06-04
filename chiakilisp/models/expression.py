@@ -159,6 +159,13 @@ class Expression:
                    f'? {true.generate(dictionary, cfg, True)}' \
                    f': {false.generate(dictionary, cfg, False)}}})' + ('' if inline else ';')  # ternary
 
+        if head.token().value() == 'when':
+            AE_ASSERT(where, len(rest) == 2, 'Expression[generate]: when: expected exactly 2 args here')
+            cond, true = rest
+            return f'({{{cond.generate(dictionary, cfg, True)} ' \
+                   f'? {true.generate(dictionary, cfg, True)}' \
+                   f': NULL;}})' + ('' if inline else ';')  # <- ternary expression, but 'false' is NULL
+
         if head.token().value() == '=':
             AR_ASSERT(where, len(rest) == 2,   'Expression[generate]: =: expected exactly 2 forms here')
             lhs, rhs = rest
