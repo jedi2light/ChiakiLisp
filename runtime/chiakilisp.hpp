@@ -278,7 +278,7 @@ int _int(const char* v) {
     return std::stoi(v);
 }
 
-// 'int' function implementaiton for std::string
+// 'int' function implementation for std::string
 
 int _int(std::string v) {
     return std::stoi(v);
