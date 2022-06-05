@@ -1,0 +1,3 @@
+[submodule "runtime"]
+	path = runtime
+	url = https://gitea.jedi2light.moe/jedi2light/ChiakiLisp-CXXRuntime.git
