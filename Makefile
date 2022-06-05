@@ -16,7 +16,7 @@ install: lint build
 cxx-runtime: runtime/
 	git submodule init
 	git submodule update
-	./runtime/build-cxx-runtime.sh
+	cd runtime && ./build-cxx-runtime.sh
 
 build-upload-install: lint build
 	python -m twine upload --repository pypi --verbose ./dist/chiakilisp-*.whl
