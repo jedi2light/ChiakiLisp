@@ -128,6 +128,24 @@ class Expression:
             f"Expression[generate]: '{head.token().value()}' special form: is not supported in cxx-mode"
         )
 
+        if head.token().value() == 'or':
+            AE_ASSERT(where, len(rest),     'Expression[generate]: or: at least 1 operand was expected')
+            return '(' + ' || '.join(map(lambda e: e.generate(dictionary, cfg, True),
+                                         rest)) + ')' + ('' if inline else ';')  # generate or condition
+
+        if head.token().value() == 'and':
+            AE_ASSERT(where, len(rest),    'Expression[generate]: and: at least 1 operand was expected')
+            return '(' + ' && '.join(map(lambda e: e.generate(dictionary, cfg, True),
+                                         rest)) + ')' + ('' if inline else ';')  # produce and condition
+
+        if head.token().value() == 'def?':
+            AE_ASSERT(where, len(rest) == 2,   'Expression[generate]: def: expected name and the value')
+            name, value = rest
+            cxx_name = name.generate(dictionary, cfg, True)
+            if not cfg.get('DEFS').get(cxx_name) and not cfg.get('DEFUNCTIONS').get(cxx_name):
+                cfg['DEFS'].append(f'auto {cxx_name} = {value.generate(dictionary, cfg, inline=False)}')
+            return ''  # <- def? isn't supposed to return anything, just safely define a global variable
+
         if head.token().value().startswith('.'):
             AE_ASSERT(where,
                       len(rest) >= 1, 'Expression[generate]: dot-form: at least 1 operand was expected')
