@@ -118,7 +118,12 @@ class Expression:
         NS_ASSERT(
             where,
             head.token().value() not in [
-                'or', 'and', 'try', '...', 'cond', 'fn', 'def?', 'import', 'require'
+                'try',    # in cxx mode we do not support code generation for try form. TODO: implement
+                '...',  # in cxx mode we do not know how to represent Ellipsis. TODO: maybe figure out?
+                'cond',  # in cxx mode we do not support code generation for cond form. TODO: implement
+                'fn',      # in cxx mode we do not support code generation for lambdas. TODO: implement
+                'import',             # in cxx mode we do not support importing Python 3 modules at all
+                'require'   # in cxx mode we do not support ChiakiLisp modules require. TODO: implement
             ],
             f"Expression[generate]: '{head.token().value()}' special form: is not supported in cxx-mode"
         )
@@ -309,9 +314,13 @@ class Expression:
         NS_ASSERT(
             where,
             head.token().value() not in [
-                'hpp-base-dir', 'lib-base-dir', 'lib', 'include', 'new'
+                'hpp-base-dir',  # in ast mode we do not need to define location whether to lookup for CXX headers
+                'lib-base-dir',  # in ast mode we do not need to define location whether to lookup for CXX library
+                'lib',  # <-- in ast mode we do not need to define which library our program should be linked with
+                'include',  # <-- in ast mode we not need to define what header we should include into our program
+                'new'  # <------------- in ast mode we do not need to manipulate with pointers to object instances
             ],
-            f"Expression[generate]: '{head.token().value()}' special form: is not supported in ast-mode"
+            f"Expression[generate]: sorry, but '{head.token().value()}' special form is not supported in ast-mode"
         )
 
         if head.token().value() == 'or':
