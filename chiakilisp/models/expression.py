@@ -323,7 +323,7 @@ class Expression:
             head.token().value() not in [
                 'hpp-base-dir',  # in ast mode we do not need to define location whether to lookup for CXX headers
                 'lib-base-dir',  # in ast mode we do not need to define location whether to lookup for CXX library
-                'lib',  # <-- in ast mode we do not need to define which library our program should be linked with
+                'link',  # <- in ast mode we do not need to define which library our program should be linked with
                 'include',  # <-- in ast mode we not need to define what header we should include into our program
                 'new'  # <------------- in ast mode we do not need to manipulate with pointers to object instances
             ],
