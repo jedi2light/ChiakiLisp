@@ -23,7 +23,7 @@
 ;;                 $ ./functional  # will run the binary
 
 (defn ^t:bool even? (^t:int x)
- (if (= (mod x 2) 0) true false))
+ (= (mod x 2) 0))
 
 (defn ^t:int inc (^t:int x)
  (+ x 1))
