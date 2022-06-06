@@ -118,6 +118,7 @@ class Expression:
         NS_ASSERT(
             where,
             head.token().value() not in [
+                'def?',                # in cxx mode we do not support def? form (yet). TODO: implement
                 'try',    # in cxx mode we do not support code generation for try form. TODO: implement
                 '...',  # in cxx mode we do not know how to represent Ellipsis. TODO: maybe figure out?
                 'cond',  # in cxx mode we do not support code generation for cond form. TODO: implement
@@ -137,14 +138,6 @@ class Expression:
             AE_ASSERT(where, len(rest),    'Expression[generate]: and: at least 1 operand was expected')
             return '(' + ' && '.join(map(lambda e: e.generate(dictionary, cfg, True),
                                          rest)) + ')' + ('' if inline else ';')  # produce and condition
-
-        if head.token().value() == 'def?':
-            AE_ASSERT(where, len(rest) == 2,   'Expression[generate]: def: expected name and the value')
-            name, value = rest
-            cxx_name = name.generate(dictionary, cfg, True)
-            if not cfg.get('DEFS').get(cxx_name) and not cfg.get('DEFUNCTIONS').get(cxx_name):
-                cfg['DEFS'].append(f'auto {cxx_name} = {value.generate(dictionary, cfg, inline=False)}')
-            return ''  # <- def? isn't supposed to return anything, just safely define a global variable
 
         if head.token().value().startswith('.'):
             AE_ASSERT(where,
