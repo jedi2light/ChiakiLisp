@@ -598,7 +598,7 @@ class Expression:
                 defn.update(dict(zip(names, c_arguments)))  # <--------------- update defn closure with parameters
                 defn.update({'kwargs': kwargs})  # <------ currently, there is no way to pass them from ChiakiLisp
                 retval = [child.execute(defn, False) for child in body][-1]    # store the last calculation result
-                actual_ret_tname = getattr(retval, '__name__', retval.__class__.__name__)
+                actual_ret_tname = getattr(retval, '__name__', retval.__class__.__name__)   # object or class name
                 TE_ASSERT(where,
                           isinstance(retval, expected_ret_type),
                           f'{name.token().value()} have to return: {expected_ret_tname}, not: {actual_ret_tname}')
