@@ -171,11 +171,6 @@ class Expression:
                    f'? {true.generate(dictionary, cfg, True)}' \
                    f': NULL;}})' + ('' if inline else ';')  # <- ternary expression, but 'false' is NULL
 
-        if head.token().value() == '=':
-            AE_ASSERT(where, len(rest) == 2,   'Expression[generate]: =: expected exactly 2 forms here')
-            lhs, rhs = rest
-            return f'{lhs.generate(dictionary, cfg, inline)} == {rhs.generate(dictionary, cfg, inline)}'
-
         if head.token().value() == 'def':
             AE_ASSERT(where, len(rest) == 2, 'Expression[generate]: def: expected name, value operands')
             name, value = rest

@@ -12,6 +12,7 @@ DICTIONARY = {
     'str': 'chiakilisp::_str',
     'filter': 'chiakilisp::filter', 'map': 'chiakilisp::map',
     'reduce': 'chiakilisp::reduce',
+    '=': 'chiakilisp::equals',
     'prn': 'chiakilisp::println',
     'print': 'chiakilisp::println', 'println': 'chiakilisp::println',
 }
