@@ -10,7 +10,7 @@
 from copy import deepcopy
 from typing import List, Any, Callable
 from chiakilisp.utils import get_assertion_closure
-from chiakilisp.models.value import Value, NotFound, Nil, Zero
+from chiakilisp.models.value import Value, NotFound, Nil
 
 Child = Value or 'Expression'  # define the type for a single child
 Children = List[Child]  # define a type describing list of children
@@ -240,6 +240,7 @@ class Expression:
             bindings, *body = rest
             items = bindings.children()
             AE_ASSERT(where, items,  'Expression[generate]: let: you should provide at least 1 binding')
+            AE_ASSERT(where, len(body) >= 1,       'Expression[generate]: let: body could not be empty')
             AE_ASSERT(where,
                       len(items) % 2 == 0,
                       'Expression[generate]: let: the bindings form is expected to have an even length')
@@ -255,8 +256,6 @@ class Expression:
                 if rhs.startswith("new"):
                     cfg['KNOWN_POINTERS'].append(generated)  # <------ append to the known pointers list
                 lines.append(f'{lhs} = {rhs}')  # <----- append generated variable definition expression
-            if not body:
-                body = [Zero]
             for each in body:
                 lines.append(each.generate(dictionary, cfg, False))  # <--- let this to be simple enough
             return '({' + '\n'.join(lines) + '})' + (';' if not inline else '')  # <----generate a block
