@@ -77,8 +77,8 @@ class Lexer:
                 self._increment_line_number_with_char_number_reset()
 
             elif self._current_symbol_is_number() \
-                    or (self._current_symbol() in ['-', '+']
-                            and self._next_symbol_is_number()):
+                    or (self._current_symbol_is_sign()
+                        and self._next_symbol_is_number()):
                 value = self._current_symbol()
                 self._advance()
                 self._increment_char_number()
@@ -187,19 +187,28 @@ class Lexer:
 
         """Returns the next symbol (if possible, otherwise '')"""
 
-        return '' if not self._has_next_symbol() else self._source[self._pointer + 1]
+        if (len(self._source) == 1 and not self._pointer) \
+                or not self._has_next_symbol():
+            return ''
+        return self._source[self._pointer + 1]
 
     def _has_next_symbol(self) -> bool:
 
         """Returns whether source has next symbol"""
 
-        return self._pointer < len(self._source) or self._pointer < len(self._source) - 1
+        return self._pointer < len(self._source)
 
     def _current_symbol_is_nl(self) -> bool:
 
         """Returns whether current symbol is a newline symbol"""
 
         return self._current_symbol() == '\n'
+
+    def _current_symbol_is_sign(self) -> bool:
+
+        """Returns whether current symbol is a number sign"""
+
+        return self._current_symbol() in ['+', '-']
 
     def _current_symbol_is_hash(self) -> bool:
 
@@ -255,17 +264,17 @@ class Lexer:
 
         return self._current_symbol() == ']'
 
+    def _next_symbol_is_number(self) -> bool:
+
+        """Returns whether next symbol is a number, valid number is from 0 to 9"""
+
+        return re.match(r'\d', self._next_symbol()) is not None
+
     def _current_symbol_is_number(self) -> bool:
 
         """Returns whether current symbol is a number, valid number is from 0 to 9"""
 
         return re.match(r'\d', self._current_symbol()) is not None
-
-    def _next_symbol_is_number(self) -> bool:
-
-        """Returns whether next symbol is a snumber, valid number is from 0 to 9"""
-
-        return re.match(r'\d', self._next_symbol()) is not None
 
     def _current_symbol_is_letter(self) -> bool:
 
