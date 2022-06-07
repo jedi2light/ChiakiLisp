@@ -107,6 +107,14 @@ class Lexer:
                 while self._has_next_symbol():
                     self._advance()
                     self._increment_char_number()
+                    if self._current_symbol() == '\\':
+                        self._advance()
+                        self._increment_char_number()
+                        if self._current_symbol() == 'n':
+                            value += '\n'
+                        if self._current_symbol_is_double_quote():
+                            value += '"'
+                        continue
                     if not self._current_symbol_is_double_quote():
                         value += self._current_symbol()
                     else:
