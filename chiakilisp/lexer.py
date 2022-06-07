@@ -181,6 +181,12 @@ class Lexer:
 
         return self._source[self._pointer]
 
+    def _next_symbol(self) -> str:
+
+        """Returns the next symbol (if possible, otherwise '')"""
+
+        return '' if not self._has_next_symbol() else self._source[self._pointer + 1]
+
     def _has_next_symbol(self) -> bool:
 
         """Returns whether source has next symbol"""
@@ -252,6 +258,12 @@ class Lexer:
         """Returns whether current symbol is a number, valid number is from 0 to 9"""
 
         return re.match(r'\d', self._current_symbol()) is not None
+
+    def _next_symbol_is_number(self) -> bool:
+
+        """Returns whether next symbol is a snumber, valid number is from 0 to 9"""
+
+        return re.match(r'\d', self._next_symbol()) is not None
 
     def _current_symbol_is_letter(self) -> bool:
 
