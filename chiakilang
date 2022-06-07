@@ -3,6 +3,7 @@
 # pylint: disable=fixme
 # pylint: disable=invalid-name
 # pylint: disable=line-too-long
+# pylint: disable=raise-missing-from
 # pylint: disable=missing-module-docstring
 
 import os
@@ -162,7 +163,7 @@ def repl() -> None:
         import readline  # pylint: disable=W0611 disable=import-outside-toplevel                          (>_<)
     except ImportError:
         readline = type('readline', (object,), {  # pylint: disable=invalid-name                          (>_<)
-            "set_completer": lambda _, __: None, "parse_and_bind": lambda _, __: None   # a set of stub methods
+            "set_completer": lambda _: None, "parse_and_bind": lambda _: None   # <------ a set of stub methods
         })  # <-------------------------------------------------------- this is for MS Windows NT compatibility
 
     readline.parse_and_bind("tab: complete")  # <------------------------ allows user to complete binding names
