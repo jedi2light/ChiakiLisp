@@ -274,6 +274,8 @@ class Expression:
                 rest = [tail[0]] + tail[1:]  # <------------------------------------------ override tail
                 target, *tail = rest  # <----------------- do the same we did before entering while-loop
 
+            return target.generate(dictionary, cfg, inline)  # <------------ return generated expression
+
         if head.token().value() == '->>':
             if len(rest) == 1:
                 return rest[-1].generate(dictionary, cfg, inline)  # <---- if only one form, generate it
