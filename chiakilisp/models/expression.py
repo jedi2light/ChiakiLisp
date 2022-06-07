@@ -247,10 +247,10 @@ class Expression:
             bindings, *body = rest
             items = bindings.children()
             AE_ASSERT(where, items,  'Expression[generate]: let: you should provide at least 1 binding')
-            AE_ASSERT(where,  body,                'Expression[generate]: let: body could not be empty')
             AE_ASSERT(where,
                       len(items) % 2 == 0,
                       'Expression[generate]: let: the bindings form is expected to have an even length')
+            AE_ASSERT(where,  body,                'Expression[generate]: let: body could not be empty')
             lines = []  # <----------------------------------------------------- resulting lines of code
             for name, value in (items[i:i + 2] for i in range(0, len(items), 2)):
                 SE_ASSERT(where,
@@ -451,13 +451,11 @@ class Expression:
         if head.token().value() == 'let':
             AE_ASSERT(where, tail,                    'Expression[execute]: let: expected at least bindings form')
             bindings, *body = tail
-            if not body:
-                body = [Nil]  # <----------- let the ... let have an empty body, in this case, result would be nil
             SE_ASSERT(where, isinstance(bindings, Expression), 'Expression[execute]: let: bindings is not a form')
-            let = {}
-            let.update(environ)  # we can't just bootstrap 'let' environ, because we do not want instances linking
             items = bindings.children()  # once again, lexically, that sounds a bit weird, we have to deal with it
             AE_ASSERT(where, len(items) % 2 == 0,         'Expression[execute]: let: binding form should be even')
+            let = {}
+            let.update(environ)  # we can't just bootstrap 'let' environ, because we do not want instances linking
             for raw, value in (items[i:i + 2] for i in range(0, len(items), 2)):
                 if isinstance(raw, Expression):
                     get = environ.get('get')  # <------ here we go... should it be called like ChiakiLisp interop?
@@ -467,13 +465,13 @@ class Expression:
                         let.update({alias: get(executed, idx, None)})  # <- for each alias get a coll value or nil
                 else:
                     let.update({raw.token().value(): value.execute(let, False)})  # <---------- populate a closure
+            if not body:
+                body = [Nil]  # <----------- let the ... let have an empty body, in this case, result would be nil
             return [child.execute(let, False) for child in body][-1]  # <- then return the last calculation result
 
         if head.token().value() == 'fn':
             AE_ASSERT(where, tail,                         'Expression[execute]: fn: expected at least 1 operand')
             parameters, *body = tail
-            if not body:
-                body = [Nil]  # <-- let a function be defined with empty body, in such a case, it will return None
             SE_ASSERT(where, isinstance(parameters, Expression), 'Expression[execute]: fn: parameters not a form')
             names = []
             types = []
@@ -485,8 +483,8 @@ class Expression:
             for parameter in positional_parameters:
                 SE_ASSERT(where, isinstance(parameter, Value), 'Expression[execute]: fn: param should be a Value')
                 IDENTIFIER_ASSERT(parameter,            'Expression[execute]: fn: parameter should be Identifier')
-                types.append(TYPES.get(parameter.property('t'), object))  # <-- append parameter type to type list
                 names.append(parameter.token().value())  # <------- append name of the parameter to the names list
+                types.append(TYPES.get(parameter.property('t'), object))  # <-- append parameter type to type list
             can_take_extras = False  # <-------------------- by default, function can not take any extra arguments
             if ampersand_found:
                 SE_ASSERT(where,
@@ -496,11 +494,12 @@ class Expression:
                           len(children) - 2 == ampersand_position,
                           'Expression[execute]: fn: you have to mention alias name for the extra arguments tuple')
                 operand = children[-1]
-                SE_ASSERT(where, isinstance(operand, Value), 'Expression[execute]: fn: operand should be a Value')
                 IDENTIFIER_ASSERT(operand, 'Expression[execute]: fn: extra-args-tuple alias should be Identifier')
                 can_take_extras = True  # <- now we set this to true, as the function can now take extra arguments
-                types.append(tuple)  # <---------------------- append extra args param type to all parameter types
                 names.append(operand.token().value())  # <---- append extra args param name to all parameter names
+                types.append(tuple)  # <---------------------- append extra args param type to all parameter types
+            if not body:
+                body = [Nil]  # <-- let a function be defined with empty body, in such a case, it will return None
 
             def handle(*c_arguments, **kwargs):
 
@@ -565,8 +564,6 @@ class Expression:
             SE_ASSERT(where, top, 'Expression[execute]: defn: can only use (defn) form at the top of the program')
             AE_ASSERT(where, len(tail) >= 2,            'Expression[execute]: defn: expected at least 2 operands')
             name, parameters, *body = tail
-            if not body:
-                body = [Nil]  # <-- let a function be defined with empty body, in such a case, it will return None
             SE_ASSERT(where, isinstance(name, Value),  'Expression[execute]: defn: function name should be Value')
             IDENTIFIER_ASSERT(name,               'Expression[execute]: defn: function name should be Identifier')
             SE_ASSERT(where, isinstance(parameters, Expression),   'Expression[execute]: defn: params not a form')
@@ -583,8 +580,8 @@ class Expression:
                 SE_ASSERT(where,
                           isinstance(parameter, Value),  'Expression[execute]: defn: parameter should be a Value')
                 IDENTIFIER_ASSERT(parameter,          'Expression[execute]: defn: parameter should be Identifier')
-                types.append(TYPES.get(parameter.property('t'), object))  # <-- append parameter type to type list
                 names.append(parameter.token().value())  # <------- append name of the parameter to the names list
+                types.append(TYPES.get(parameter.property('t'), object))  # <-- append parameter type to type list
             can_take_extras = False  # <-------------------- by default, function can not take any extra arguments
             if ampersand_found:
                 SE_ASSERT(where,
@@ -594,11 +591,12 @@ class Expression:
                           len(children) - 2 == ampersand_position,
                           'Expression[execute]: defn: you have to mention alias name for the extra args\' tuple.')
                 operand = children[-1]
-                SE_ASSERT(where, isinstance(operand, Value),  'Expression[defn]: defn: operand should be a Value')
                 IDENTIFIER_ASSERT(operand, 'Expression[execute]: defn: extra-args-list name should be Identifier')
                 can_take_extras = True  # <- now we set this to true, as the function can now take extra arguments
-                types.append(tuple)  # <---------------------- append extra args param type to all parameter types
                 names.append(operand.token().value())  # <---- append extra args param name to all parameter names
+                types.append(tuple)  # <---------------------- append extra args param type to all parameter types
+            if not body:
+                body = [Nil]  # <-- let a function be defined with empty body, in such a case, it will return None
 
             def handle(*c_arguments, **kwargs):  # pylint: disable=E0102  # <- handle object couldn't be redefined
 
