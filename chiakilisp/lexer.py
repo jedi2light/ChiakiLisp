@@ -76,7 +76,9 @@ class Lexer:
                 self._advance()
                 self._increment_line_number_with_char_number_reset()
 
-            elif self._current_symbol_is_number():
+            elif self._current_symbol_is_number() \
+                    or (self._current_symbol() == '-'
+                            and self._next_symbol_is_number()):
                 value = self._current_symbol()
                 self._advance()
                 self._increment_char_number()
