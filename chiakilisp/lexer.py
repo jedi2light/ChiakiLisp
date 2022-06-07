@@ -185,7 +185,7 @@ class Lexer:
 
         """Returns whether source has next symbol"""
 
-        return self._pointer < len(self._source)
+        return self._pointer < len(self._source) or self._pointer < len(self._source) - 1
 
     def _current_symbol_is_nl(self) -> bool:
 
