@@ -156,6 +156,7 @@ class Expression:
             AE_ASSERT(where, len(rest) >= 2, 'Expression[generate]: defn: expected at least 2 operands')
             name, parameters, *body = rest
             IDENTIFIER_ASSERT(name,    'Expression[generate]: defn: function name should be Identifier')
+            AE_ASSERT(where, len(body) >= 1,      'Expression[generate]: defn: body could not be empty')
             returns = CXX_TYPES.get(name.property("t"), "auto")  # <- take into account func return type
             built_name = name.generate(dictionary, cfg, True)  # <----------- generate C++ function name
             for each in parameters.children():
