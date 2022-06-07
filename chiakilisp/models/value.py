@@ -94,9 +94,11 @@ class Value:
 
         representation = ''
 
+        if token.type() == Token.Nil:
+            representation = 'NULL'
         if token.type() == Token.String:
             representation = f'"{token.value()}"'
-        if token.type() in [Token.Nil, Token.Number, Token.Boolean, Token.Identifier]:  # return raw val-str
+        if token.type() in [Token.Number, Token.Boolean, Token.Identifier]:  # <--- return the raw value-str
             if token.type() == Token.Identifier:
                 # Try to resolve a C++ name from a dictionary first
                 raw = token.value()
@@ -109,7 +111,7 @@ class Value:
                     .replace('!', '_EXCLAMATION_MARK')
                 if not token.value() == '-':
                     representation = representation.replace('-', '_DASH_')  # <--- replace '-' with '_DASH_'
-                if not token.value() == '/' or not token.value().endswith('/'):  # TODO: !make this smarter!
+                if not token.value().startswith('/') or not token.value().endswith('/'):  # TODO: improve it
                     representation = representation.replace('/', '::')  # <-- replace LISP accessor with C++
             else:
                 representation = token.value()  # <-- in all the other cases, return raw string token' value
