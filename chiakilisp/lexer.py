@@ -54,6 +54,12 @@ class Lexer:
 
         return tuple((self._file_name, self._line_num, self._char_num))
 
+    def pos(self) -> tuple:
+
+        """Returns the same as the self._pos, but its a public method"""
+
+        return self._pos()  # <--- instead of doing extra refactoring :)
+
     def lex(self) -> None:  # pylint: disable=R0912, disable=R0915  #>_<
 
         """Process the source code, thus it populates the tokens list"""
