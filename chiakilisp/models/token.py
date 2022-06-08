@@ -75,12 +75,6 @@ class Token:
 
         return self._type == Token.Identifier
 
-    def position_formatted(self) -> str:
-
-        """Return formatted token position"""
-
-        return ':'.join(map(str, self._position))
-
     def __str__(self) -> str:
 
         """Override __str__ method"""
