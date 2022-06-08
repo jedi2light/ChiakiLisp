@@ -300,7 +300,7 @@ class Expression:
             AE_ASSERT(where, len(rest) == 1, 'Expression[generate]: hpp-base-dir: path string expected')
             path = rest[0]
             SE_ASSERT(where, isinstance(path, Value), 'Expression[generate]: hpp-base-dir: not a Value')
-            SE_ASSERT(path.token().postion(),
+            SE_ASSERT(path.token().position(),
                       path.token().is_string(),
                       'Expression[generate]: hpp-base-dir: the path to the headers have to be a String')
             cfg['CXX_INCLUDE_DIRS'].append(path.token().value())  # <--- append path to CXX_INCLUDE_DIRS
