@@ -13,13 +13,14 @@ def get_assertion_closure(e_object) -> Callable:
 
     """Returns the 'ASSERT()' function for the 'e_object'"""
 
-    def ASSERT(t_pos: str, condition, *args) -> None:
+    def ASSERT(where: tuple, condition, *args) -> None:
         """Helps to raise custom exception when asserting"""
 
         if not condition:
             msg, *rst = args
+            where = ':'.join(map(str, where))
             raise e_object(
-                f'{t_pos} {e_object.__name__}: {msg}', *rst)
+                f'{where} {e_object.__name__}: {msg}', *rst)
 
     return ASSERT  # <---- thus, return an assertion closure
 

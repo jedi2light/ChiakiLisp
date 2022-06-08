@@ -142,7 +142,7 @@ class Value:
         if self.token().type() == Token.Identifier:
 
             name = self.token().value()
-            where = self.token().position_formatted()  # <- assign to pretty formatted token position string
+            where = self.token().position()  # <------------------------------------ remember token position
 
             ASSERT = partial(_ASSERT, where)  # <---- create partial function to simplify ASSERT() func call
             proposals = partial(_proposals, environment.keys())  # <------- simplify proposals function call

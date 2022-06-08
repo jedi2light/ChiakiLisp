@@ -44,9 +44,9 @@ def IDENTIFIER_ASSERT(value: Value, message: str) -> None:
 
     """A handy shortcut to make assertion that Value is Identifier"""
 
-    token = value.token()
+    val_token = value.token()
 
-    SE_ASSERT(token.position_formatted(), token.is_identifier(), message)
+    SE_ASSERT(val_token.position(), val_token.is_identifier(), message)
 
 
 class Expression:
@@ -91,7 +91,7 @@ class Expression:
         assert isinstance(head, Value),     'Expression[lint]: head should be a Value, not an Expression instance'
         IDENTIFIER_ASSERT(head,                       'Expression[lint]: head of expression should be Identifier')
 
-        where = head.token().position_formatted()  # <-- remember head token formatted position in the source code
+        where = head.token().position()  # <------------ remember head token formatted position in the source code
 
         if head.token().value() == 'def':
             AE_ASSERT(where, len(tail) == 2,                    'Expression[lint]: def: expected exactly 2 forms')
@@ -113,7 +113,7 @@ class Expression:
         assert isinstance(head, Value),   'Expression[generate]: head should be a Value object instance'
         IDENTIFIER_ASSERT(head,      'Expression[generate]: head of expression should be an Identifier')
 
-        where = head.token().position_formatted()  # <-- remember current expression head token position
+        where = head.token().position()  # <------------ remember current expression head token position
 
         NS_ASSERT(
             where,
@@ -300,7 +300,7 @@ class Expression:
             AE_ASSERT(where, len(rest) == 1, 'Expression[generate]: hpp-base-dir: path string expected')
             path = rest[0]
             SE_ASSERT(where, isinstance(path, Value), 'Expression[generate]: hpp-base-dir: not a Value')
-            SE_ASSERT(path.token().position_formatted(),
+            SE_ASSERT(path.token().postion(),
                       path.token().is_string(),
                       'Expression[generate]: hpp-base-dir: the path to the headers have to be a String')
             cfg['CXX_INCLUDE_DIRS'].append(path.token().value())  # <--- append path to CXX_INCLUDE_DIRS
@@ -310,7 +310,7 @@ class Expression:
             AE_ASSERT(where, len(rest) == 1, 'Expression[generate]: lib-base-dir: path string expected')
             path = rest[0]
             SE_ASSERT(where, isinstance(path, Value), 'Expression[generate]: lib-base-dir: not a Value')
-            SE_ASSERT(path.token().position_formatted(),
+            SE_ASSERT(path.token().position(),
                       path.token().is_string(),
                       'Expression[generate]: lib-base-dir: the path to the library have to be a String')
             cfg['CXX_LIBRARY_DIRS'].append(path.token().value())  # <--- append path to CXX_LIBRARY_DIRS
@@ -345,7 +345,7 @@ class Expression:
         assert isinstance(head, Value),            'Expression[execute]: head of the expression should be a Value'
         IDENTIFIER_ASSERT(head,             'Expression[execute]: head of the expression should be an Identifier')
 
-        where = head.token().position_formatted()  # <-- when make assertions on expression head, this can be used
+        where = head.token().position()  # <------------ when make assertions on expression head, this can be used
 
         NS_ASSERT(
             where,
