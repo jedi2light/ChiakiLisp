@@ -479,7 +479,7 @@ class Expression:
             for raw, value in (items[i:i + 2] for i in range(0, len(items), 2)):
                 if isinstance(raw, Expression):
                     get = environ.get('get')  # <------ here we go... should it be called like ChiakiLisp interop?
-                    RE_ASSERT(get,           "Expression[execute]: let: destructuring requires core/get function")
+                    RE_ASSERT(where, get,    "Expression[execute]: let: destructuring requires core/get function")
                     executed = value.execute(let, False)  # <-- pre-execute value in order to treat it like a list
                     for idx, alias in enumerate(map(lambda val: val.token().value(), raw.children())):  # map over
                         let.update({alias: get(executed, idx, None)})  # <- for each alias get a coll value or nil
