@@ -54,7 +54,7 @@ def wood(source: str, source_file_name: str) -> list:
     try:
         lexer.lex()
     except IndexError:  # may occur when input's broken
-        formatted = ':'.join(map(str, lexer.pos()))
+        formatted = ':'.join(map(str,     lexer.pos()))
         raise SyntaxError(
             f'{formatted}: '
             'Unable to continue the source code lexing'
@@ -62,8 +62,8 @@ def wood(source: str, source_file_name: str) -> list:
     ast = Parser(lexer.tokens())
     try:
         ast.parse()
-    except AssertionError: # missing brackets may cause
-        formatted = ':'.join(map(str, lexer.pos()))
+    except AssertionError:  # missing bracket may cause
+        formatted = ':'.join(map(str,     lexer.pos()))
         raise SyntaxError(
             f'{formatted}: '
             "Unable to build an 'Abstract Syntax Tree'"
