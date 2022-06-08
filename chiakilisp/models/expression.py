@@ -198,7 +198,17 @@ class Expression:
                    f'? {true.generate(dictionary, cfg, True)}' \
                    f': NULL;}})' + ('' if inline else ';')  # <- ternary expression, but 'false' is NULL
 
-        # cond...
+        if head.token().value() == 'cond':
+            if not rest:
+                return '({ NULL; )}' + (';' if not inline else '')
+
+            AE_ASSERT(where,
+                      len(rest) % 2 == 0,   'Expression[generate]: cond: expected even number of forms')
+
+            return Expression([identifier('->>')] + [
+                Expression([identifier('if')] + pair)
+                for pair in reversed([rest[i:i + 2] for i in range(0, len(rest), 2)])
+            ]).generate(dictionary, cfg, inline)  # <-- return generated (->> ...) expression with 'if's
 
         if head.token().value() == 'let':
             AE_ASSERT(where,  rest,             'Expression[generate]: let: at least one form expected')
