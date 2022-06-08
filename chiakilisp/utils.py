@@ -73,13 +73,32 @@ def pprint(*args: list) -> None:
 
     print(' '.join(map(wrap, args)))  # white-space' joined str
 
+MAX_SCORE = 999  # <---- set max score to the pretty big number
+
+
+def simple_fuzzy_matched_match_score(possible: str, item: str):
+
+    """This function returns the score of the matching check"""
+
+    first = set(possible)
+    second = set(item)
+
+    first_length = len(first)
+    first_to_second_subtraction_len = len(first - second)
+
+    return MAX_SCORE \
+        if first_length == first_to_second_subtraction_len \
+        else first_to_second_subtraction_len
+
 
 def simple_fuzzy_matched(item: str, glossary: Iterable) -> tuple:
 
     """This returns most fuzzy matched strings in the glossary"""
 
     scored = tuple(map(
-        lambda possible: (len(set(possible) - set(item)), possible),
+        lambda possible: (simple_fuzzy_matched_match_score(possible,
+                                                           item),
+                          possible),
         glossary
     ))  # <- returns something like ((1, 'foo'), 2, 'bar') and so on
 
@@ -91,15 +110,7 @@ def simple_fuzzy_matched(item: str, glossary: Iterable) -> tuple:
         )
     )))  # <----- returns the most lower score in the `scored` tuple
 
-    return tuple()
-
-    return tuple(filter(
-        lambda candidate: (
-                len(candidate) - len(item) >= 5  # <-- tune it later
-                or len(item) - len(candidate) <= 5   # tune it later
-        ),
-        map(
+    return tuple(map(
             lambda pair: pair[1],
             filter(lambda pair: pair[0] == lowest, scored)
-        )
     ))  # <--- returns a tuple of candidates with the `lowest` score
