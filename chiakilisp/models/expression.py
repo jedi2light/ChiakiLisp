@@ -118,12 +118,11 @@ class Expression:
         NS_ASSERT(
             where,
             head.token().value() not in [
-                'def?',                # in cxx mode we do not support def? form (yet). TODO: implement
                 'try',    # in cxx mode we do not support code generation for try form. TODO: implement
-                '...',  # in cxx mode we do not know how to represent Ellipsis. TODO: maybe figure out?
                 'cond',  # in cxx mode we do not support code generation for cond form. TODO: implement
                 'fn',      # in cxx mode we do not support code generation for lambdas. TODO: implement
-                'import',             # in cxx mode we do not support importing Python 3 modules at all
+                'def?',                # in cxx mode we do not support def? form (yet). TODO: implement
+                'import',       # in cxx mode we do not support Python 3 modules (now). TODO: implement
                 'require'   # in cxx mode we do not support ChiakiLisp modules require. TODO: implement
             ],
             f"Expression[generate]: '{head.token().value()}' special form: is not supported in cxx-mode"
@@ -139,132 +138,7 @@ class Expression:
             return '(' + ' && '.join(map(lambda e: e.generate(dictionary, cfg, True),
                                          rest)) + ')' + ('' if inline else ';')  # produce and condition
 
-        if head.token().value().startswith('.'):
-            AE_ASSERT(where, rest,    'Expression[generate]: dot-form: at least 1 operand was expected')
-            name, *args = rest
-            SE_ASSERT(where, name,      'Expression[generate]: dot-form: object name should be a Value')
-            IDENTIFIER_ASSERT(name,  'Expression[generate]: dot-form: object name should be Identifier')
-            SE_ASSERT(where,
-                      len(head.token().value()) > 1, 'Expression[generate]: dot-form: cannot be just .')
-            generated = name.generate(dictionary, cfg, True)  # <------ get the C++ name of the variable
-            accessor = '->' if generated in cfg['KNOWN_POINTERS'] else '.'   # '->' accessor for pointer
-            return f'{generated}{accessor}{head.token().value()[1:]}(' \
-                   + ', '.join(map(lambda a: a.generate(dictionary, cfg, True),
-                                   args)) + ')' \
-                   + (';' if not inline else '')  # <---- return generated dot-expression representation
-
-        if head.token().value() == 'defn':
-            AE_ASSERT(where, len(rest) >= 2, 'Expression[generate]: defn: expected at least 2 operands')
-            name, parameters, *body = rest
-            SE_ASSERT(where,
-                      isinstance(name, Value),   'Expression[generate]: defn: the name should be Value')
-            IDENTIFIER_ASSERT(name,    'Expression[generate]: defn: function name should be Identifier')
-            AE_ASSERT(where, body,                'Expression[generate]: defn: body could not be empty')
-            returns = CXX_TYPES.get(name.property("t"), "auto")  # <- take into account func return type
-            built_name = name.generate(dictionary, cfg, True)  # <----------- generate C++ function name
-            for each in parameters.children():
-                SE_ASSERT(where,
-                          isinstance(each, Value),  'Expression[generate]: a parameter should be Value')
-                IDENTIFIER_ASSERT(each,  'Expression[generate]: each parameter should be an Identifier')
-            built_parameters = '(' + \
-                               ', '.join(map(lambda p: f'{CXX_TYPES.get(p.property("t"), "auto")} '
-                                                       f'{p.generate(dictionary, cfg, True)}',  # pm def
-                                             parameters.children())) \
-                               + ')'  # <---------------------------------- generate function parameters
-            built_body = f'return ({{{" ".join([e.generate(dictionary, cfg, False) for e in body])}}});'
-            cfg['DEFUNCTIONS'].append(f'{returns} {built_name} {built_parameters} {{  {built_body}  }}')
-            return ''  # <--- defn function is not supposed to return generated code, only update config
-
-        if head.token().value() == 'if':
-            AE_ASSERT(where, len(rest) == 3,  'Expression[generate]: if: expected exactly 3 forms here')
-            cond, true, false = rest
-            return f'({{{cond.generate(dictionary, cfg, True)} ' \
-                   f'? {true.generate(dictionary, cfg, True)}' \
-                   f': {false.generate(dictionary, cfg, False)}}})' + ('' if inline else ';')  # ternary
-
-        if head.token().value() == 'when':
-            AE_ASSERT(where, len(rest) == 2, 'Expression[generate]: when: expected exactly 2 args here')
-            cond, true = rest
-            return f'({{{cond.generate(dictionary, cfg, True)} ' \
-                   f'? {true.generate(dictionary, cfg, True)}' \
-                   f': NULL;}})' + ('' if inline else ';')  # <- ternary expression, but 'false' is NULL
-
-        if head.token().value() == 'def':
-            AE_ASSERT(where, len(rest) == 2, 'Expression[generate]: def: expected name, value operands')
-            name, value = rest
-            SE_ASSERT(where, isinstance(name, Value), 'Expression[generate]: def: name should be Value')
-            IDENTIFIER_ASSERT(name,           'Expression[generate]: def: name should be an Identifier')
-            generated = name.generate(dictionary, cfg, True)  # <----- generate CXX name of the variable
-            cfg['DEFS'].append(f'auto {generated} = {value.generate(dictionary, cfg, False)}')  # define
-            return ''  # <- def-form is not supposed to generate a line of code, only append to the defs
-
-        if head.token().value() == 'hpp-base-dir':
-            AE_ASSERT(where, len(rest) == 1, 'Expression[generate]: hpp-base-dir: path string expected')
-            path = rest[0]
-            SE_ASSERT(where, isinstance(path, Value), 'Expression[generate]: hpp-base-dir: not a Value')
-            SE_ASSERT(path.token().position_formatted(),
-                      path.token().is_string(),
-                      'Expression[generate]: hpp-base-dir: the path to the headers have to be a String')
-            cfg['CXX_INCLUDE_DIRS'].append(path.token().value())  # <--- append path to CXX_INCLUDE_DIRS
-            return ''  # <----------------- hpp-base-dir form is not supposed to generate a line of code
-
-        if head.token().value() == 'lib-base-dir':
-            AE_ASSERT(where, len(rest) == 1, 'Expression[generate]: lib-base-dir: path string expected')
-            path = rest[0]
-            SE_ASSERT(where, isinstance(path, Value), 'Expression[generate]: lib-base-dir: not a Value')
-            SE_ASSERT(path.token().position_formatted(),
-                      path.token().is_string(),
-                      'Expression[generate]: lib-base-dir: the path to the library have to be a String')
-            cfg['CXX_LIBRARY_DIRS'].append(path.token().value())  # <--- append path to CXX_LIBRARY_DIRS
-            return ''  # <----------------- lib-base-dir form is not supposed to generate a line of code
-
-        if head.token().value() == 'link':
-            AE_ASSERT(where, len(rest) == 1,  'Expression[generate]: link: a library name was expected')
-            name = rest[0]
-            SE_ASSERT(where, isinstance(name, Value), 'Expression[generate]: link: name is not a Value')
-            IDENTIFIER_ASSERT(name,         'Expression[generate]: a library name should be Identifier')
-            cfg['LD_LINK_SRC_WITH'].append(name.token().value())  # <--- append name to LD_LINK_SRC_WITH
-            return ''  # <------------------------- link form is not supposed to generate a line of code
-
-        if head.token().value() == 'include':
-            AE_ASSERT(where, len(rest) == 1,  'Expression[generate]: include: header path was expected')
-            path = rest[0]
-            SE_ASSERT(where, isinstance(path, Value), 'Expression[generate]: include: path not a Value')
-            IDENTIFIER_ASSERT(path,          'Expression[generate]: a header path should be Identifier')
-            cfg['SOURCE_INCLUDING'].append(path.token().value())  # <--- append name to SOURCE_INCLUDING
-            return ''  # <---------------------- include form is not supposed to generate a line of code
-
-        if head.token().value() == 'new':
-            AE_ASSERT(where, len(rest) == 1,     'Expression[generate]: new: expected exactly one form')
-            definition = rest[0]
-            SE_ASSERT(where,
-                      isinstance(definition, Expression),
-                      'Expression[generate]: new: definition have to be dynamic object allocation form')
-            return f'new {definition.generate(dictionary, cfg, inline)}'  # <-- return a 'new' statement
-
-        if head.token().value() == 'let':
-            AE_ASSERT(where,  rest,             'Expression[generate]: let: at least one form expected')
-            bindings, *body = rest
-            items = bindings.children()
-            AE_ASSERT(where, items,  'Expression[generate]: let: you should provide at least 1 binding')
-            AE_ASSERT(where,
-                      len(items) % 2 == 0,
-                      'Expression[generate]: let: the bindings form is expected to have an even length')
-            AE_ASSERT(where,  body,                'Expression[generate]: let: body could not be empty')
-            lines = []  # <----------------------------------------------------- resulting lines of code
-            for name, value in (items[i:i + 2] for i in range(0, len(items), 2)):
-                SE_ASSERT(where,
-                          isinstance(name, Value), 'Expression[generate]: binding name should be Value')
-                IDENTIFIER_ASSERT(name,    'Expression[generate]: binding name should be an Identifier')
-                rhs = value.generate(dictionary, cfg,  False)  # <------- right-hand-side generated code
-                generated = name.generate(dictionary, cfg, True)  # <--- get generated C++ variable name
-                lhs = f'auto{"*" if rhs.startswith("new") else ""} {generated}'  # <- and left-hand-side
-                if rhs.startswith("new"):
-                    cfg['KNOWN_POINTERS'].append(generated)  # <------ append to the known pointers list
-                lines.append(f'{lhs} = {rhs}')  # <----- append generated variable definition expression
-            for each in body:
-                lines.append(each.generate(dictionary, cfg, False))  # <--- let this to be simple enough
-            return '({' + '\n'.join(lines) + '})' + (';' if not inline else '')  # <----generate a block
+        # try...
 
         if head.token().value() == '->':
             if len(rest) == 1:
@@ -295,6 +169,143 @@ class Expression:
                 target, *tail = rest  # <----------------- do the same we did before entering while-loop
 
             return target.generate(dictionary, cfg, inline)  # <------------ return generated expression
+
+        if head.token().value().startswith('.') and not head.token().value() == '...':
+            AE_ASSERT(where, rest,    'Expression[generate]: dot-form: at least 1 operand was expected')
+            name, *args = rest
+            SE_ASSERT(where, name,      'Expression[generate]: dot-form: object name should be a Value')
+            IDENTIFIER_ASSERT(name,  'Expression[generate]: dot-form: object name should be Identifier')
+            SE_ASSERT(where,
+                      len(head.token().value()) > 1, 'Expression[generate]: dot-form: cannot be just .')
+            generated = name.generate(dictionary, cfg, True)  # <------ get the C++ name of the variable
+            accessor = '->' if generated in cfg['KNOWN_POINTERS'] else '.'   # '->' accessor for pointer
+            return f'{generated}{accessor}{head.token().value()[1:]}(' \
+                   + ', '.join(map(lambda a: a.generate(dictionary, cfg, True),
+                                   args)) + ')' \
+                   + (';' if not inline else '')  # <---- return generated dot-expression representation
+
+        if head.token().value() == 'if':
+            AE_ASSERT(where, len(rest) == 3,  'Expression[generate]: if: expected exactly 3 forms here')
+            cond, true, false = rest
+            return f'({{{cond.generate(dictionary, cfg, True)} ' \
+                   f'? {true.generate(dictionary, cfg, True)}' \
+                   f': {false.generate(dictionary, cfg, False)}}})' + ('' if inline else ';')  # ternary
+
+        if head.token().value() == 'when':
+            AE_ASSERT(where, len(rest) == 2, 'Expression[generate]: when: expected exactly 2 args here')
+            cond, true = rest
+            return f'({{{cond.generate(dictionary, cfg, True)} ' \
+                   f'? {true.generate(dictionary, cfg, True)}' \
+                   f': NULL;}})' + ('' if inline else ';')  # <- ternary expression, but 'false' is NULL
+
+        # cond...
+
+        if head.token().value() == 'let':
+            AE_ASSERT(where,  rest,             'Expression[generate]: let: at least one form expected')
+            bindings, *body = rest
+            items = bindings.children()
+            AE_ASSERT(where, items,  'Expression[generate]: let: you should provide at least 1 binding')
+            AE_ASSERT(where,
+                      len(items) % 2 == 0,
+                      'Expression[generate]: let: the bindings form is expected to have an even length')
+            AE_ASSERT(where,  body,                'Expression[generate]: let: body could not be empty')
+            lines = []  # <----------------------------------------------------- resulting lines of code
+            for name, value in (items[i:i + 2] for i in range(0, len(items), 2)):
+                SE_ASSERT(where,
+                          isinstance(name, Value), 'Expression[generate]: binding name should be Value')
+                IDENTIFIER_ASSERT(name,    'Expression[generate]: binding name should be an Identifier')
+                rhs = value.generate(dictionary, cfg,  False)  # <------- right-hand-side generated code
+                generated = name.generate(dictionary, cfg, True)  # <--- get generated C++ variable name
+                lhs = f'auto{"*" if rhs.startswith("new") else ""} {generated}'  # <- and left-hand-side
+                if rhs.startswith("new"):
+                    cfg['KNOWN_POINTERS'].append(generated)  # <------ append to the known pointers list
+                lines.append(f'{lhs} = {rhs}')  # <----- append generated variable definition expression
+            for each in body:
+                lines.append(each.generate(dictionary, cfg, False))  # <--- let this to be simple enough
+            return '({' + '\n'.join(lines) + '})' + (';' if not inline else '')  # <----generate a block
+
+        # fn...
+
+        if head.token().value() == 'def':
+            AE_ASSERT(where, len(rest) == 2, 'Expression[generate]: def: expected name, value operands')
+            name, value = rest
+            SE_ASSERT(where, isinstance(name, Value), 'Expression[generate]: def: name should be Value')
+            IDENTIFIER_ASSERT(name,           'Expression[generate]: def: name should be an Identifier')
+            generated = name.generate(dictionary, cfg, True)  # <----- generate CXX name of the variable
+            cfg['DEFS'].append(f'auto {generated} = {value.generate(dictionary, cfg, False)}')  # define
+            return ''  # <- def-form is not supposed to generate a line of code, only append to the defs
+
+        # def?...
+
+        if head.token().value() == 'defn':
+            AE_ASSERT(where, len(rest) >= 2, 'Expression[generate]: defn: expected at least 2 operands')
+            name, parameters, *body = rest
+            SE_ASSERT(where,
+                      isinstance(name, Value),   'Expression[generate]: defn: the name should be Value')
+            IDENTIFIER_ASSERT(name,    'Expression[generate]: defn: function name should be Identifier')
+            AE_ASSERT(where, body,                'Expression[generate]: defn: body could not be empty')
+            returns = CXX_TYPES.get(name.property("t"), "auto")  # <- take into account func return type
+            built_name = name.generate(dictionary, cfg, True)  # <----------- generate C++ function name
+            for each in parameters.children():
+                SE_ASSERT(where,
+                          isinstance(each, Value),  'Expression[generate]: a parameter should be Value')
+                IDENTIFIER_ASSERT(each,  'Expression[generate]: each parameter should be an Identifier')
+            built_parameters = '(' + \
+                               ', '.join(map(lambda p: f'{CXX_TYPES.get(p.property("t"), "auto")} '
+                                                       f'{p.generate(dictionary, cfg, True)}',  # pm def
+                                             parameters.children())) \
+                               + ')'  # <---------------------------------- generate function parameters
+            built_body = f'return ({{{" ".join([e.generate(dictionary, cfg, False) for e in body])}}});'
+            cfg['DEFUNCTIONS'].append(f'{returns} {built_name} {built_parameters} {{  {built_body}  }}')
+            return ''  # <--- defn function is not supposed to return generated code, only update config
+
+        # import...
+
+        # require...
+
+        if head.token().value() == 'new':
+            AE_ASSERT(where, len(rest) == 1,     'Expression[generate]: new: expected exactly one form')
+            definition = rest[0]
+            SE_ASSERT(where,
+                      isinstance(definition, Expression),
+                      'Expression[generate]: new: definition have to be dynamic object allocation form')
+            return f'new {definition.generate(dictionary, cfg, inline)}'  # <-- return a 'new' statement
+
+        if head.token().value() == 'link':
+            AE_ASSERT(where, len(rest) == 1,  'Expression[generate]: link: a library name was expected')
+            name = rest[0]
+            SE_ASSERT(where, isinstance(name, Value), 'Expression[generate]: link: name is not a Value')
+            IDENTIFIER_ASSERT(name,         'Expression[generate]: a library name should be Identifier')
+            cfg['LD_LINK_SRC_WITH'].append(name.token().value())  # <--- append name to LD_LINK_SRC_WITH
+            return ''  # <------------------------- link form is not supposed to generate a line of code
+
+        if head.token().value() == 'include':
+            AE_ASSERT(where, len(rest) == 1,  'Expression[generate]: include: header path was expected')
+            path = rest[0]
+            SE_ASSERT(where, isinstance(path, Value), 'Expression[generate]: include: path not a Value')
+            IDENTIFIER_ASSERT(path,          'Expression[generate]: a header path should be Identifier')
+            cfg['SOURCE_INCLUDING'].append(path.token().value())  # <--- append name to SOURCE_INCLUDING
+            return ''  # <---------------------- include form is not supposed to generate a line of code
+
+        if head.token().value() == 'hpp-base-dir':
+            AE_ASSERT(where, len(rest) == 1, 'Expression[generate]: hpp-base-dir: path string expected')
+            path = rest[0]
+            SE_ASSERT(where, isinstance(path, Value), 'Expression[generate]: hpp-base-dir: not a Value')
+            SE_ASSERT(path.token().position_formatted(),
+                      path.token().is_string(),
+                      'Expression[generate]: hpp-base-dir: the path to the headers have to be a String')
+            cfg['CXX_INCLUDE_DIRS'].append(path.token().value())  # <--- append path to CXX_INCLUDE_DIRS
+            return ''  # <----------------- hpp-base-dir form is not supposed to generate a line of code
+
+        if head.token().value() == 'lib-base-dir':
+            AE_ASSERT(where, len(rest) == 1, 'Expression[generate]: lib-base-dir: path string expected')
+            path = rest[0]
+            SE_ASSERT(where, isinstance(path, Value), 'Expression[generate]: lib-base-dir: not a Value')
+            SE_ASSERT(path.token().position_formatted(),
+                      path.token().is_string(),
+                      'Expression[generate]: lib-base-dir: the path to the library have to be a String')
+            cfg['CXX_LIBRARY_DIRS'].append(path.token().value())  # <--- append path to CXX_LIBRARY_DIRS
+            return ''  # <----------------- lib-base-dir form is not supposed to generate a line of code
 
         cpp_function_name = head.generate(dictionary, cfg, True)  # <--- get generated C++ function name
 
@@ -330,11 +341,11 @@ class Expression:
         NS_ASSERT(
             where,
             head.token().value() not in [
-                'hpp-base-dir',  # in ast mode we do not need to define location whether to lookup for CXX headers
-                'lib-base-dir',  # in ast mode we do not need to define location whether to lookup for CXX library
+                'new'  # <------------- in ast mode we do not need to manipulate with pointers to object instances
                 'link',  # <- in ast mode we do not need to define which library our program should be linked with
                 'include',  # <-- in ast mode we not need to define what header we should include into our program
-                'new'  # <------------- in ast mode we do not need to manipulate with pointers to object instances
+                'hpp-base-dir',  # in ast mode we do not need to define location whether to lookup for CXX headers
+                'lib-base-dir',  # in ast mode we do not need to define location whether to lookup for CXX library
             ],
             f"Expression[generate]: sorry, but '{head.token().value()}' special form is not supported in ast-mode"
         )
