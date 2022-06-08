@@ -167,3 +167,4 @@ class Value:
 
 
 Nil = Value(Token(Token.Nil, 'nil', ()))  # predefined Nil value; (useful for empty defn, fn and let bodies)
+identifier = lambda identifier_name: Value(Token(Token.Identifier, identifier_name, ()))  # <--- tiny helper
