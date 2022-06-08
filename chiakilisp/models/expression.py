@@ -118,12 +118,11 @@ class Expression:
         NS_ASSERT(
             where,
             head.token().value() not in [
-                'try',    # in cxx mode we do not support code generation for try form. TODO: implement
-                'cond',  # in cxx mode we do not support code generation for cond form. TODO: implement
-                'fn',      # in cxx mode we do not support code generation for lambdas. TODO: implement
-                'def?',                # in cxx mode we do not support def? form (yet). TODO: implement
-                'import',       # in cxx mode we do not support Python 3 modules (now). TODO: implement
-                'require'   # in cxx mode we do not support ChiakiLisp modules require. TODO: implement
+                'try',     # in cxx mode we do not support code generation for try form. TODO: implement
+                'fn',       # in cxx mode we do not support code generation for lambdas. TODO: implement
+                'def?',                 # in cxx mode we do not support def? form (yet). TODO: implement
+                'import',        # in cxx mode we do not support Python 3 modules (now). TODO: implement
+                'require'    # in cxx mode we do not support ChiakiLisp modules require. TODO: implement
             ],
             f"Expression[generate]: '{head.token().value()}' special form: is not supported in cxx-mode"
         )
