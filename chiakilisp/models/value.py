@@ -111,7 +111,8 @@ class Value:
                     .replace('!', '_EXCLAMATION_MARK')
                 if not token.value() == '-':
                     representation = representation.replace('-', '_DASH_')  # <--- replace '-' with '_DASH_'
-                if not token.value().startswith('/') or not token.value().endswith('/'):  # TODO: improve it
+                if not token.value().startswith('/') \
+                        and not token.value().endswith('/') and '/' in token.value():  # <------- be careful
                     representation = representation.replace('/', '::')  # <-- replace LISP accessor with C++
             else:
                 representation = token.value()  # <-- in all the other cases, return raw string token' value
@@ -146,7 +147,7 @@ class Value:
             ASSERT = partial(_ASSERT, where)  # <---- create partial function to simplify ASSERT() func call
             proposals = partial(_proposals, environment.keys())  # <------- simplify proposals function call
 
-            if '/' in name and not name == '/':
+            if not name.startswith('/') and not name.endswith('/') and '/' in name:
                 obj_name, member_name, *_ = name.split('/')  # <------ syntax is <object name>/<member name>
                 obj_object = environment.get(obj_name, NotFound)  # <------- assign found object or NotFound
                 ASSERT(obj_object is not NotFound,
