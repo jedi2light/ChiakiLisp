@@ -298,7 +298,7 @@ class Expression:
 
         if head.token().value() == 'hpp-base-dir':
             AE_ASSERT(where, len(rest) == 1, 'Expression[generate]: hpp-base-dir: path string expected')
-            path = rest[0]
+            path: Value = rest[0]
             SE_ASSERT(where, isinstance(path, Value), 'Expression[generate]: hpp-base-dir: not a Value')
             SE_ASSERT(path.token().position(),
                       path.token().is_string(),
@@ -308,7 +308,7 @@ class Expression:
 
         if head.token().value() == 'lib-base-dir':
             AE_ASSERT(where, len(rest) == 1, 'Expression[generate]: lib-base-dir: path string expected')
-            path = rest[0]
+            path: Value = rest[0]
             SE_ASSERT(where, isinstance(path, Value), 'Expression[generate]: lib-base-dir: not a Value')
             SE_ASSERT(path.token().position(),
                       path.token().is_string(),
