@@ -185,8 +185,8 @@ class Expression:
                    + (';' if not inline else '')  # <---- return generated dot-expression representation
 
         if head.token().value() == 'if':
-            AE_ASSERT(where, len(rest) == 3,  'Expression[generate]: if: expected exactly 3 forms here')
-            cond, true, false = rest
+            AE_ASSERT(where, len(rest) >= 2, 'Expression[generate]: if: expected at least 2 forms here')
+            cond, true, false = (rest if len(rest) == 3 else rest + [Nil])  # <- tolerate missing branch
             return f'({{{cond.generate(dictionary, cfg, True)} ' \
                    f'? {true.generate(dictionary, cfg, True)}' \
                    f': {false.generate(dictionary, cfg, False)}}})' + ('' if inline else ';')  # ternary
@@ -441,8 +441,8 @@ class Expression:
             return object_m_object(*(child.execute(environ, False) for child in method_args))  # return its result
 
         if head.token().value() == 'if':
-            AE_ASSERT(where, len(tail) == 3,                  'Expression[execute]: if: expected exactly 2 forms')
-            cond, true, false = tail
+            AE_ASSERT(where, len(tail) >= 2,            'Expression[execute]: if: expected at least 2 forms here')
+            cond, true, false = (tail if len(tail) == 3 else tail + [Nil])  # <----- tolerate missing false-branch
             return true.execute(environ, False) if cond.execute(environ, False) else false.execute(environ, False)
 
         if head.token().value() == 'when':
