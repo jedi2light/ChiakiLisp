@@ -73,6 +73,7 @@ def pprint(*args: list) -> None:
 
     print(' '.join(map(wrap, args)))  # white-space' joined str
 
+
 MAX_SCORE = 999  # <---- set max score to the pretty big number
 
 
