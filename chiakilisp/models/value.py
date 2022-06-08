@@ -146,7 +146,7 @@ class Value:
             ASSERT = partial(_ASSERT, where)  # <---- create partial function to simplify ASSERT() func call
             proposals = partial(_proposals, environment.keys())  # <------- simplify proposals function call
 
-            if '/' in name:
+            if '/' in name and not name == '/':
                 obj_name, member_name, *_ = name.split('/')  # <------ syntax is <object name>/<member name>
                 obj_object = environment.get(obj_name, NotFound)  # <------- assign found object or NotFound
                 ASSERT(obj_object is not NotFound,
