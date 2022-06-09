@@ -9,10 +9,11 @@
 
 from copy import deepcopy
 from typing import List, Any, Callable
+from chiakilisp.models.literal import\
+    Literal, NotFound, Nil, identifier
 from chiakilisp.utils import get_assertion_closure
-from chiakilisp.models.value import Value, NotFound, Nil, identifier
 
-Child = Value or 'Expression'   # define the type for a single child
+Child = Literal or 'Expression'   # define a type for a single child
 Children = List[Child]   # define a type describing list of children
 
 
@@ -26,9 +27,9 @@ class NotSupportedError(SyntaxError):
     """NotSupportedError (just for name)"""
 
 
-NE_ASSERT = get_assertion_closure(NameError)  # <------ raises a NameError
-AE_ASSERT = get_assertion_closure(ArityError)  # <--- raises an ArityError
-SE_ASSERT = get_assertion_closure(SyntaxError)  # <-- raises a SyntaxError
+NE_ASSERT = get_assertion_closure(NameError)  # <-------- raises NameError
+AE_ASSERT = get_assertion_closure(ArityError)  # <------ raises ArityError
+SE_ASSERT = get_assertion_closure(SyntaxError)  # <---- raises SyntaxError
 RE_ASSERT = get_assertion_closure(RuntimeError)  # <-- raises RuntimeError
 TE_ASSERT = get_assertion_closure(TypeError)  # <-------- raises TypeError
 NS_ASSERT = get_assertion_closure(NotSupportedError)   # NotSupportedError
@@ -40,13 +41,11 @@ TYPES = {'int': int, 'float': float,
 CXX_TYPES = {'int': 'long', 'float': 'float', 'str': 'std::string'}
 
 
-def IDENTIFIER_ASSERT(value: Value, message: str) -> None:
+def IDENTIFIER_ASSERT(lit: Literal, message: str) -> None:
 
-    """A handy shortcut to make assertion that Value is Identifier"""
+    """Handy shortcut to make assertion that Literal is Identifier"""
 
-    val_token = value.token()
-
-    SE_ASSERT(val_token.position(), val_token.is_identifier(), message)
+    SE_ASSERT(lit.token().position(), lit.token().is_identifier(), message)
 
 
 class Expression:
@@ -73,30 +72,31 @@ class Expression:
 
         """Dumps the entire expression"""
 
+        # There is no need to annotate types, or assert() them
+
         children = self.children()
         if children:
             first, *rest = children
             first.dump(indent)
             for argument in rest:
-                argument.dump(indent + 1)
+                argument.dump(indent + 1)   # increment indent
 
     def lint(self, _: dict, rule: str, storage: dict) -> None:
 
-        """React to the builtin linter visit"""
+        """React to the builtin linter visit event"""
 
-        head: Value
-        tail: Children
+        head: Literal
         head, *tail = self.children()
 
-        assert isinstance(head, Value),     'Expression[lint]: head should be a Value, not an Expression instance'
+        assert isinstance(head, Literal), 'Expression[lint]: head should be a Literal, not an Expression instance'
         IDENTIFIER_ASSERT(head,                       'Expression[lint]: head of expression should be Identifier')
 
-        where = head.token().position()  # <------------ remember head token formatted position in the source code
+        where = head.token().position()  # <---------------------- remember head token position in the source code
 
         if head.token().value() == 'def':
             AE_ASSERT(where, len(tail) == 2,                    'Expression[lint]: def: expected exactly 2 forms')
-            name: Value = tail[0]
-            SE_ASSERT(where, isinstance(name, Value),             'Expression[lint]: def: name should be a Value')
+            name: Literal = tail[0]  # <----------------------------------------- assign name as a type of Literal
+            SE_ASSERT(where, isinstance(name, Literal),         'Expression[lint]: def: name should be a Literal')
             IDENTIFIER_ASSERT(name,                         'Expression[lint]: def: name should be an Identifier')
 
             if rule == 'UnusedGlobalVariables':
@@ -106,11 +106,10 @@ class Expression:
 
         """Generate C++ representation of the ChiakiLisp expression"""
 
-        head: Value
-        rest: Children
+        head: Literal
         head, *rest = self.children()
 
-        assert isinstance(head, Value),   'Expression[generate]: head should be a Value object instance'
+        assert isinstance(head, Literal),  'Expression[generate]: head should be an instance of Literal'
         IDENTIFIER_ASSERT(head,      'Expression[generate]: head of expression should be an Identifier')
 
         where = head.token().position()  # <------------ remember current expression head token position
@@ -128,12 +127,14 @@ class Expression:
         )
 
         if head.token().value() == 'or':
-            AE_ASSERT(where, len(rest),     'Expression[generate]: or: at least 1 operand was expected')
+            if not rest:
+                return 'NULL' + (';' if not inline else '')  # <---- if not rest, just return NULL value
             return '(' + ' || '.join(map(lambda e: e.generate(dictionary, cfg, True),
                                          rest)) + ')' + ('' if inline else ';')  # generate or condition
 
         if head.token().value() == 'and':
-            AE_ASSERT(where, len(rest),    'Expression[generate]: and: at least 1 operand was expected')
+            if not rest:
+                return 'true' + (';' if not inline else '')  # <---- if not rest, just return true value
             return '(' + ' && '.join(map(lambda e: e.generate(dictionary, cfg, True),
                                          rest)) + ')' + ('' if inline else ';')  # produce and condition
 
@@ -143,10 +144,12 @@ class Expression:
             if len(rest) == 1:
                 return rest[-1].generate(dictionary, cfg, inline)  # <---- if only one form, generate it
 
+            rest = deepcopy(rest)  # <----------- could be slow is rest is complex nested data structure
+
             target, *tail = rest  # <----------------------------- initialize target and _rest variables
             while len(rest) > 1:  # <----- do not leave loop while there is at least one element in tail
                 _ = tail[0]
-                if isinstance(_, Value):
+                if isinstance(_, Literal):
                     tail[0] = Expression([_])  # <------- cast each argument from the tail to Expression
                 rest[0].children().insert(1, target)  # <---------------------------- insert an argument
                 rest = [tail[0]] + tail[1:]  # <------------------------------------------ override tail
@@ -158,10 +161,12 @@ class Expression:
             if len(rest) == 1:
                 return rest[-1].generate(dictionary, cfg, inline)  # <---- if only one form, generate it
 
+            rest = deepcopy(rest)  # <----------- could be slow is rest is complex nested data structure
+
             target, *tail = rest  # <----------------------------- initialize target and _rest variables
             while len(rest) > 1:  # <----- do not leave loop while there is at least one element in tail
                 _ = tail[0]
-                if isinstance(_, Value):
+                if isinstance(_, Literal):
                     tail[0] = Expression([_])  # <------- cast each argument from the tail to Expression
                 tail[0].children().append(target)  # <----------------------- append argument to the end
                 rest = [tail[0]] + tail[1:]  # <------------------------------------------ override tail
@@ -169,13 +174,16 @@ class Expression:
 
             return target.generate(dictionary, cfg, inline)  # <------------ return generated expression
 
-        if head.token().value().startswith('.') and not head.token().value() == '...':
-            AE_ASSERT(where, rest,    'Expression[generate]: dot-form: at least 1 operand was expected')
-            name, *args = rest
-            SE_ASSERT(where, name,      'Expression[generate]: dot-form: object name should be a Value')
-            IDENTIFIER_ASSERT(name,  'Expression[generate]: dot-form: object name should be Identifier')
+        if head.token().value().startswith('.') and not head.token().value() == '...':   # skip Ellipsis
+            AE_ASSERT(where, rest,      'Expression[generate]: dot-form: expected at least object name')
             SE_ASSERT(where,
                       len(head.token().value()) > 1, 'Expression[generate]: dot-form: cannot be just .')
+            name: Literal   # <---------------------------------------- assign name as a type of Literal
+            name, *args = rest
+            SE_ASSERT(where,
+                      isinstance(name, Literal),
+                      'Expression[generate]: dot-form: an object name should be an instance of Literal')
+            IDENTIFIER_ASSERT(name,  'Expression[generate]: dot-form: object name should be Identifier')
             generated = name.generate(dictionary, cfg, True)  # <------ get the C++ name of the variable
             accessor = '->' if generated in cfg['KNOWN_POINTERS'] else '.'   # '->' accessor for pointer
             return f'{generated}{accessor}{head.token().value()[1:]}(' \
@@ -199,11 +207,9 @@ class Expression:
 
         if head.token().value() == 'cond':
             if not rest:
-                return '({ NULL; )}' + (';' if not inline else '')
-
+                return '({ NULL; )}' + (';' if not inline else '')  # <- generate a block returning NULL
             AE_ASSERT(where,
                       len(rest) % 2 == 0,   'Expression[generate]: cond: expected even number of forms')
-
             return Expression([identifier('->>')] + [
                 Expression([identifier('if')] + pair)
                 for pair in reversed([rest[i:i + 2] for i in range(0, len(rest), 2)])
@@ -211,7 +217,10 @@ class Expression:
 
         if head.token().value() == 'let':
             AE_ASSERT(where,  rest,             'Expression[generate]: let: at least one form expected')
+            bindings: Expression  # <---------------------------- assign binding as a type of Expression
             bindings, *body = rest
+            SE_ASSERT(where,
+                      isinstance(bindings, Expression), 'Expression[generate]: bindings are not a form')
             items = bindings.children()
             AE_ASSERT(where, items,  'Expression[generate]: let: you should provide at least 1 binding')
             AE_ASSERT(where,
@@ -220,8 +229,10 @@ class Expression:
             AE_ASSERT(where,  body,                'Expression[generate]: let: body could not be empty')
             lines = []  # <----------------------------------------------------- resulting lines of code
             for name, value in (items[i:i + 2] for i in range(0, len(items), 2)):
+                name: Literal  # <------------------------------------- assign name as a type of Literal
                 SE_ASSERT(where,
-                          isinstance(name, Value), 'Expression[generate]: binding name should be Value')
+                          isinstance(name, Literal),
+                          'Expression[generate]: binding name is expected to be an instance of Literal')
                 IDENTIFIER_ASSERT(name,    'Expression[generate]: binding name should be an Identifier')
                 rhs = value.generate(dictionary, cfg,  False)  # <------- right-hand-side generated code
                 generated = name.generate(dictionary, cfg, True)  # <--- get generated C++ variable name
@@ -237,8 +248,10 @@ class Expression:
 
         if head.token().value() == 'def':
             AE_ASSERT(where, len(rest) == 2, 'Expression[generate]: def: expected name, value operands')
+            name: Literal   # <---------------------------------------- assign name as a type of Literal
             name, value = rest
-            SE_ASSERT(where, isinstance(name, Value), 'Expression[generate]: def: name should be Value')
+            SE_ASSERT(where,
+                      isinstance(name, Literal),  'Expression[generate]: def: name should be a Literal')
             IDENTIFIER_ASSERT(name,           'Expression[generate]: def: name should be an Identifier')
             generated = name.generate(dictionary, cfg, True)  # <----- generate CXX name of the variable
             cfg['DEFS'].append(f'auto {generated} = {value.generate(dictionary, cfg, False)}')  # define
@@ -248,16 +261,22 @@ class Expression:
 
         if head.token().value() == 'defn':
             AE_ASSERT(where, len(rest) >= 2, 'Expression[generate]: defn: expected at least 2 operands')
+            name: Literal  # <----------------------------------------- assign name as a type of Literal
+            parameters: Expression  # <----------------------- assign parameters as a type of Expression
             name, parameters, *body = rest
             SE_ASSERT(where,
-                      isinstance(name, Value),   'Expression[generate]: defn: the name should be Value')
+                      isinstance(name, Literal), 'Expression[generate]: defn: a name should be Literal')
             IDENTIFIER_ASSERT(name,    'Expression[generate]: defn: function name should be Identifier')
+            SE_ASSERT(where,
+                      isinstance(parameters, Expression),
+                      'Expression[generate]: defn: function parameters should be a Expression instance')
             AE_ASSERT(where, body,                'Expression[generate]: defn: body could not be empty')
             returns = CXX_TYPES.get(name.property("t"), "auto")  # <- take into account func return type
             built_name = name.generate(dictionary, cfg, True)  # <----------- generate C++ function name
             for each in parameters.children():
+                each: Literal  # <------------------------------------- assign each as a type of Literal
                 SE_ASSERT(where,
-                          isinstance(each, Value),  'Expression[generate]: a parameter should be Value')
+                          isinstance(each, Literal), 'Expression[generate]: fn param should be Literal')
                 IDENTIFIER_ASSERT(each,  'Expression[generate]: each parameter should be an Identifier')
             built_parameters = '(' + \
                                ', '.join(map(lambda p: f'{CXX_TYPES.get(p.property("t"), "auto")} '
@@ -274,7 +293,7 @@ class Expression:
 
         if head.token().value() == 'new':
             AE_ASSERT(where, len(rest) == 1,     'Expression[generate]: new: expected exactly one form')
-            definition = rest[0]
+            definition: Expression = rest[0]  # <------------- assign definition as a type of Expression
             SE_ASSERT(where,
                       isinstance(definition, Expression),
                       'Expression[generate]: new: definition have to be dynamic object allocation form')
@@ -282,24 +301,25 @@ class Expression:
 
         if head.token().value() == 'link':
             AE_ASSERT(where, len(rest) == 1,  'Expression[generate]: link: a library name was expected')
-            name = rest[0]
-            SE_ASSERT(where, isinstance(name, Value), 'Expression[generate]: link: name is not a Value')
+            name: Literal = rest[0]  # <------------------------------- assign name as a type of Literal
+            SE_ASSERT(where, isinstance(name, Literal),  'Expression[generate]: link: Literal expected')
             IDENTIFIER_ASSERT(name,         'Expression[generate]: a library name should be Identifier')
             cfg['LD_LINK_SRC_WITH'].append(name.token().value())  # <--- append name to LD_LINK_SRC_WITH
             return ''  # <------------------------- link form is not supposed to generate a line of code
 
         if head.token().value() == 'include':
             AE_ASSERT(where, len(rest) == 1,  'Expression[generate]: include: header path was expected')
-            path = rest[0]
-            SE_ASSERT(where, isinstance(path, Value), 'Expression[generate]: include: path not a Value')
+            path: Literal = rest[0]  # <------------------------------- assign path as a type of Literal
+            SE_ASSERT(where, isinstance(path, Literal), 'Expression[generate]: include: Literal wanted')
             IDENTIFIER_ASSERT(path,          'Expression[generate]: a header path should be Identifier')
             cfg['SOURCE_INCLUDING'].append(path.token().value())  # <--- append name to SOURCE_INCLUDING
             return ''  # <---------------------- include form is not supposed to generate a line of code
 
         if head.token().value() == 'hpp-base-dir':
             AE_ASSERT(where, len(rest) == 1, 'Expression[generate]: hpp-base-dir: path string expected')
-            path: Value = rest[0]
-            SE_ASSERT(where, isinstance(path, Value), 'Expression[generate]: hpp-base-dir: not a Value')
+            path: Literal = rest[0]  # <------------------------------- assign path as a type of Literal
+            SE_ASSERT(where,
+                      isinstance(path, Literal), 'Expression[generate]: hpp-base-dir: Literal expected')
             SE_ASSERT(path.token().position(),
                       path.token().is_string(),
                       'Expression[generate]: hpp-base-dir: the path to the headers have to be a String')
@@ -308,8 +328,9 @@ class Expression:
 
         if head.token().value() == 'lib-base-dir':
             AE_ASSERT(where, len(rest) == 1, 'Expression[generate]: lib-base-dir: path string expected')
-            path: Value = rest[0]
-            SE_ASSERT(where, isinstance(path, Value), 'Expression[generate]: lib-base-dir: not a Value')
+            path: Literal = rest[0]  # <------------------------------- assign path as a type of Literal
+            SE_ASSERT(where,
+                      isinstance(path, Literal), 'Expression[generate]: lib-base-dir: Literal expected')
             SE_ASSERT(path.token().position(),
                       path.token().is_string(),
                       'Expression[generate]: lib-base-dir: the path to the library have to be a String')
@@ -335,14 +356,14 @@ class Expression:
 
         """Execute here, is the return Python value 3 related to the expression: string, number, and vice versa"""
 
-        head: Value
+        head: Literal
         tail: Children
 
-        assert self.children(),      'Expression[execute]: current expression has no values, unable to execute it'
+        assert self.children(),           'Expression[execute]: current expression is empty, unable to execute it'
 
         head, *tail = self.children()
 
-        assert isinstance(head, Value),            'Expression[execute]: head of the expression should be a Value'
+        assert isinstance(head, Literal),        'Expression[execute]: head of the expression should be a Literal'
         IDENTIFIER_ASSERT(head,             'Expression[execute]: head of the expression should be an Identifier')
 
         where = head.token().position()  # <------------ when make assertions on expression head, this can be used
@@ -382,15 +403,19 @@ class Expression:
         if head.token().value() == 'try':
             AE_ASSERT(where, len(tail) == 2,        'Expression[execute]: try: expected main and and catch forms')
             main, catch = tail
+            catch: Expression  # <------------------------------------------- assign catch as a type of Expression
             SE_ASSERT(where, isinstance(catch, Expression),    'Expression[execute]: try: catch should be a form')
             AE_ASSERT(where, len(catch.children()) == 4,   'Expression[execute]: try: catch: expected 4 operands')
+            kind: Literal  # <------------------------------------------------- assign kind as a type of a Literal
+            klass: Literal  # <----------------------------------------------- assign klass as a type of a Literal
+            alias: Literal  # <----------------------------------------------- assign alias as a type of a Literal
             kind, klass, alias, block = catch.children()
-            SE_ASSERT(where, isinstance(kind, Value),          'Expression[execute]: try: kind should be a Value')
+            SE_ASSERT(where, isinstance(kind, Literal),      'Expression[execute]: try: kind should be a Literal')
             IDENTIFIER_ASSERT(kind,                      'Expression[execute]: try: kind should be an Identifier')
             SE_ASSERT(where, kind.token().value() == 'catch',  "Expression[execute]: try: kind should be 'catch'")
-            SE_ASSERT(where, isinstance(klass, Value),        'Expression[execute]: try: klass should be a Value')
+            SE_ASSERT(where, isinstance(klass, Literal),    'Expression[execute]: try: klass should be a Literal')
             IDENTIFIER_ASSERT(klass,                       'Expression[execute]: try: klass should be Identifier')
-            SE_ASSERT(where, isinstance(alias, Value),        'Expression[execute]: try: alias should be a Value')
+            SE_ASSERT(where, isinstance(alias, Literal),    'Expression[execute]: try: alias should be a Literal')
             IDENTIFIER_ASSERT(alias,                       'Expression[execute]: try: alias should be Identifier')
             obj = klass.execute(environ, False)  # <---------------------------------- get actual exception object
             closure = {}
@@ -410,7 +435,7 @@ class Expression:
             target, *rest = tail  # <------- split tail for the first time to initialize target and rest variables
             while len(tail) > 1:  # <-- do not leave the loop while there is at least one element left in the tail
                 _ = rest[0]
-                if isinstance(_, Value):
+                if isinstance(_, Literal):
                     rest[0] = Expression([_])  # <-------- each argument except first should be cast to Expression
                 rest[0].children().insert(1, target)  # <- in case of first-threading-macro, insert as the 1st arg
                 tail = [rest[0]] + rest[1:]  # <- override tail: modified expression and the tail rest with offset
@@ -427,7 +452,7 @@ class Expression:
             target, *rest = tail  # <------- split tail for the first time to initialize target and rest variables
             while len(tail) > 1:  # <-- do not leave the loop while there is at least one element left in the tail
                 _ = rest[0]
-                if isinstance(_, Value):
+                if isinstance(_, Literal):
                     rest[0] = Expression([_])  # <-------- each argument except first should be cast to Expression
                 rest[0].children().append(target)  # <- in case of last-threading-macro, append to the end of args
                 tail = [rest[0]] + rest[1:]  # <- override tail: modified expression and the tail rest with offset
@@ -437,16 +462,18 @@ class Expression:
 
         if head.token().value().startswith('.') and not head.token().value() == '...':   # it could be an Ellipsis
             AE_ASSERT(where, tail,                  'Expression[execute]: dot-form: expected at least 1 operands')
-            object_name: Value
-            method_args: Children
+            SE_ASSERT(where, len(head.token().value()) > 1,  'Expression[execute]: dot-form: could not be just .')
+            object_name: Literal  # <------------------------------------- assign object name as a type of Literal
             object_name, *method_args = tail
+            SE_ASSERT(where,
+                      isinstance(object_name, Literal), 'Expression[execute]: dot-form: object name isnt Literal')
             method_name: str = head.token().value()[1:]
             object_instance = object_name.execute(environ, False)
-            object_name = getattr(object_instance, '__name__', object_instance.__class__.__name__)   # actual name
+            object_alias = getattr(object_instance, '__name__', object_instance.__class__.__name__)  # actual name
             object_m_object: Callable = getattr(object_instance, method_name, NotFound)  # <---- could be NotFound
             NE_ASSERT(where,
                       object_m_object is not NotFound,
-                      f"Expression[execute]: dot-form: no method named '{method_name}' found in '{object_name}'.")
+                      f"Expression[execute]: dot-form: no method named '{method_name}' found in '{object_alias}'")
             return object_m_object(*(child.execute(environ, False) for child in method_args))  # return its result
 
         if head.token().value() == 'if':
@@ -460,9 +487,9 @@ class Expression:
             return true.execute(environ, False) if cond.execute(environ, False) else None  # <-- false is just nil
 
         if head.token().value() == 'cond':
-            AE_ASSERT(where, len(tail) % 2 == 0,       'Expression[execute]: cond: expected even number of forms')
             if not tail:
                 return None  # <------------------------------------------ if nothing has been passed, return None
+            AE_ASSERT(where, len(tail) % 2 == 0,       'Expression[execute]: cond: expected even number of forms')
             for cond, expr in (tail[i:i + 2] for i in range(0, len(tail), 2)):
                 if cond.execute(environ, False):
                     return expr.execute(environ, False)
@@ -470,6 +497,7 @@ class Expression:
 
         if head.token().value() == 'let':
             AE_ASSERT(where, tail,                    'Expression[execute]: let: expected at least bindings form')
+            bindings: Expression  # <------------------------------------- assign bindings as a type of Expression
             bindings, *body = tail
             SE_ASSERT(where, isinstance(bindings, Expression), 'Expression[execute]: let: bindings is not a form')
             items = bindings.children()  # once again, lexically, that sounds a bit weird, we have to deal with it
@@ -491,32 +519,33 @@ class Expression:
 
         if head.token().value() == 'fn':
             AE_ASSERT(where, tail,                         'Expression[execute]: fn: expected at least 1 operand')
+            parameters: Expression  # <--------------------------------- assign parameters as a type of Expression
             parameters, *body = tail
             SE_ASSERT(where, isinstance(parameters, Expression), 'Expression[execute]: fn: parameters not a form')
             names = []
             types = []
             children = parameters.children()
-            ampersand_found = tuple(filter(lambda pr: (isinstance(pr[1], Value) and pr[1].token().value() == '&'),
+            ampersand_found = tuple(filter(lambda p:   (isinstance(p[1], Literal)
+                                                        and p[1].is_identifier() and p[1].token().value() == '&'),
                                            enumerate(children)))  # <- find a tuple, where 0 - pos, 1 - an operand
             ampersand_position: int = ampersand_found[0][0] if ampersand_found else -1  # <---- 0 - tuple, 1 - pos
             positional_parameters = children[:ampersand_position] if ampersand_found else children  # <-- before &
             for parameter in positional_parameters:
-                SE_ASSERT(where, isinstance(parameter, Value), 'Expression[execute]: fn: param should be a Value')
+                parameter: Literal  # <----------------------------------- assign parameter as a type of a Literal
+                SE_ASSERT(where, isinstance(parameter, Literal),  'Expression[execute]: fn: param is not Literal')
                 IDENTIFIER_ASSERT(parameter,            'Expression[execute]: fn: parameter should be Identifier')
                 names.append(parameter.token().value())  # <------- append name of the parameter to the names list
                 types.append(TYPES.get(parameter.property('t'), object))  # <-- append parameter type to type list
             can_take_extras = False  # <-------------------- by default, function can not take any extra arguments
             if ampersand_found:
+                can_take_extras = True  # <- now we set this to true, as the function can now take extra arguments
                 SE_ASSERT(where,
                           len(children) - 1 != ampersand_position,
                           'Expression[execute]: fn: you can only mention one alias for the extra arguments tuple')
                 SE_ASSERT(where,
                           len(children) - 2 == ampersand_position,
                           'Expression[execute]: fn: you have to mention alias name for the extra arguments tuple')
-                operand = children[-1]
-                IDENTIFIER_ASSERT(operand, 'Expression[execute]: fn: extra-args-tuple alias should be Identifier')
-                can_take_extras = True  # <- now we set this to true, as the function can now take extra arguments
-                names.append(operand.token().value())  # <---- append extra args param name to all parameter names
+                names.append(children[-1].token().value())   # append extra args param name to all parameter names
                 types.append(tuple)  # <---------------------- append extra args param type to all parameter types
             if not body:
                 body = [Nil]  # <-- let a function be defined with empty body, in such a case, it will return None
@@ -562,8 +591,10 @@ class Expression:
         if head.token().value() == 'def':
             SE_ASSERT(where, top,   'Expression[execute]: def: can only use (def) form at the top of the program')
             AE_ASSERT(where, len(tail) == 2,  'Expression[execute]: def: expected binding name and binding value')
+            name: Literal  # <--------------------------------------------------- assign name as a type of Literal
             name, value = tail
-            SE_ASSERT(where, isinstance(name, Value),  'Expression[execute]: def: binding name should be a Value')
+            SE_ASSERT(where,
+                      isinstance(name, Literal),     'Expression[execute]: def: binding name should be a Literal')
             IDENTIFIER_ASSERT(name,                 'Expression[execute]: def: binding name should be Identifier')
             executed = value.execute(environ, False)
             environ.update({name.token().value(): executed})
@@ -572,8 +603,10 @@ class Expression:
         if head.token().value() == 'def?':
             SE_ASSERT(where, top, 'Expression[execute]: def?: can only use (def?) form at the top of the program')
             AE_ASSERT(where, len(tail) == 2, 'Expression[execute]: def?: expected binding name and binding value')
+            name: Literal  # <--------------------------------------------------- assign name as a type of Literal
             name, value = tail
-            SE_ASSERT(where, isinstance(name, Value), 'Expression[execute]: def?: binding name should be a Value')
+            SE_ASSERT(where,
+                      isinstance(name, Literal),    'Expression[execute]: def?: binding name should be a Literal')
             IDENTIFIER_ASSERT(name,                'Expression[execute]: def?: binding name should be Identifier')
             from_env = environ.get(name.token().value()) if (name.token().value() in environ.keys()) else NotFound
             executed = value.execute(environ, False) if from_env is NotFound else from_env  # existing or executed
@@ -583,8 +616,10 @@ class Expression:
         if head.token().value() == 'defn':
             SE_ASSERT(where, top, 'Expression[execute]: defn: can only use (defn) form at the top of the program')
             AE_ASSERT(where, len(tail) >= 2,            'Expression[execute]: defn: expected at least 2 operands')
+            name: Literal  # <--------------------------------------------------- assign name as a type of Literal
             name, parameters, *body = tail
-            SE_ASSERT(where, isinstance(name, Value),  'Expression[execute]: defn: function name should be Value')
+            SE_ASSERT(where,
+                      isinstance(name, Literal),     'Expression[execute]: defn: function name should be Literal')
             IDENTIFIER_ASSERT(name,               'Expression[execute]: defn: function name should be Identifier')
             SE_ASSERT(where, isinstance(parameters, Expression),   'Expression[execute]: defn: params not a form')
             expected_ret_type = TYPES.get(name.property('t'), object)  # <---- store function expected return type
@@ -592,28 +627,28 @@ class Expression:
             names = []
             types = []
             children = parameters.children()
-            ampersand_found = tuple(filter(lambda pr: (isinstance(pr[1], Value) and pr[1].token().value() == '&'),
+            ampersand_found = tuple(filter(lambda p: (isinstance(p[1], Literal)
+                                                      and p[1].is_identifier() and p[1].token().value() == '&'),
                                            enumerate(children)))  # <- find a tuple, where 0 - pos, 1 - an operand
             ampersand_position: int = ampersand_found[0][0] if ampersand_found else -1  # <---- 0 - tuple, 1 - pos
             positional_parameters = children[:ampersand_position] if ampersand_found else children  # <-- before &
             for parameter in positional_parameters:
+                parameter: Literal  # <------------------------------------- assign parameter as a type of Literal
                 SE_ASSERT(where,
-                          isinstance(parameter, Value),  'Expression[execute]: defn: parameter should be a Value')
+                          isinstance(parameter, Literal),   'Expression[execute]: defn: parm should be a Literal')
                 IDENTIFIER_ASSERT(parameter,          'Expression[execute]: defn: parameter should be Identifier')
                 names.append(parameter.token().value())  # <------- append name of the parameter to the names list
                 types.append(TYPES.get(parameter.property('t'), object))  # <-- append parameter type to type list
             can_take_extras = False  # <-------------------- by default, function can not take any extra arguments
             if ampersand_found:
+                can_take_extras = True  # <- now we set this to true, as the function can now take extra arguments
                 SE_ASSERT(where,
                           len(children) - 1 != ampersand_position,
                           'Expression[execute]: defn: you can only mention one alias for the extra args\' tuple.')
                 SE_ASSERT(where,
                           len(children) - 2 == ampersand_position,
                           'Expression[execute]: defn: you have to mention alias name for the extra args\' tuple.')
-                operand = children[-1]
-                IDENTIFIER_ASSERT(operand, 'Expression[execute]: defn: extra-args-list name should be Identifier')
-                can_take_extras = True  # <- now we set this to true, as the function can now take extra arguments
-                names.append(operand.token().value())  # <---- append extra args param name to all parameter names
+                names.append(children[-1].token().value())   # append extra args param name to all parameter names
                 types.append(tuple)  # <---------------------- append extra args param type to all parameter types
             if not body:
                 body = [Nil]  # <-- let a function be defined with empty body, in such a case, it will return None
@@ -665,14 +700,15 @@ class Expression:
         if head.token().value() == 'import':
             SE_ASSERT(where, top,    'Expression[execute]: import: you should place all the (import)s at the top')
             AE_ASSERT(where, len(tail) == 1, 'Expression[execute]: import: expected name of the module to import')
-            name = tail[0]
-            SE_ASSERT(where, isinstance(name, Value),  'Expression[execute]: import: module name should be Value')
+            name: Literal = tail[0]  # <----------------------------------------- assign name as a type of Literal
+            SE_ASSERT(where,
+                      isinstance(name, Literal),     'Expression[execute]: import: module name should be Literal')
             IDENTIFIER_ASSERT(name,      'Expression[execute]: import: Python 3 module name should be Identifier')
-            name = name.token().value()
-            parts = name.split('.')  # <----------------- split the name of importable module by the dot-character
+            alias: str = name.token().value()   # re-assign (maybe redefined from try-form) alias to a type of str
+            parts = alias.split('.')  # <---------------- split the name of importable module by the dot-character
             unqualified = parts[-1]  # <----------------- store the unqualified name of importable Python 3 module
             identifiers = iter(parts[1:])  # <----------------- make it possible to iterate over parts with next()
-            module = __import__(name)  # <--------------------------- import Python 3 module by its qualified name
+            module = __import__(alias)  # <-------------------------- import Python 3 module by its qualified name
             while module.__name__.split('.')[-1] != unqualified:
                 module = getattr(module, next(identifiers), None)   # <--- while not matching, go deep into module
             environ[unqualified] = module  # <------------------------------------------ update global environment
@@ -681,8 +717,9 @@ class Expression:
         if head.token().value() == 'require':
             SE_ASSERT(where, top,  'Expression[execute]: require: you should place all the (require)s at the top')
             AE_ASSERT(where, len(tail) == 1,   'Expression[execute]: require: expected name of ChiakiLisp module')
-            name = tail[0]
-            SE_ASSERT(where, isinstance(name, Value), 'Expression[execute]: require: module name should be Value')
+            name: Literal = tail[0]  # <----------------------------------------- assign name as a type of Literal
+            SE_ASSERT(where,
+                      isinstance(name, Literal),    'Expression[execute]: require: module name should be Literal')
             IDENTIFIER_ASSERT(name,   'Expression[execute]: require: ChiakiLisp module name should be Identifier')
             module = type(name.token().value(), (object,), environ['require'](name.token().value() + '.cl'))  # -|
             environ[name.token().value().split('/')[-1]] = module  # <- update global environ with required module
