@@ -3,6 +3,7 @@ __pycache__
 /dist
 /chiakilisp.egg-info/
 # ChiakiLisp's examples
+/simple*
 /factorial*
 /funcional*
 /qt5-simple-app-window*
