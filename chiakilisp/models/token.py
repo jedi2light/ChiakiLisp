@@ -25,7 +25,7 @@ class Token:
 
         self._type = _type
         self._value = _value
-        self._position = _pos  # <- will include ln, cn and file name
+        self._position = _pos  # <---- filename and line/char numbers
 
     def type(self) -> str:
 

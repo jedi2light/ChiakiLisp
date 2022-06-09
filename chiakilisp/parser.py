@@ -3,17 +3,17 @@
 
 from typing import List
 from chiakilisp.models.token import Token
-from chiakilisp.models.value import Value
+from chiakilisp.models.literal import Literal
 from chiakilisp.models.expression import Expression
 
 
-Child = Value or Expression  # define the type for the single child
+Child = Literal or Expression  # define the type for a single child
 Children = List[Child]  # define a type describing list of children
 
 
 class Parser:
 
-    """Parser is the class that takes a list of tokens and produces a wood of Expressions or Values"""
+    """Parser is the class that takes a list of tokens and produces a wood of Expressions/Literals"""
 
     _wood: Children
     _tokens: List[Token]
@@ -97,7 +97,7 @@ def read(tokens: List[Token]) -> Children:
     """This function produces wood of Expressions/Values"""
 
     if not tokens:
-        return []  # allow empty expressions, useful for defn
+        return []  # allow empty expressions, useful for empty function parameters like: (defn my-function () ...)
 
     children: Children = []
     idx: int = 0
@@ -116,8 +116,9 @@ def read(tokens: List[Token]) -> Children:
                 _properties.append(_property)  # <--------------------- append raw property to the properties list
                 idx += 1  # <------------------------------------------------------------------- move pointer next
                 continue  # <--------------------------------------------------------- and continue parsing tokens
-            children.append(Value(current_token))  # in case current token is a regular one, treat it as the Value
-            children[-1].set_properties(_properties)  # <-------------------------------- set the value properties
-            idx += 1  # and let the read() function to advance to the next one token by incrementing an index to 1
+            literal = Literal(current_token)  # <------------------------------- initialize literal instance first
+            literal.set_properties(_properties)  # <--------------------- set literal properties defined by a user
+            children.append(literal)  # <---------------------------- finally, append literal to the children list
+            idx += 1  # and let the 'read()' function to advance to the next one token by incrementing 'idx' value
 
-    return children  # in the end, return list of Expression class children (Values or child Expression instances)
+    return children  # in the end return list of Expression class children (Literal or child Expression instances)

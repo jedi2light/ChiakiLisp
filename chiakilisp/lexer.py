@@ -17,9 +17,9 @@ class Lexer:
 
     _source: str
     _file_name: str   # the name of source file we're lexing
-    _pointer: int = 0  # default pointer pos
+    _pointer: int = 0  # <-------------- default pointer pos
     _tokens: List[Token]
-    _line_num, _char_num = 1, 0   # defaults
+    _line_num, _char_num = 1, 0   # <-- position in the file
 
     def __init__(self, source: str, file_name: str) -> None:
 
@@ -60,7 +60,7 @@ class Lexer:
 
         return self._pos()  # <--- instead of doing extra refactoring :)
 
-    def lex(self) -> None:  # pylint: disable=R0912, disable=R0915  #>_<
+    def lex(self) -> None:  # pylint: disable=R0912, disable=R0915  # :(
 
         """Process the source code, thus it populates the tokens list"""
 
@@ -169,7 +169,7 @@ class Lexer:
 
             else:
                 self._advance()  # <----------- skip over all the garbage characters
-                self._increment_char_number()  # <---with character number increment
+                self._increment_char_number()  # <-- with character number increment
 
     def _advance(self) -> None:
 

@@ -6,8 +6,8 @@
 from functools import partial
 from typing import Any, Callable, Iterable
 from chiakilisp.utils import simple_fuzzy_matched  # <- for proposals
-from chiakilisp.utils import get_assertion_closure  # to get ASSERT()
-from chiakilisp.models.token import Token  # Value needs Token    :*)
+from chiakilisp.utils import get_assertion_closure  # <- for ASSERT()
+from chiakilisp.models.token import Token  # Literal needs Token  :*)
 
 _ASSERT: Callable = get_assertion_closure(NameError)  # <---- closure
 
@@ -19,17 +19,17 @@ def _proposals(glossary: Iterable, item: str) -> str:
     return ', '.join(simple_fuzzy_matched(item, glossary))
 
 
-class NotFound:  # pylint: disable=too-few-public-methods  # shut up!
+class NotFound:  # pylint: disable=too-few-public-methods  # its okay
 
     """
     Stub class to display that there is no such a name in environment
     """
 
 
-class Value:
+class Literal:
 
     """
-    Value is the class that encapsulates single Token, and meant to be a part of Expression (but not always)
+    Literal is the class that encapsulates single Token and meant to be a part of Expression, but not always
     """
 
     _token: Token
@@ -37,14 +37,14 @@ class Value:
 
     def __init__(self, token: Token) -> None:
 
-        """Initialize Value instance"""
+        """Initialize Literal instance"""
 
         self._token = token
         self._properties = {}
 
     def dump(self, indent: int) -> None:
 
-        """Dumps a single expression value"""
+        """Dumps a single expression literal"""
 
         value = self.token().value()
 
@@ -54,13 +54,13 @@ class Value:
 
     def token(self) -> Token:
 
-        """Returns related token"""
+        """Returns Token instance tied to the Literal"""
 
         return self._token
 
     def set_properties(self, _properties: list) -> None:
 
-        """Allows to set a value property (i.e.: (defn ^t:int () 1))"""
+        """Allows to set a literal property (i.e.: (defn ^t:int () 1))"""
 
         self._properties = dict(map(lambda prop: prop.split(':'), _properties))
 
@@ -73,22 +73,22 @@ class Value:
 
     def properties(self) -> dict:
 
-        """Returns all the value props"""
+        """Returns all the literal props"""
 
         return self._properties
 
     def lint(self, _: dict, rule: str, storage: dict) -> None:
 
-        """React to the builtin linter visit"""
+        """React to the builtin linter visit event"""
 
         if rule == 'UnusedGlobalVariables' and self.token().type() == Token.Identifier:
-            name = self.token().value()
-            if name in storage:
-                storage[name] += 1  # <- if there is such a global variable, increment its referencing count
+            name = self.token().value()  # <---------------------------- get the name of the global variable
+            if name in storage:  # <-------------------------------------- if global variable has defined...
+                storage[name] += 1  # <------------------------------------ ...increment its reference count
 
     def generate(self, dictionary: dict, cfg: dict, inline: bool):         # pylint: disable=unused-argument
 
-        """Generate C++ representation of the single ChiakiLisp value"""
+        """Generate C++ representation of the single ChiakiLisp Literal"""
 
         token = self.token()  # <------------------------------------------- to refer it for multimple times
 
@@ -98,30 +98,29 @@ class Value:
             representation = 'NULL'
         if token.type() == Token.String:
             representation = f'"{token.value()}"'
-        if token.type() in [Token.Number, Token.Boolean, Token.Identifier]:  # <--- return the raw value-str
-            if token.type() == Token.Identifier:
-                # Try to resolve a C++ name from a dictionary first
-                raw = token.value()
-                found = dictionary.get(raw)
-                if found:
-                    return found
-                # A bit of demangle processing here for LISPy names
-                representation = raw\
-                    .replace('?', '_QUESTION_MARK')\
-                    .replace('!', '_EXCLAMATION_MARK')
-                if not token.value() == '-':
-                    representation = representation.replace('-', '_DASH_')  # <--- replace '-' with '_DASH_'
-                if not token.value().startswith('/') \
-                        and not token.value().endswith('/') and '/' in token.value():  # <------- be careful
-                    representation = representation.replace('/', '::')  # <-- replace LISP accessor with C++
-            else:
-                representation = token.value()  # <-- in all the other cases, return raw string token' value
+        if token.type() in [Token.Number, Token.Boolean]:
+            representation = token.value()  # <----------------------------- return 'token().value()' string
+        if token.type() == Token.Identifier:
+            # Try to resolve a C++ name from a dictionary first  ###########################################
+            raw = token.value()
+            found = dictionary.get(raw)
+            if found:
+                return found  # if dictionary already contains a C++ function name, return found value as is
+            # A bit of demangle processing here for LISPy names  ###########################################
+            representation = raw \
+                .replace('?', '_QUESTION_MARK') \
+                .replace('!', '_EXCLAMATION_MARK')
+            if not token.value() == '-':
+                representation = representation.replace('-', '_DASH_')  # <------- replace '-' with '_DASH_'
+            if not token.value().startswith('/') \
+                    and not token.value().endswith('/') and '/' in token.value():  # <----------- be careful
+                representation = representation.replace('/', '::')  # <------ replace LISP accessor with C++
 
         return f'{representation}{";" if not inline else ""}'  # <- append semicolon character if not inline
 
     def execute(self, environment: dict, __=False) -> Any:  # pylint: disable=inconsistent-return-statements
 
-        """Execute, here, is the return Python value related to the value: string, number, and vice versa"""
+        """Execute, here, is the return Python value tied to the literal: number, string, boolean, etc..."""
 
         if self.token().type() == Token.Nil:
 
@@ -141,13 +140,13 @@ class Value:
 
         if self.token().type() == Token.Identifier:
 
-            name = self.token().value()
+            name = self.token().value()  # <------------- because we reference token().value() so many times
             where = self.token().position()  # <------------------------------------ remember token position
 
-            ASSERT = partial(_ASSERT, where)  # <---- create partial function to simplify ASSERT() func call
+            ASSERT = partial(_ASSERT, where)  # <------ create partial function to simplify ASSERT() fn call
             proposals = partial(_proposals, environment.keys())  # <------- simplify proposals function call
 
-            if not name.startswith('/') and not name.endswith('/') and '/' in name:
+            if not name.startswith('/') and not name.endswith('/') and '/' in name:  # <--------- be careful
                 obj_name, member_name, *_ = name.split('/')  # <------ syntax is <object name>/<member name>
                 obj_object = environment.get(obj_name, NotFound)  # <------- assign found object or NotFound
                 ASSERT(obj_object is not NotFound,
@@ -167,5 +166,5 @@ class Value:
             return found  # <- return found Python 3 value (from the current environment) or raise NameError
 
 
-Nil = Value(Token(Token.Nil, 'nil', ()))  # predefined Nil value; (useful for empty defn, fn and let bodies)
-identifier = lambda identifier_name: Value(Token(Token.Identifier, identifier_name, ()))  # <--- tiny helper
+Nil = Literal(Token(Token.Nil, 'nil', ()))  # predefined Nil Literal; useful for empty defn, fn and let body
+identifier = lambda identifier_name: Literal(Token(Token.Identifier, identifier_name, ()))  # <- tiny helper

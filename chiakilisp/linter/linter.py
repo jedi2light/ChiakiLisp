@@ -6,11 +6,10 @@ from chiakilisp.parser import Children
 # Rules implemented right now:
 #  - UnusedGlobalVariables - check the source code for unused global variables
 
-# User could define Rules dictionary in their ~/.chiakilisp-linter-rc.cl file:
-# (def Rules [... ...]) where each ... is a string representing name of a rule
+# User could define Rules dictionary in their ~/.chiakilang-linter-rc.cl file:
+# (def config {"Rules" [... ]}), where each ... is a string (name of the rule)
 
-# For example:
-# (def Rules ["UnusedGlobalVariables"]) ;; will enable 'UnusedGlobalVariables'
+# For example: ```lisp\n (def config {"Rules" ["UnusedGlobalVariables"]})\n```
 
 _DEFAULTS = {
     'Rules': []  # no rules enabled by default, user should edit their rc file
