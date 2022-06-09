@@ -525,8 +525,8 @@ class Expression:
             names = []
             types = []
             children = parameters.children()
-            ampersand_found = tuple(filter(lambda p:   (isinstance(p[1], Literal)
-                                                        and p[1].is_identifier() and p[1].token().value() == '&'),
+            ampersand_found = tuple(filter(lambda p: (isinstance(p[1],   Literal) and p[1].token().is_identifier()
+                                                      and p[1].token().value() == '&'),   # filter lambda function
                                            enumerate(children)))  # <- find a tuple, where 0 - pos, 1 - an operand
             ampersand_position: int = ampersand_found[0][0] if ampersand_found else -1  # <---- 0 - tuple, 1 - pos
             positional_parameters = children[:ampersand_position] if ampersand_found else children  # <-- before &
@@ -627,8 +627,8 @@ class Expression:
             names = []
             types = []
             children = parameters.children()
-            ampersand_found = tuple(filter(lambda p: (isinstance(p[1], Literal)
-                                                      and p[1].is_identifier() and p[1].token().value() == '&'),
+            ampersand_found = tuple(filter(lambda p: (isinstance(p[1],   Literal) and p[1].token().is_identifier()
+                                                      and p[1].token().value() == '&'),   # filter lambda function
                                            enumerate(children)))  # <- find a tuple, where 0 - pos, 1 - an operand
             ampersand_position: int = ampersand_found[0][0] if ampersand_found else -1  # <---- 0 - tuple, 1 - pos
             positional_parameters = children[:ampersand_position] if ampersand_found else children  # <-- before &
