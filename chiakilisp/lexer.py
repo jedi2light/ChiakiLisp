@@ -3,7 +3,7 @@
 
 import re
 from typing import List
-from chiakilisp.models.token import Token  # Lexer needs Token                :*)
+from chiakilisp.models.token import Token  # Lexer returns a Token instances list
 
 
 ALPHABET = ['+', '-', '*', '/', '=', '<', '>', '?', '!', '.', '_', '&', ':', '^']
@@ -56,7 +56,7 @@ class Lexer:
 
     def pos(self) -> tuple:
 
-        """Returns the same as the self._pos, but its a public method"""
+        """Returns the same as the self._pos, but it's a public method"""
 
         return self._pos()  # <--- instead of doing extra refactoring :)
 
@@ -165,7 +165,7 @@ class Lexer:
 
             elif self._current_symbol_is_nl():
                 self._advance()
-                self._increment_line_number_with_char_number_reset()  # inc line num
+                self._increment_line_number_with_char_number_reset()  # position upd
 
             else:
                 self._advance()  # <----------- skip over all the garbage characters
