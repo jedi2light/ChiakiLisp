@@ -87,6 +87,8 @@ class Literal(LiteralType):
             name = self.token().value()  # <---------------------------- get the name of the global variable
             if name in storage:  # <-------------------------------------- if global variable has defined...
                 storage[name] += 1  # <------------------------------------ ...increment its reference count
+            else:
+                errors.append([self.token().position(),  f"variable '{name}' referenced before assignment"])
 
     def generate(self, dictionary: dict, _: dict, inline: bool):         # pylint: disable=unused-argument
 
