@@ -79,7 +79,7 @@ class Literal(LiteralType):
 
         return self._properties
 
-    def lint(self, _: dict, rule: str, storage: dict, __: list) -> None:
+    def lint(self, _: dict, rule: str, storage: dict, errors: list, __: dict) -> None:
 
         """React to the builtin linter visit event"""
 

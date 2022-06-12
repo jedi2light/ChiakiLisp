@@ -93,7 +93,7 @@ class Expression(ExpressionType):
             for argument in rest:
                 argument.dump(indent + 1)   # increment indent
 
-    def lint(self, _: dict, rule: str, storage: dict, errors: list) -> None:
+    def lint(self, _: dict, rule: str, storage: dict, errors: list, places: dict) -> None:
 
         """React to the builtin linter visit event"""
 
