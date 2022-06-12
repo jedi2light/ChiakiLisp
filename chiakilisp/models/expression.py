@@ -264,18 +264,17 @@ class Expression(ExpressionType):
         # def?...
 
         if head.token().value() == 'defn':
-            valid, _, why = rules.get('defn-cpp').valid(tail)  # <-- validate tail with a defn-form-rule
-            SE_ASSERT(where, valid,                                f'Expression[generate]: defn: {why}')
+            TAIL_IS_VALID(tail, 'defn-cpp', where,                  'Expression[generate]: defn: {why}')
             name: Literal  # <----------------------------------------- assign name as a type of Literal
             parameters: Expression  # <----------------------- assign parameters as a type of Expression
             name, parameters, *body = tail  # <-------------------- assign body as a list of CommonTypes
             returns = CXX_TYPES.get(name.property("t"), "auto")  # <------ take into account return type
             built_name = name.generate(dictionary, cfg, True)  # <----------- generate C++ function name
             built_parameters = '(' + \
-                               ', '.join(map(lambda p: f'{CXX_TYPES.get(p.property("t"), "auto")} '
-                                                       f'{p.generate(dictionary, cfg, True)}',  # define
+                               ', '.join(map(lambda par: f'{CXX_TYPES.get(par.property("t"),  "auto")} '
+                                                         f'{par.generate(dictionary,    cfg,    True)}',
                                              parameters.children())) \
-                               + ')'  # <---------------------------------- generate function parameters
+                               + ')'  # <------------------------------ generate C++ function parameters
             built_body = f'return ({{{" ".join([e.generate(dictionary, cfg, False) for e in body])}}});'
             cfg['DEFUNCTIONS'].append(f'{returns} {built_name} {built_parameters} {{  {built_body}  }}')
             return ''  # <--- defn function is not supposed to return generated code, only update config
