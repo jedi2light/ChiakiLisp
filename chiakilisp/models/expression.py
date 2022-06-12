@@ -49,6 +49,17 @@ def IDENTIFIER_ASSERT(lit: Literal, message: str) -> None:
     SE_ASSERT(lit.token().position(), lit.token().is_identifier(), message)
 
 
+def TAIL_IS_VALID(tail: list, rule: str, where: tuple, m_tmpl: str) -> int:
+
+    """
+    Validates tail with a certain rule, throws SyntaxError or returns arity
+    """
+
+    valid, arity, why = rules.get(rule).valid(tail)
+    SE_ASSERT(where, valid, m_tmpl.format(why=why))
+    return arity
+
+
 class Expression(ExpressionType):
 
     """
