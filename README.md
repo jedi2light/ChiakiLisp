@@ -24,25 +24,15 @@ There are few similar projects already exist:
  - [HyLang](https://hylang.org) - pretty cool project, compiles LISP into Python 3 bytecode, cool
  - [NanamiLang](https://nanamilang.jedi2light.moe) - my attempt to mix Clojure-like look-and-feel and Python 3 core
 
-But this project tries to be as simple as possible, but providing some features like:
- - Custom formatting for Python 3 native data types
- - Multiline lambda functions (unreachable in Python 3 syntax)
- - `if` special form which looks more like Python 3 ternary expression
- - `when` special form which is basically `if` but with `nil` for `else`
- - `let` blocks with their own local environment unreachable from outer scope
- - `nil/true/false` keywords (you do not need the press a Shift key any time you want to type them)
- - `->/->>` aka `first/last threadin macro` right in Python 3, could you imagine this earlier, guys?)
- - Obviously, you do not need to separate your operands by a coma (,) (also, `{}` form does not need colon (:) char)
-
 ## Simple and complex (collections) data types
 
 ChiakiLisp does not use custom wrappers for any of them:
- - When you type `nil`, you get `NoneType` data type
- - When you type `1234`, you get `int` data type
- - When you type `"hello, world"`, you get `str` data type
- - When you type `true` or `false`, you get `bool` data type
- - When you type `[...]`, you get `list` data type
- - When you type `{...}`, you get `dict` data type
+ - When you type `nil`, you get `NoneType` data type, `NULL` in C++
+ - When you type `1234`, you get `int` data type, `long` in C++
+ - When you type `"hello, world"`, you get `str` data type, `char*` in C++
+ - When you type `true` or `false`, you get `bool` data type, `bool` in C++
+ - When you type `[...]`, you get `list` data type, `std::vector<T>` in C++
+ - When you type `{...}`, you get `dict` data type, not implemented for C++
 
 ## License and contribution
 
