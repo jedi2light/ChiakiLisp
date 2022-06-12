@@ -309,19 +309,13 @@ class Expression(ExpressionType):
             return ''  # <----------------- lib-base-dir form is not supposed to generate a line of code
 
         cpp_function_name = head.generate(dictionary, cfg, True)  # <--- get generated C++ function name
-
-        lines = [f'{cpp_function_name}(']  # <--- start with the function call: name and opening bracket
-
-        arguments = []  # <------------------ a list holding all the generated "arguments" to a function
-
+        lines = [f'{cpp_function_name}(']  # <- function call generation start: name and opening bracket
+        arguments = []  # <------------------------------ a list of all the generated function arguments
         for each in tail:
             arguments.append(each.generate(dictionary, cfg, True))  # <---- populate a list of arguments
-
-        lines.append(', '.join(arguments))  # <--- join all the function "arguments" by a coma character
-
+        lines.append(', '.join(arguments))  # <--- join all the function arguments by a 'coma' character
         lines.append(')' if inline else ');')  # <- close the function call with closing bracket and ';'
-
-        return ''.join(lines)  # <------------------------------ at the end, return all the lines joined
+        return ''.join(lines)  # <------------------------------------------ return all the lines joined
 
     def execute(self, environ: dict, top: bool = True) -> Any:
 
