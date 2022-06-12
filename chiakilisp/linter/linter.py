@@ -22,6 +22,7 @@ class BuiltinLinter:
 
     _env: dict
     _wood: Children
+    _errors: list
     _config: dict
     _report: dict
     _global_variables_counts: dict
@@ -32,6 +33,7 @@ class BuiltinLinter:
 
         self._env = env
         self._wood = wood
+        self._errors = []
         self._global_variables_counts = {}
         self._report = {
             'UnusedGlobalVariables': []
@@ -85,7 +87,7 @@ class BuiltinLinter:
         storage = self._global_variables_counts
 
         for each in self._wood:
-            each.lint(self._env, 'UnusedGlobalVariables', storage)
+            each.lint(self._env, 'UnusedGlobalVariables', storage, self._errors)
 
         for global_variable_name, global_variable_refer_count in storage.items():
             if not global_variable_refer_count:
