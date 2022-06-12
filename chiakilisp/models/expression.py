@@ -285,35 +285,30 @@ class Expression(ExpressionType):
         # require...
 
         if head.token().value() == 'new':
-            valid, _, why = rules.get('new').valid(tail)  # <------ validate tail with the new-form rule
-            SE_ASSERT(where, valid,                                 f'Expression[generate]: new: {why}')
+            TAIL_IS_VALID(tail, 'new', where,                        'Expression[generate]: new: {why}')
             definition: Expression = tail[0]  # <------------- assign definition as a type of Expression
-            return f'new {definition.generate(dictionary, cfg, inline)}'  # <-- return a 'new' statement
+            return f'new {definition.generate(dictionary, cfg, inline)}'  # return a generated statement
 
         if head.token().value() == 'link':
-            valid, _, why = rules.get('link').valid(tail)  # <---- validate tail with the link-form rule
-            SE_ASSERT(where, valid,                                f'Expression[generate]: link: {why}')
+            TAIL_IS_VALID(tail, 'link', where,                      'Expression[generate]: link: {why}')
             name: Literal = tail[0]  # <------------------------------- assign name as a type of Literal
             cfg['LD_LINK_SRC_WITH'].append(name.token().value())  # <--- append name to LD_LINK_SRC_WITH
             return ''  # <------------------------- link form is not supposed to generate a line of code
 
         if head.token().value() == 'include':
-            valid, _, why = rules.get('include').valid(tail)  # validate tail with the include-form rule
-            SE_ASSERT(where, valid,                             f'Expression[generate]: include: {why}')
+            TAIL_IS_VALID(tail, 'include', where,                'Expression[generate]: include: {why}')
             path: Literal = tail[0]  # <------------------------------- assign path as a type of Literal
             cfg['SOURCE_INCLUDING'].append(path.token().value())  # <--- append name to SOURCE_INCLUDING
             return ''  # <---------------------- include form is not supposed to generate a line of code
 
         if head.token().value() == 'hpp-base-dir':
-            valid, _, why = rules.get('hpp-base-dir').valid(tail)  # validate tail for hpp-base-dir form
-            SE_ASSERT(where, valid,                        f'Expression[generate]: hpp-base-dir: {why}')
+            TAIL_IS_VALID(tail, 'hpp-base-dir', where,      'Expression[generate]: hpp-base-dir: {why}')
             path: Literal = tail[0]  # <------------------------------- assign path as a type of Literal
             cfg['CXX_INCLUDE_DIRS'].append(path.token().value())  # <--- append path to CXX_INCLUDE_DIRS
             return ''  # <----------------- hpp-base-dir form is not supposed to generate a line of code
 
         if head.token().value() == 'lib-base-dir':
-            valid, _, why = rules.get('lib-base-dir').valid(tail)  # validate tail for lib-base-dir form
-            SE_ASSERT(where, valid,                        f'Expression[generate]: lib-base-dir: {why}')
+            TAIL_IS_VALID(tail, 'lib-base-dir', where,      'Expression[generate]: lib-base-dir: {why}')
             path: Literal = tail[0]  # <------------------------------- assign path as a type of Literal
             cfg['CXX_LIBRARY_DIRS'].append(path.token().value())  # <--- append path to CXX_LIBRARY_DIRS
             return ''  # <----------------- lib-base-dir form is not supposed to generate a line of code
