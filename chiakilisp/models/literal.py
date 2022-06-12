@@ -90,7 +90,7 @@ class Literal(LiteralType):
             else:
                 errors.append([self.token().position(),  f"variable '{name}' referenced before assignment"])
 
-    def generate(self, dictionary: dict, _: dict, inline: bool):         # pylint: disable=unused-argument
+    def generate(self, dictionary: dict, _: dict, inline: bool):           # pylint: disable=unused-argument
 
         """Generate C++ representation of the single ChiakiLisp Literal"""
 
