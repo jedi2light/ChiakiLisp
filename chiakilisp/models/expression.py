@@ -553,24 +553,22 @@ class Expression(ExpressionType):
 
         if head.token().value() == 'def':
             SE_ASSERT(where, top,   'Expression[execute]: def: can only use (def) form at the top of the program')
-            valid, _, why = rules.get('def').valid(tail)  # <---------------- validate tail with the def-form rule
-            SE_ASSERT(where, valid,                                            f'Expression[execute]: def: {why}')
+            TAIL_IS_VALID(tail, 'def', where,                                   'Expression[execute]: def: {why}')
             name: Literal  # <--------------------------------------------------- assign name as a type of Literal
             name, value = tail  # <-------------------------------------------------- assign value as a CommonType
-            executed = value.execute(environ, False)
-            environ.update({name.token().value(): executed})
-            return executed   # <- so the reason we use environment.update is that we want to return binding value
+            executed = value.execute(environ, False)  # <-------------------------------- store the executed value
+            environ.update({name.token().value(): executed})  # <------------------- assign it to its binding name
+            return executed   # <----------------------------------------------------------- return executed value
 
         if head.token().value() == 'def?':
             SE_ASSERT(where, top, 'Expression[execute]: def?: can only use (def?) form at the top of the program')
-            valid, _, why = rules.get('def?').valid(tail)  # <--------------- validate tail with the def-form rule
-            SE_ASSERT(where, valid,                                           f'Expression[execute]: def?: {why}')
+            TAIL_IS_VALID(tail, 'def?', where,                                 'Expression[execute]: def?: {why}')
             name: Literal  # <--------------------------------------------------- assign name as a type of Literal
             name, value = tail  # <-------------------------------------------------- assign value as a CommonType
             from_env = environ.get(name.token().value()) if (name.token().value() in environ.keys()) else NotFound
-            executed = value.execute(environ, False) if from_env is NotFound else from_env  # existing or executed
-            environ.update({name.token().value(): executed})  # <--- update current scope' environment in any case
-            return executed   # <- so the reason we use environment.update is that we want to return binding value
+            executed = value.execute(environ, False) if from_env is NotFound else from_env  # try to find existing
+            environ.update({name.token().value(): executed})  # assign existing/executed value to its binding name
+            return executed   # <----------------------------------------------------------- return executed value
 
         if head.token().value() == 'defn':
             SE_ASSERT(where, top, 'Expression[execute]: defn: can only use (defn) form at the top of the program')
