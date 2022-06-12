@@ -113,6 +113,7 @@ class Expression(ExpressionType):
             name: Literal = tail[0]  # <----------------------------------------- assign name as a type of Literal
 
             if rule == 'UnusedGlobalVariables':
+                places.update({name.token().position(): ['GlobalVariable', name.token().value()]})  # register var
                 storage[name.token().value()] = 0    # since we define global variable with def, add it to storage
 
     def generate(self, dictionary: dict, cfg: dict, inline: bool):
