@@ -498,11 +498,11 @@ class Expression(ExpressionType):
             types = []  # <------------------------------------------------------ define a list of parameter types
             children = parameters.children()  # <---- assign children as the reference to the parameter form items
             ampersand_found = tuple(filter(lambda p: p[1].token().value() == '&', enumerate(children)))   # find &
-            ampersand_position: int = ampersand_found[0][0] if ampersand_found else -1  # <---- 0 - tuple, 1 - pos
-            positional_parameters = children[:ampersand_position] if ampersand_found else children  # <-- before &
-            positional_parameters_length = len(positional_parameters)  # <-- remember positional parameters length
-            for parameter in positional_parameters:  # <-------- for each parameter in a positional parameter list
-                parameter: Literal  # <----------------------------------- assign parameter as a type of a Literal
+            ampersand_position: int = ampersand_found[0][0] if ampersand_found else -1  # get '&' position (or -1)
+            positional_parameters = children[:ampersand_position] if ampersand_found else children   # positionals
+            positional_parameters_length = len(positional_parameters)  # <------------ remember positionals length
+            for parameter in positional_parameters:  # <------------------------------ for each position parameter
+                parameter: Literal  # <------------------------------------- assign parameter as a type of Literal
                 names.append(parameter.token().value())  # <--------------- append parameter name to the name list
                 types.append(TYPES.get(parameter.property('t'), object))  # append parameter type to the type list
             can_take_extras = False  # <-------------------- by default, function can not take any extra arguments
@@ -531,7 +531,7 @@ class Expression(ExpressionType):
                 if can_take_extras:
                     if len(c_arguments) > positional_parameters_length:
                         e_arguments = c_arguments[positional_parameters_length:]
-                        c_arguments = c_arguments[:positional_parameters_length] + (e_arguments,)  # modify a list
+                        c_arguments = c_arguments[:positional_parameters_length] + (e_arguments,)  # new args list
                     else:
                         c_arguments = c_arguments + (tuple(),)  # <- if extras are possible but missing, set to ()
 
@@ -585,11 +585,11 @@ class Expression(ExpressionType):
             types = []  # <------------------------------------------------------ define a list of parameter types
             children = parameters.children()  # <---- assign children as the reference to the parameter form items
             ampersand_found = tuple(filter(lambda p: p[1].token().value() == '&', enumerate(children)))   # find &
-            ampersand_position: int = ampersand_found[0][0] if ampersand_found else -1  # <---- 0 - tuple, 1 - pos
-            positional_parameters = children[:ampersand_position] if ampersand_found else children  # <-- before &
-            positional_parameters_length = len(positional_parameters)  # <-- remember positional parameters length
-            for parameter in positional_parameters:  # <-------- for each parameter in a positional parameter list
-                parameter: Literal  # <----------------------------------- assign parameter as a type of a Literal
+            ampersand_position: int = ampersand_found[0][0] if ampersand_found else -1  # get '&' position (or -1)
+            positional_parameters = children[:ampersand_position] if ampersand_found else children   # positionals
+            positional_parameters_length = len(positional_parameters)  # <------------ remember positionals length
+            for parameter in positional_parameters:  # <------------------------------ for each position parameter
+                parameter: Literal  # <------------------------------------- assign parameter as a type of Literal
                 names.append(parameter.token().value())  # <--------------- append parameter name to the name list
                 types.append(TYPES.get(parameter.property('t'), object))  # append parameter type to the type list
             can_take_extras = False  # <-------------------- by default, function can not take any extra arguments
@@ -618,7 +618,7 @@ class Expression(ExpressionType):
                 if can_take_extras:
                     if len(c_arguments) > positional_parameters_length:
                         e_arguments = c_arguments[positional_parameters_length:]
-                        c_arguments = c_arguments[:positional_parameters_length] + (e_arguments,)  # modify a list
+                        c_arguments = c_arguments[:positional_parameters_length] + (e_arguments,)  # new args list
                     else:
                         c_arguments = c_arguments + (tuple(),)  # <- if extras are possible but missing, set to ()
 
