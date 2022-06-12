@@ -66,6 +66,10 @@ class BuiltinLinter:
         if not self._config.get('Rules'):
             print('There are no rules to run/report')
 
+        for pos, why in self._errors:
+            print('ERR', ':'.join(map(str, pos)), '=>')
+            print('    :::', why)
+
         for rule in self._config.get('Rules'):
             print(f'>>> {rule}')
             body = self.report().get(rule)
