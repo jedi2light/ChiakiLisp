@@ -371,18 +371,16 @@ class Expression(ExpressionType):
             return result  # <------ if all conditions have been evaluated to truthy ones, return the last of them
 
         if head.token().value() == 'try':
-            valid, _, why = rules.get('try').valid(tail)  # <-------------------- validate tail with try-form rule
-            SE_ASSERT(where, valid,                                            f'Expression[execute]: try: {why}')
-            main: CommonType = tail[0]  # <----------- assign main as a type of CommonType (Expression or Literal)
+            TAIL_IS_VALID(tail, 'try', where,                                   'Expression[execute]: try: {why}')
+            main: CommonType = tail[0]  # <----------------------------------- assign main as a type of CommonType
             catch: Expression = tail[1]  # <--------------------------------- assign catch as a type of Expression
-            valid, _, why = rules.get('catch').valid(catch.children())  # <--- validate catch with catch-form rule
-            SE_ASSERT(where, valid,                                          f'Expression[execute]: catch: {why}')
+            TAIL_IS_VALID(catch.children(), 'catch', where,                   'Expression[execute]: catch: {why}')
             klass: Literal = catch.children()[1]  # <--------------------------- assign klass as a type of Literal
             alias: Literal = catch.children()[2]  # <--------------------------- assign alias as a type of Literal
             block: List[CommonType] = catch.children()[3:]  # <------------- assign block as a list of CommonTypes
             obj = klass.execute(environ, False)  # <---------------------------------- get actual exception object
-            closure = {}  # <------------------------------ initialize a try-form closure with an empty dictionary
-            closure.update(environ)  # <-- we do not want to modify global environment to store exception instance
+            closure = {}  # <--------------------------------------------------- initialize a try-form environment
+            closure.update(environ)  # <-------------------------------------------- update it with the global one
             try:
                 return main.execute(environ, False)  # <-------------------------------- try to execute main block
             except obj as exception:  # <------------------------------------------ if exception has been occurred
