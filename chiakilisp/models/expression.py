@@ -97,7 +97,8 @@ class Expression(ExpressionType):
         if head.token().value() == 'def':
             valid, _, why = rules.get('def').valid(tail)  # <---------------- validate tail with the def-form rule
             if not valid:
-                errors.append([where, why])  # <------ instead of raising SyntaxError, add a list describing error
+                errors.append([where, f'def: {why}'])  # <-- instead of raising SyntaxError, add to the error list
+                return  # <--------------------------------- and return (do nothing) on current linter visit event
             name: Literal = tail[0]  # <----------------------------------------- assign name as a type of Literal
 
             if rule == 'UnusedGlobalVariables':
