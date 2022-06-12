@@ -230,21 +230,20 @@ class Expression(ExpressionType):
             ]).generate(dictionary, cfg, inline)  # <-- return generated (->> ...) expression with 'if's
 
         if head.token().value() == 'let':
-            valid, _, why = rules.get('let-cpp').valid(tail)  # <-- validate tail with let-cpp-form rule
-            SE_ASSERT(where, valid,                                 f'Expression[generate]: let: {why}')
+            TAIL_IS_VALID(tail, 'let-cpp', where,                    'Expression[generate]: let: {why}')
             bindings: Expression  # <---------------------------- assign binding as a type of Expression
-            bindings, *body = tail  # <---------------------------- assign body to a list of CommonTypes
-            lines = []  # <----------------------------------------------------- resulting lines of code
+            bindings, *body = tail  # <---------------------------- assign body as a list of CommonTypes
+            lines = []  # <------------------------------------------ initialize a list for a code lines
             for name, value in pairs(bindings.children()):  # <- for each pair in bindings form children
                 name: Literal  # <----------------------------------- assign name as a type of a Literal
                 rhs = value.generate(dictionary, cfg,  False)  # <------- right-hand-side generated code
                 generated = name.generate(dictionary, cfg, True)  # <------- generated C++ variable name
                 lhs = f'auto{"*" if rhs.startswith("new") else ""} {generated}'  # <- and left-hand-side
-                if rhs.startswith("new"):
-                    cfg['KNOWN_POINTERS'].append(generated)  # <------ append to the known pointers list
-                lines.append(f'{lhs} = {rhs}')  # <----- append generated variable definition expression
+                if rhs.startswith("new"):  # <- if we've have encountered 'new ...' generated expression
+                    cfg['KNOWN_POINTERS'].append(generated)  # <-- append lhs to the known pointers list
+                lines.append(f'{lhs} = {rhs}')  # <--- register generated variable definition expression
             for each in body:
-                lines.append(each.generate(dictionary, cfg, False))  # <--- let this to be simple enough
+                lines.append(each.generate(dictionary, cfg, False))  # <--- and generate body code lines
             return '({' + '\n'.join(lines) + '})' + (';' if not inline else '')  # <- generate let-block
 
         # fn...
