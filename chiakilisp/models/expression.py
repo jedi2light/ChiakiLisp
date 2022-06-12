@@ -253,13 +253,13 @@ class Expression(ExpressionType):
         # fn...
 
         if head.token().value() == 'def':
-            valid, _, why = rules.get('def').valid(tail)  # <-------- validate tail with a def-form rule
-            SE_ASSERT(where, valid,                                 f'Expression[generate]: def: {why}')
+            TAIL_IS_VALID(tail, 'def', where,                        'Expression[generate]: def: {why}')
             name: Literal   # <---------------------------------------- assign name as a type of Literal
-            name, value = tail  # <---------------------------------------- assign value as a CommonType
-            generated = name.generate(dictionary, cfg, True)  # <----- generate CXX name of the variable
-            cfg['DEFS'].append(f'auto {generated} = {value.generate(dictionary, cfg, False)}')  # append
-            return ''  # <- def-form is not supposed to generate a line of code, only append to the defs
+            name, value = tail  # <-------------------------------- assign value as a type of CommonType
+            ty = CXX_TYPES.get(name.property("t"), "auto")  # <--------- take into account variable type
+            generated = name.generate(dictionary, cfg, True)  # <------------ generate C++ variable name
+            cfg['DEFS'].append(f'{ ty } {  generated  } = {  value.generate(dictionary, cfg, False)  }')
+            return ''  # <------ def-form is not supposed to generate a line of code, only update config
 
         # def?...
 
