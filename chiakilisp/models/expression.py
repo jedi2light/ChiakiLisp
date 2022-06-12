@@ -666,6 +666,6 @@ class Expression(ExpressionType):
             environ[name.token().value().split('/')[-1]] = module  # <- assign module object to a unqualified name
             return None  # <----------------------------------------------------------------------- and return nil
 
-        handle = head.execute(environ, False)
-        arguments = tuple(map(lambda argument: argument.execute(environ, False), tail))
+        handle = head.execute(environ, False)  # resolve handle object by its name, this could raise a 'NameError'
+        arguments = tuple(map(lambda argument: argument.execute(environ, False), tail))  # build args for a handle
         return handle(*arguments)  # return handle execution result (which is Python 3 value) to the caller object
