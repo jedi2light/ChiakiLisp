@@ -4,9 +4,17 @@
 # pylint: disable=missing-module-docstring
 # pylint: disable=too-many-return-statements  # it is fine dear
 
-from typing import Callable, Iterable
+from typing import Callable, Iterable, Sized, Generator
 
 FORMATTERS = {'True': 'true', 'False': 'false',  'None': 'nil'}
+
+
+def pairs(plain: Sized) -> Generator:
+
+    """Returns generator of pairs;
+    can fail if number of args is not even, check before"""
+
+    return (plain[i:i + 2] for i in range(0, len(plain), 2))
 
 
 def get_assertion_closure(e_object) -> Callable:
