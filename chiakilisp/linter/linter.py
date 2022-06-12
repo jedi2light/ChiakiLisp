@@ -23,6 +23,7 @@ class BuiltinLinter:
     _env: dict
     _wood: Children
     _errors: list
+    _places: dict
     _config: dict
     _report: dict
     _global_variables_counts: dict
@@ -34,11 +35,23 @@ class BuiltinLinter:
         self._env = env
         self._wood = wood
         self._errors = []
+        self._places = {}
         self._global_variables_counts = {}
         self._report = {
             'UnusedGlobalVariables': []
         }
         self._config = config or _DEFAULTS
+
+    def find(self, kind: str, name: str) -> tuple or None:
+
+        """Find position in file by kind, name; or None"""
+
+        for pos, (inner_kind, inner_name) \
+                in self._places.items():
+            if kind == inner_kind \
+                    and name == inner_name:
+                return pos
+        return None
 
     def report(self) -> dict:
 
