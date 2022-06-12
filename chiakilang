@@ -166,7 +166,7 @@ def repl() -> None:
             "set_completer": lambda _: None, "parse_and_bind": lambda _: None   # <------ a set of stub methods
         })  # <-------------------------------------------------------- this is for MS Windows NT compatibility
 
-    readline.parse_and_bind("tab: complete")  # <------------------------ allows user to complete binding names
+    readline.parse_and_bind("tab: complete")  # <-------------------------------- allows user to complete names
     readline.parse_and_bind('set: blink-matching-paren on')  # <---------------------- extremely needed feature
 
     def completer(text, state) -> str or None:
@@ -193,13 +193,13 @@ def repl() -> None:
         if not source:  # if there is no source code for execute()
             continue
         try:
-            execute(source, '<REPL>')  # <--------------------------------- execute function also prints result
+            execute(source, '<REPL>')  # <------------------------------- execute() function also prints result
         except (Exception,) as _exc:  # pylint: disable=W0703        # try to catch any possible exception here
             ENVIRONMENT['*e'] = _exc  # <------------------- like in clojure REPL, store exception object in *e
             if ENVIRONMENT.get('repl-show-traceback'):
                 traceback.print_exc()
             else:
-                print(_exc)  # have to manually print error (and if user want to print out exception traceback)
+                print(_exc)  # have to manually print error (and if user want to) print out exception traceback
 
 
 def lint(source: str, path: str) -> None:
@@ -292,7 +292,7 @@ if __name__ == '__main__':
                   f'{cxx_flags_str} {ld_flags_str} '\
                   f'{cpp_source_path} -o {file_path_base_name_extension_less}'  # <------- generate clang++ cmd
 
-            print(cmd)  # <------------------ print out cmd to user (so it can be copied by them, for instance)
+            print(cmd)  # <------------------ print out cmd to user (so it can be copied by they, for instance)
 
             os.system(cmd)  # <----------------------------------------- run the compiler cmd using os.system()
 
@@ -318,6 +318,6 @@ if __name__ == '__main__':
             ENVIRONMENT['argc'] = len(sys.argv[1:])  # <------------------------- skip over ./chiakilang itself
             ENVIRONMENT['argv'] = sys.argv[1:]  # <------------------------------ skip over ./chiakilang itself
 
-            execute(r.read(), file_path_base_name,  silent=True)  # <------- set silent to avoid extra printing
+            execute(r.read(), file_path_base_name,  silent=True)  # <----------- silent to avoid extra printing
     else:
         repl()  # <------------------------------------------------------------ start built-in REPL environment
