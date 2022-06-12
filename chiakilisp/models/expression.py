@@ -197,12 +197,11 @@ class Expression(ExpressionType):
             SE_ASSERT(where,
                       len(head.token().value()) > 1,
                       'Expression[generate]: dot-form: method name is mandatory, could not just be "."')
-            valid, _, why = rules.get('dot-form').valid(tail)  # <----- validate tail with dot-form rule
-            SE_ASSERT(where, valid,                            f'Expression[generate]: dot-form: {why}')
+            TAIL_IS_VALID(tail, 'dot-form', where,              'Expression[generate]: dot-form: {why}')
             name: Literal   # <---------------------------------------- assign name as a type of Literal
-            name, *args = tail  # <------------------------------ assign args to the list of CommonTypes
-            generated = name.generate(dictionary, cfg, True)  # <------ get the C++ name of the variable
-            accessor = '->' if generated in cfg['KNOWN_POINTERS'] else '.'   # '->' accessor for pointer
+            name, *args = tail  # <-------------------------------- assign args to a list of CommonTypes
+            generated = name.generate(dictionary, cfg, True)  # <------------ generate C++ variable name
+            accessor = '->' if generated in cfg['KNOWN_POINTERS'] else '.'   # <-- use '->' for pointers
             return f'{generated}{accessor}{head.token().value()[1:]}(' \
                    + ', '.join(map(lambda an_arg: an_arg.generate(dictionary, cfg, True), args)) + ')' \
                    + (';' if not inline else '')  # <---- return generated dot-expression representation
