@@ -471,21 +471,20 @@ class Expression(ExpressionType):
             return None  # <------------------------------------------------------ if nothing is true, return None
 
         if head.token().value() == 'let':
-            valid, _, why = rules.get('let').valid(tail)  # <--------------------- validate tail with the let-form
-            SE_ASSERT(where, valid,                                            f'Expression[execute]: let: {why}')
+            TAIL_IS_VALID(tail, 'let', where,                                   'Expression[execute]: let: {why}')
             bindings: Expression  # <------------------------------------- assign bindings as a type of Expression
             bindings, *body = tail  # <--------------------------------------- assign body as a list of CommonType
-            let = {}  # <---------------------------------------------- initialize a new closure for the let-block
-            let.update(environ)  # we can't just bootstrap 'let' environ, because we do not want instances linking
-            for raw, value in pairs(bindings.children()):  # <-------------------- for each next pair of arguments
-                if isinstance(raw, Expression):  # <--------------------------------- the left-hand-side is a form
-                    get = environ.get('get')  # <------ here we go... should it be called like ChiakiLisp interop?
+            let = {}  # <---------------------------------------------- initialize a new environment for let-block
+            let.update(environ)  # <------------------------------------------------ update it with the global one
+            for raw, value in pairs(bindings.children()):  # <--------------------------------- for each next pair
+                if isinstance(raw, Expression):  # <-------------------------------- if a left-hand-side is a form
+                    get = environ.get('get')  # <--------------------- use handy 'get' from the ChiakiLisp corelib
                     RE_ASSERT(where, get,    "Expression[execute]: let: destructuring requires core/get function")
-                    executed = value.execute(let, False)  # <-- pre-execute value in order to treat it like a list
-                    for idx, alias in enumerate(map(lambda val: val.token().value(), raw.children())):  # map over
-                        let.update({alias: get(executed, idx, None)})  # <- for each alias get a coll value or nil
+                    executed = value.execute(let, False)  # <-- store a value execution result; to treat as a coll
+                    for idx, alias in enumerate(map(lambda v: v.token().value(), raw.children())):  # iterate form
+                        let.update({alias: get(executed, idx, None)})  # <---- assign nil, or indexed item of coll
                 else:  # <---------------------------------------------------- the left-hand-side is an identifier
-                    let.update({raw.token().value(): value.execute(let, False)})  # <---------- populate a closure
+                    let.update({raw.token().value(): value.execute(let, False)})  # <- assign value to its binding
             if not body:
                 body = [Nil]  # <----------- let the ... let have an empty body, in this case, result would be nil
             return [child.execute(let, False) for child in body][-1]  # <------ return the last calculation result
