@@ -449,22 +449,19 @@ class Expression(ExpressionType):
             return object_method(*(child.execute(environ, False) for child in method_args))  # <-- return a result
 
         if head.token().value() == 'if':
-            valid, arity, why = rules.get('if').valid(tail)  # <------------------ validate tail with if-form rule
-            SE_ASSERT(where, valid,                                             f'Expression[execute]: if: {why}')
+            arity = TAIL_IS_VALID(tail, 'if', where,                             'Expression[execute]: if: {why}')
             cond, true, false = (tail if arity == 3 else tail + [Nil])  # <-- tolerate missing false-branch for if
             return true.execute(environ, False) if cond.execute(environ, False) else false.execute(environ, False)
 
         if head.token().value() == 'when':
-            valid, _, why = rules.get('when').valid(tail)  # <------------------ validate tail with when-form rule
-            SE_ASSERT(where, valid,                                           f'Expression[execute]: when: {why}')
+            TAIL_IS_VALID(tail, 'when', where,                                 'Expression[execute]: when: {why}')
             cond, *extras = tail  # <-------------------------- false branch is always equals to nil for when-form
             return [true.execute(environ, False) for true in extras][-1] if cond.execute(environ, False) else None
 
         if head.token().value() == 'cond':
             if not tail:
                 return None  # <------------------------------------------ if nothing has been passed, return None
-            valid, _, why = rules.get('cond').valid(tail)  # <-------------- validate tail with the cond-form rule
-            SE_ASSERT(where, valid,                                           f'Expression[execute]: cond: {why}')
+            TAIL_IS_VALID(tail, 'cond', where,                                 'Expression[execute]: cond: {why}')
             for cond, expr in pairs(tail):
                 if cond.execute(environ, False):
                     return expr.execute(environ, False)
