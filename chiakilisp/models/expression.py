@@ -208,16 +208,14 @@ class Expression(ExpressionType):
                    + (';' if not inline else '')  # <---- return generated dot-expression representation
 
         if head.token().value() == 'if':
-            valid, arity, why = rules.get('if').valid(tail)  # <-------- validate tail with if-form rule
-            SE_ASSERT(where, valid,                                  f'Expression[generate]: if: {why}')
+            arity = TAIL_IS_VALID(tail, 'if', where,                  'Expression[generate]: if: {why}')
             cond, true, false = (tail if arity == 3 else tail + [Nil])   # tolerate missing false-branch
             return f'({{{cond.generate(dictionary, cfg, True)} ' \
                    f'? {true.generate(dictionary, cfg, True)}' \
                    f': {false.generate(dictionary, cfg, False)}}})' + ('' if inline else ';')  # ternary
 
         if head.token().value() == 'when':
-            valid, _, why = rules.get('when').valid(tail)  # <-------- validate tail with when-form rule
-            SE_ASSERT(where, valid,                                f'Expression[generate]: when: {why}')
+            TAIL_IS_VALID(tail, 'when', where,                      'Expression[generate]: when: {why}')
             cond, *extras = tail  # <---------------- false branch is always equals to nil for when-form
             consequences = '({'+''.join([true.generate(dictionary, cfg, False) for true in extras])+'})'
             return f'({{{cond.generate(dictionary, cfg, True)} ? {consequences}' \
