@@ -646,27 +646,25 @@ class Expression(ExpressionType):
 
         if head.token().value() == 'import':
             SE_ASSERT(where, top,    'Expression[execute]: import: you should place all the (import)s at the top')
-            valid, _, why = rules.get('import').valid(tail)  # <---------- validate tail with the import-form rule
-            SE_ASSERT(where, valid,                                         f'Expression[execute]: import: {why}')
+            TAIL_IS_VALID(tail, 'import', where,                             'Expression[execute]: import: {why}')
             name: Literal = tail[0]  # <----------------------------------------- assign name as a type of Literal
-            alias: str = name.token().value()   # re-assign (maybe redefined from try-form) alias to a type of str
-            parts = alias.split('.')  # <---------------- split the name of importable module by the dot-character
+            alias: str = name.token().value()  # <--------------- get the alias (avoid name variable redefinition)
+            parts = alias.split('.')  # <---------------- split the importable module name into a list by '.' char
             unqualified = parts[-1]  # <----------------- store the unqualified name of importable Python 3 module
             identifiers = iter(parts[1:])  # <----------------- make it possible to iterate over parts with next()
             module = __import__(alias)  # <-------------------------- import Python 3 module by its qualified name
-            while module.__name__.split('.')[-1] != unqualified:
-                module = getattr(module, next(identifiers), None)   # <--- while not matching, go deep into module
-            environ[unqualified] = module  # <------------------------------------------ update global environment
-            return None  # <--------------------------------------------------------------------------- return nil
+            while module.__name__.split('.')[-1] != unqualified:  # while unqualified doesn't match an object name
+                module = getattr(module, next(identifiers), None)  # lookup for an object inside of current object
+            environ[unqualified] = module  # <---------------- assign module object to the unqualified module name
+            return None  # <----------------------------------------------------------------------- and return nil
 
         if head.token().value() == 'require':
             SE_ASSERT(where, top,  'Expression[execute]: require: you should place all the (require)s at the top')
-            valid, _, why = rules.get('require').valid(tail)  # <-------- validate tail with the require-form rule
-            SE_ASSERT(where, valid,                                        f'Expression[execute]: require: {why}')
+            TAIL_IS_VALID(tail, 'require', where,                           'Expression[execute]: require: {why}')
             name: Literal = tail[0]  # <----------------------------------------- assign name as a type of Literal
-            module = type(name.token().value(), (object,), environ['require'](name.token().value() + '.cl'))  # -|
-            environ[name.token().value().split('/')[-1]] = module  # <- update global environ with required module
-            return None  # <--------------------------------------------------------------------------- return nil
+            module = type(name.token().value(),  (object,),  environ.get('require')(name.token().value() + '.cl'))
+            environ[name.token().value().split('/')[-1]] = module  # <- assign module object to a unqualified name
+            return None  # <----------------------------------------------------------------------- and return nil
 
         handle = head.execute(environ, False)
         arguments = tuple(map(lambda argument: argument.execute(environ, False), tail))
