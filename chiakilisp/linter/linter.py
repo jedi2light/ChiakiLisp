@@ -88,7 +88,7 @@ class BuiltinLinter:
     def _fancy_print_report_for_unused_global_variables(self) -> None:
 
         for each in self._report.get('UnusedGlobalVariables'):
-            print(f'    ::: Global variable \'{each}\' is not used anywhere')
+            print(f'    ::: global variable \'{each}\' is not used anywhere')
 
     def run(self) -> None:
 
