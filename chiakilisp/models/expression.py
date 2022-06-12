@@ -432,16 +432,15 @@ class Expression(ExpressionType):
         if head.token().value().startswith('.') and not head.token().value() == '...':   # it could be an Ellipsis
             SE_ASSERT(where,
                       len(head.token().value()) > 1,    'Expression[execute]: dot-form: method name is mandatory')
-            valid, _, why = rules.get('dot-form').valid(tail)  # <--------------- validate tail with dot-form rule
-            SE_ASSERT(where, valid,                                       f'Expression[execute]: dot-form: {why}')
+            TAIL_IS_VALID(tail,                         'dot-form', where, 'Expression[execute]: dot-form: {why}')
             object_name: Literal  # <------------------------------------- assign object name as a type of Literal
             object_name, *method_args = tail  # <--------------- get the object name and method args from the tail
             method_alias = head.token().value()[1:]  # <------------------------------ get the method name (alias)
-            object_instance = object_name.execute(environ, False)  # <--- get the object instance from environment
+            object_instance = object_name.execute(environ, False)  # <---- get an object instance from environment
             SE_ASSERT(where,
                       hasattr(object_instance, '__class__'),
                       'Expression[execute]: dot-form: use object/method, module/method to invoke a static method')
-            object_alias = object_instance.__class__.__name__  # <------------- get the actual instance class name
+            object_alias = object_instance.__class__.__name__  # <-------------- get an actual instance class name
             object_method: Callable = getattr(object_instance, method_alias, NotFound)  # <--- get a method object
             NE_ASSERT(where,
                       object_method is not NotFound,
