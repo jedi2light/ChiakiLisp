@@ -224,8 +224,7 @@ class Expression(ExpressionType):
         if head.token().value() == 'cond':
             if not tail:
                 return '({ NULL; )}' + (';' if not inline else '')  # <- generate a block returning NULL
-            valid, _, why = rules.get('cond').valid(tail)  # <---- validate tail with the cond-form rule
-            SE_ASSERT(where, valid,                                f'Expression[generate]: cond: {why}')
+            TAIL_IS_VALID(tail, 'cond', where,                      'Expression[generate]: cond: {why}')
             return Expression([identifier('->>')] + [
                 Expression([identifier('if')] + each_pair) for each_pair in reversed(tuple(pairs(tail)))
             ]).generate(dictionary, cfg, inline)  # <-- return generated (->> ...) expression with 'if's
