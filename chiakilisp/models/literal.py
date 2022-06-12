@@ -1,6 +1,7 @@
 # pylint: disable=fixme
 # pylint: disable=invalid-name
 # pylint: disable=line-too-long
+# pylint: disable=arguments-renamed
 # pylint: disable=missing-module-docstring
 
 from functools import partial
@@ -8,6 +9,7 @@ from typing import Any, Callable, Iterable
 from chiakilisp.utils import simple_fuzzy_matched  # <- for proposals
 from chiakilisp.utils import get_assertion_closure  # <- for ASSERT()
 from chiakilisp.models.token import Token  # Literal needs Token  :*)
+from chiakilisp.models.forward import LiteralType  # forward declared
 
 _ASSERT: Callable = get_assertion_closure(NameError)  # <---- closure
 
@@ -26,7 +28,7 @@ class NotFound:  # pylint: disable=too-few-public-methods  # its okay
     """
 
 
-class Literal:
+class Literal(LiteralType):
 
     """
     Literal is the class that encapsulates single Token and meant to be a part of Expression, but not always
@@ -77,7 +79,7 @@ class Literal:
 
         return self._properties
 
-    def lint(self, _: dict, rule: str, storage: dict) -> None:
+    def lint(self, _: dict, rule: str, storage: dict, __: list) -> None:
 
         """React to the builtin linter visit event"""
 
@@ -86,7 +88,7 @@ class Literal:
             if name in storage:  # <-------------------------------------- if global variable has defined...
                 storage[name] += 1  # <------------------------------------ ...increment its reference count
 
-    def generate(self, dictionary: dict, cfg: dict, inline: bool):         # pylint: disable=unused-argument
+    def generate(self, dictionary: dict, _: dict, inline: bool):         # pylint: disable=unused-argument
 
         """Generate C++ representation of the single ChiakiLisp Literal"""
 
