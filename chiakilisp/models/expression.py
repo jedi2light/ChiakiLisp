@@ -491,10 +491,9 @@ class Expression(ExpressionType):
             return [child.execute(let, False) for child in body][-1]  # <------ return the last calculation result
 
         if head.token().value() == 'fn':
-            valid, _, why = rules.get('fn').valid(tail)  # <------------------ validate tail with the fn-form rule
-            SE_ASSERT(where, valid,                                             f'Expression[execute]: fn: {why}')
+            TAIL_IS_VALID(tail, 'fn', where,                                     'Expression[execute]: fn: {why}')
             parameters: Expression  # <--------------------------------- assign parameters as a type of Expression
-            parameters, *body = tail  # <---------------------------------------- assign body as a CommonType list
+            parameters, *body = tail  # <-----------------------------------assign body as the list of CommonTypes
             names = []  # <------------------------------------------------------ define a list of parameter names
             types = []  # <------------------------------------------------------ define a list of parameter types
             children = parameters.children()  # <---- assign children as the reference to the parameter form items
@@ -543,14 +542,14 @@ class Expression(ExpressionType):
                               isinstance(arg_value, arg_type),
                               f'<anonymous function..>: {arg_name}: {arg_tname} expected, got: {arg_value_tname}')
 
-                fn = {}  # <--------------- initialize a closure for current anonymous function evaluation context
-                fn.update(environ)  # <--------- update (not bootstrap) fn closure environment with the global one
-                fn.update(dict(zip(names, c_arguments)))  # <-------------------- update fn closure with arguments
-                fn.update({'kwargs': kwargs})  # <-------- currently, there is no way to pass them from ChiakiLisp
+                fn = {}  # <------------------------------------------------- initialize new execution environment
+                fn.update(environ)  # <--------------------------------------------- update it with the global one
+                fn.update(dict(zip(names, c_arguments)))  # <-------------- associate parameters with their values
+                fn.update({'kwargs': kwargs})  # <-------- update it with keyword arguments passed from a callback
                 return [child.execute(fn, False) for child in body][-1]  # <--- return the last calculation result
 
             handle.x__custom_name__x = '<anonymous function>'  # <-- set function name to the <anonymous function>
-            return handle  # <--------------------------------------- return the anonymous function handler object
+            return handle  # <------------------------------------------------- return the function handler object
 
         if head.token().value() == 'def':
             SE_ASSERT(where, top,   'Expression[execute]: def: can only use (def) form at the top of the program')
@@ -575,8 +574,7 @@ class Expression(ExpressionType):
 
         if head.token().value() == 'defn':
             SE_ASSERT(where, top, 'Expression[execute]: defn: can only use (defn) form at the top of the program')
-            valid, _, why = rules.get('defn').valid(tail)  # <-------------- validate tail with the defn-form rule
-            SE_ASSERT(where, valid,                                             f'Expression[execute]: fn: {why}')
+            TAIL_IS_VALID(tail, 'defn', where,                                 'Expression[execute]: defn: {why}')
             name: Literal  # <--------------------------------------------------- assign name as a type of Literal
             parameters: Expression  # <--------------------------------- assign parameters as a type of Expression
             name, parameters, *body = tail  # <---------------------------- assign body as the list of CommonTypes
@@ -630,20 +628,20 @@ class Expression(ExpressionType):
                               isinstance(arg_value, arg_type),
                               f'{name.token().value()}: {arg_name}: {arg_tname} expected, got: {arg_value_tname}')
 
-                defn = {}  # <----------------------- initialize a closure for current function evaluation context
-                defn.update(environ)  # <----- update (not bootstrap) defn closure environment with the global one
-                defn.update(dict(zip(names, c_arguments)))  # <---------------- update defn closure with arguments
-                defn.update({'kwargs': kwargs})  # <------ currently, there is no way to pass them from ChiakiLisp
+                defn = {}  # <----------------------------------------------- initialize new execution environment
+                defn.update(environ)  # <------------------------------------------- update it with the global one
+                defn.update(dict(zip(names, c_arguments)))  # <------------ associate parameters with their values
+                defn.update({'kwargs': kwargs})  # <------ update it with keyword arguments passed from a callback
                 retval = [child.execute(defn, False) for child in body][-1]    # store the last calculation result
-                actual_ret_tname = getattr(retval, '__name__', retval.__class__.__name__)   # object or class name
+                actual_ret_tname = getattr(retval, '__name__', retval.__class__.__name__)  # name of retval object
                 TE_ASSERT(where,
                           isinstance(retval, expected_ret_type),
                           f'{name.token().value()} have to return: {expected_ret_tname}, not: {actual_ret_tname}')
                 return retval  # <--------------------------------------------- return the last calculation result
 
             handle.x__custom_name__x = name.token().value()  # assign custom function name to display it by pprint
-            environ.update({name.token().value(): handle})  # in case of 'defn', we also need to update global env
-            return handle  # <------------------------------------------ return the global function handler object
+            environ.update({name.token().value(): handle})   # in case of 'defn' we also need to update global env
+            return handle  # <------------------------------------------------- return the function handler object
 
         if head.token().value() == 'import':
             SE_ASSERT(where, top,    'Expression[execute]: import: you should place all the (import)s at the top')
