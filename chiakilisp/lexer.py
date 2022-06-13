@@ -131,6 +131,11 @@ class Lexer:
                 self._advance()  # <-- call _advance()  to skip the leading '"' char
                 self._increment_char_number()  # <-- increment character num as well
 
+            elif self._current_symbol_is_single_quote():
+                self._tokens.append(Token(Token.Quote,            "'", self._pos()))
+                self._advance()
+                self._increment_char_number()
+
             elif self._current_symbol_is_opening_bracket():
                 self._tokens.append(Token(Token.OpeningBracket,   '(', self._pos()))
                 self._advance()
