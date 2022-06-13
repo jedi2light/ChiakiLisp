@@ -227,6 +227,12 @@ class Lexer:
 
         return self._current_symbol() == ';'
 
+    def _current_symbol_is_single_quote(self) -> bool:
+
+        """Returns whether current symbol is a single-quote symbol"""
+
+        return self._current_symbol() == "'"
+
     def _current_symbol_is_double_quote(self) -> bool:
 
         """Returns whether current symbol is a double-quote symbol"""
