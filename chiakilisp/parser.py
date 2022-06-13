@@ -107,7 +107,9 @@ def read(tokens: List[Token]) -> Children:
         if current_token.type() == Token.OpeningBracket:  # if read() function has encountered an expression start
             boundary_of_encountered_expression: int = boundary(tokens[idx:])  # find an idx of expression boundary
             left_boundary, right_boundary = idx + 1, boundary_of_encountered_expression + idx  # define boundaries
-            children.append(Expression(read(tokens[left_boundary:right_boundary])))  # an expression children list
+            expression = Expression(read(tokens[left_boundary:right_boundary]))  # <--- initialize Expression inst
+            expression.set_properties(_properties)  # <--------------------------------- set expression properties
+            children.append(expression)  # <------------------------------- append expression to the children list
             idx = right_boundary + 1  # and then let the read() function to advance to the next one token instance
         else:
             if current_token.is_identifier() and current_token.value().startswith('^'):   # when property detected
