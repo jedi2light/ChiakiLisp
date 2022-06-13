@@ -5,6 +5,8 @@
 # pylint: disable=too-many-return-statements  # it is fine dear
 
 from typing import Callable, Iterable, Sized, Generator
+from chiakilisp.models.forward import \
+    ExpressionType, LiteralType
 
 FORMATTERS = {'True': 'true', 'False': 'false',  'None': 'nil'}
 
@@ -36,6 +38,12 @@ def get_assertion_closure(e_object) -> Callable:
 def wrap(arg) -> str:
 
     """Wraps any Python 3 value (safely) into string"""
+
+    if isinstance(arg, LiteralType):  # if its a quoted literal
+        return arg.wrapped()      # offload wrapping to literal
+
+    if isinstance(arg, ExpressionType):  # if quoted expression
+        return arg.wrapped()   # offload wrapping to expression
 
     if isinstance(arg, str):  # if it's a str(), wrap it in '"'
         return f'"{arg}"'
