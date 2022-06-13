@@ -95,11 +95,26 @@ class Expression(ExpressionType):
 
         return self._properties
 
+    def quoted(self) -> bool:
+
+        """Returns whether expression is quoted"""
+
+        return 'quoted' in self._properties.keys()
+
     def children(self) -> list:
 
         """Returns expression children"""
 
         return self._children
+
+    def wrapped(self) -> str:
+
+        """Wraps expression to str"""
+
+        return '(' + ' '.join(
+            map(lambda x: x.wrapped(),
+                self.children())
+        ) + ')'
 
     def dump(self, indent: int) -> None:
 
@@ -341,6 +356,10 @@ class Expression(ExpressionType):
     def execute(self, environ: dict, top: bool = True) -> Any:
 
         """Execute here, is the return Python value 3 related to the expression: string, number, and vice versa"""
+
+        if self.quoted():
+
+            return self  # <--------------------- return expression instance in case user have decided to quote it
 
         head: Literal
 

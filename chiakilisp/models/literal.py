@@ -60,6 +60,13 @@ class Literal(LiteralType):
 
         return self._token
 
+    def wrapped(self) -> str:
+
+        """Wraps literal to str"""
+
+        return f'"{self.token().value()}"' \
+            if self.token().is_string() else self.token().value()
+
     def set_properties(self, _properties: list) -> None:
 
         """Allows to set a literal property (i.e.: (defn ^t:int () 1))"""
@@ -78,6 +85,12 @@ class Literal(LiteralType):
         """Returns all the literal props"""
 
         return self._properties
+
+    def quoted(self) -> bool:
+
+        """Returns whether literal is quoted"""
+
+        return 'quoted' in self._properties.keys()
 
     def lint(self, _: dict, rule: str, storage: dict, errors: list, __: dict) -> None:
 
@@ -125,6 +138,10 @@ class Literal(LiteralType):
     def execute(self, environment: dict, __=False) -> Any:  # pylint: disable=inconsistent-return-statements
 
         """Execute, here, is the return Python value tied to the literal: number, string, boolean, etc..."""
+
+        if self.quoted():
+
+            return self  # return a literal
 
         if self.token().type() == Token.Nil:
 

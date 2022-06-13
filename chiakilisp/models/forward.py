@@ -23,10 +23,18 @@ class LiteralType(CommonType):
 
         """Just to define 'token()' signature"""
 
+    def wrapped(self) -> str:
+
+        """Just to define 'wrapped()' signature"""
+
 
 class ExpressionType(CommonType):
 
     """Forward declaration for Expression model"""
+
+    def wrapped(self) -> str:
+
+        """Just to define 'wrapped()' signature"""
 
     def children(self) -> list:
 
