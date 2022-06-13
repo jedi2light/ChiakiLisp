@@ -7,6 +7,7 @@ class Token:
     Token is the class that encapsulates a part of a source code: number, string or something else
     """
 
+    Quote: str = 'Quote'
     Nil: str = 'Nil'
     Number: str = 'Number'
     String: str = 'String'
