@@ -112,6 +112,10 @@ def read(tokens: List[Token]) -> Children:
             children.append(expression)  # <------------------------------- append expression to the children list
             idx = right_boundary + 1  # and then let the read() function to advance to the next one token instance
         else:
+            if current_token.is_quote():  # <------------ when user asks to quote current expression of identifier
+                _properties.append('quoted:true')  # "'a or '(+ 1 2)" <=> "^quoted:true a or ^quoted:true (+ 1 2)"
+                idx += 1  # <------------------------------------------------------------------- move pointer next
+                continue  # <--------------------------------------------------------- and continue parsing tokens
             if current_token.is_identifier() and current_token.value().startswith('^'):   # when property detected
                 _property = current_token.value()[1:]  # <--- get the name of the property by removing leading '^'
                 assert _property,  'Parser[parse]: property was intended to be assigned, but it\'s value\'s empty'
