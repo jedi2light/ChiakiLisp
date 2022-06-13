@@ -46,6 +46,12 @@ class Token:
 
         return self._position
 
+    def is_quote(self) -> bool:
+
+        """Just a handy shortcut"""
+
+        return self._type == Token.Quote
+
     def is_nil(self) -> bool:
 
         """Just a handy shortcut"""
