@@ -67,12 +67,33 @@ class Expression(ExpressionType):
     """
 
     _children: list
+    _properties: dict
 
     def __init__(self, children: list) -> None:
 
         """Initialize Expression instance"""
 
         self._children = children
+        self._properties = {}
+
+    def set_properties(self, _properties: list) -> None:
+
+        """Allows to set an expression property (i.e.: (prn ^t:str (+ 1 1)))"""
+
+        self._properties = dict(map(lambda prop: prop.split(':'), _properties))
+
+    def property(self,
+                 name: str, default=None) -> str:
+
+        """Returns the property by its own name"""
+
+        return self._properties.get(name, default)
+
+    def properties(self) -> dict:
+
+        """Returns all the expression props"""
+
+        return self._properties
 
     def children(self) -> list:
 
