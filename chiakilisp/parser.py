@@ -109,6 +109,7 @@ def read(tokens: List[Token]) -> Children:
             left_boundary, right_boundary = idx + 1, boundary_of_encountered_expression + idx  # define boundaries
             expression = Expression(read(tokens[left_boundary:right_boundary]))  # <--- initialize Expression inst
             expression.set_properties(_properties)  # <--------------------------------- set expression properties
+            _properties.__init__()  # <- do not forget to flush the properties list (also no need for make a copy)
             children.append(expression)  # <------------------------------- append expression to the children list
             idx = right_boundary + 1  # and then let the read() function to advance to the next one token instance
         else:
@@ -124,6 +125,7 @@ def read(tokens: List[Token]) -> Children:
                 continue  # <--------------------------------------------------------- and continue parsing tokens
             literal = Literal(current_token)  # <------------------------------- initialize literal instance first
             literal.set_properties(_properties)  # <--------------------- set literal properties defined by a user
+            _properties.__init__()  # <- do not forget to flush the properties list (also no need for make a copy)
             children.append(literal)  # <---------------------------- finally, append literal to the children list
             idx += 1  # and let the 'read()' function to advance to the next one token by incrementing 'idx' value
 
