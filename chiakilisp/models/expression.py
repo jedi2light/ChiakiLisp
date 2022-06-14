@@ -650,6 +650,71 @@ class Expression(ExpressionType):
             environ.update({name.token().value(): handle})   # in case of 'defn' we also need to update global env
             return handle  # <------------------------------------------------- return the function handler object
 
+        if head.token().value() == 'defmacro':
+            SE_ASSERT(where, top, 'Expression[execute]: defmacro: can only use (defmacro) form on top of program')
+            TAIL_IS_VALID(tail, 'defmacro', where,                         'Expression[execute]: defmacro: {why}')
+            name: Literal  # <--------------------------------------------------- assign name as a type of Literal
+            parameters: Expression  # <--------------------------------- assign parameters as a type of Expression
+            name, parameters, *body = tail  # <---------------------------- assign body as the list of CommonTypes
+            names = []  # <------------------------------------------------------ define a list of parameter names
+            types = []  # <------------------------------------------------------ define a list of parameter types
+            children = parameters.children()  # <---- assign children as the reference to the parameter form items
+            ampersand_found = tuple(filter(lambda p: p[1].token().value() == '&', enumerate(children)))   # find &
+            ampersand_position: int = ampersand_found[0][0] if ampersand_found else -1  # get '&' position (or -1)
+            positional_parameters = children[:ampersand_position] if ampersand_found else children   # positionals
+            positional_parameters_length = len(positional_parameters)  # <------------ remember positionals length
+            for parameter in positional_parameters:  # <---------------------------- for each positional parameter
+                parameter: Literal  # <------------------------------------- assign parameter as a type of Literal
+                names.append(parameter.token().value())  # <--------------- append parameter name to the name list
+                types.append(TYPES.get(parameter.property('t'), object))  # append parameter type to the type list
+            can_take_extras = False  # <----------------------- by default, macro can not take any extra arguments
+            if ampersand_found:
+                can_take_extras = True  # <---- now we set this to true, as the macro can now take extra arguments
+                SE_ASSERT(where,
+                          len(children) - 1 != ampersand_position,
+                          'Expression[execute]: defmacro: you can only mention one alias for extra args\' tuple.')
+                SE_ASSERT(where,
+                          len(children) - 2 == ampersand_position,
+                          'Expression[execute]: defmacro: you have to mention alias name for extra args\' tuple.')
+                names.append(children[-1].token().value())   # append extra args param name to all parameter names
+                types.append(tuple)  # <---------------------- append extra args param type to all parameter types
+            if not body:
+                body = [Nil]  # <----- let a macro be defined with empty body, in such a case, it will return None
+            integrity_spec_rule = s.Rule(s.Arity(s.AtLeast(positional_parameters_length)
+                                                 if can_take_extras else s.Exactly(positional_parameters_length)))
+
+            def handle(*c_arguments, **kwargs):  # pylint: disable=E0102  # <- handle object couldn't be redefined
+
+                """User-macro handle object"""
+
+                mc_valid, _, mc_why = integrity_spec_rule.valid(c_arguments)  # <- first, validate macro integrity
+                SE_ASSERT(where, mc_valid,                                    f'{name.token().value()}: {mc_why}')
+
+                if can_take_extras:
+                    if len(c_arguments) > positional_parameters_length:
+                        e_arguments = c_arguments[positional_parameters_length:]
+                        c_arguments = c_arguments[:positional_parameters_length] + (e_arguments,)  # new args list
+                    else:
+                        c_arguments = c_arguments + (tuple(),)  # <- if extras are possible but missing, set to ()
+
+                for arg_value, arg_name, arg_type in zip(c_arguments, names, types):
+                    arg_tname = arg_type.__name__
+                    arg_value_tname = getattr(arg_value, '__name__', arg_value.__class__.__name__)   # actual name
+                    TE_ASSERT(where,
+                              isinstance(arg_value, arg_type),
+                              f'{name.token().value()}: {arg_name}: {arg_tname} expected, got: {arg_value_tname}')
+
+                defmacro = {}  # <------------------------------------------- initialize new execution environment
+                defmacro.update(environ)  # <--------------------------------------- update it with the global one
+                defmacro.update(dict(zip(names, c_arguments)))  # <-------- associate parameters with their values
+                defmacro.update({'kwargs': kwargs})  # <-- update it with keyword arguments passed from a callback
+                return deepcopy([child.execute(defmacro, False) for child in body][-1])   # return the last result
+
+            handle.x__custom_name__x = name.token().value()  # <- assign custom macro name to display it by pprint
+            handle.x__its_a_macro__x = True  # <-- set the `macro` flag, thus it couldn't be treated as a function
+            environ.update({name.token().value(): handle})   # in case of 'defmacro', we need to update global env
+            return handle  # <---------------------------------------------------- return the macro handler object
+
         if head.token().value() == 'import':
             SE_ASSERT(where, top,    'Expression[execute]: import: you should place all the (import)s at the top')
             TAIL_IS_VALID(tail, 'import', where,                             'Expression[execute]: import: {why}')
@@ -673,5 +738,12 @@ class Expression(ExpressionType):
             return None  # <----------------------------------------------------------------------- and return nil
 
         handle = head.execute(environ, False)  # resolve handle object by its name, this could raise a 'NameError'
-        arguments = tuple(map(lambda argument: argument.execute(environ, False), tail))  # build args for a handle
-        return handle(*arguments)  # return handle execution result (which is Python 3 value) to the caller object
+
+        if hasattr(handle, 'x__its_a_macro__x'):  # <---------------------- if the user have invoked macro handler
+            questionable = handle(*tuple(tail))   # <- 'expand' the macro by executing it using global environment
+            if isinstance(questionable, (Literal,
+                                         Expression)):  # <- if macro handler have generated expression or literal
+                questionable.unquote()  # <- unquote it recursively, in case of Expression; could also be unquoted
+                return questionable.execute(environ, False)  # <- execute 'expanded & unquoted' expression/literal
+            return questionable  # <-- if macro handler have generated arbitrary Python 3 value, return it *as is*
+        return handle(*tuple(map(lambda argument: argument.execute(environ,  False),  tail)))  # return the result
