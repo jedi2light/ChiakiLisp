@@ -90,7 +90,7 @@ class Literal(LiteralType):
 
         """Returns whether literal is quoted"""
 
-        return 'quoted' in self._properties.keys()
+        return bool(self.properties().get('quoted'))
 
     def lint(self, _: dict, rule: str, storage: dict, errors: list, __: dict) -> None:
 

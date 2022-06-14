@@ -99,7 +99,7 @@ class Expression(ExpressionType):
 
         """Returns whether expression is quoted"""
 
-        return 'quoted' in self._properties.keys()
+        return bool(self.properties().get('quoted'))
 
     def children(self) -> list:
 
