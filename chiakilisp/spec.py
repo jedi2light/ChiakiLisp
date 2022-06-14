@@ -101,7 +101,7 @@ class FormOf(SignatureVariantType):
     def __init__(self,
                  variant: SignatureVariantType,
                  even: bool = False,
-                 empty: bool = True) -> None:
+                 empty: bool = False) -> None:
 
         self._even = even
         self._empty = empty
