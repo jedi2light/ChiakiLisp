@@ -7,6 +7,12 @@
 (def Expression expression/Expression)
 ;; be able to reference already imported 'functools/reduce' function
 (def reduce functools/reduce)
+;; set of experimental macros
+(defmacro when (condition & actions)
+ ;; i.e: (when 1 2 (prn "Hello")) => (if 1 (let () 2 (prn "hello")))
+ (let (body-of-let-expression ['let '()]
+        _ (.extend body-of-let-expression actions))
+  (Expression ['if condition (Expression body-of-let-expression)])))
 ;; set of general purpose functions like (identity ...) or something
 (defn identity (x)
  x)
