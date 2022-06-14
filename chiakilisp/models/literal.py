@@ -3,6 +3,7 @@
 # pylint: disable=line-too-long
 # pylint: disable=arguments-renamed
 # pylint: disable=missing-module-docstring
+# pylint: disable=too-many-return-statements
 
 from functools import partial
 from typing import Any, Callable, Iterable
