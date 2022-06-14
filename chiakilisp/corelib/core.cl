@@ -9,10 +9,10 @@
 (def reduce functools/reduce)
 ;; set of experimental macros
 (defmacro when (condition & actions)
- ;; i.e: (when 1 2 (prn "Hello")) => (if 1 (let () 2 (prn "hello")))
- (let (body-of-let-expression ['let '()]
-        _ (.extend body-of-let-expression actions))
-  (Expression ['if condition (Expression body-of-let-expression)])))
+;; i.e.: (when 1 2 (prn "Hello")) => (if 1 (let () 2 (prn "hello")))
+   (let (if-expression-body ['let '()]
+       _ (.extend if-expression-body actions))
+      (Expression ['if condition (Expression if-expression-body)])))
 ;; set of general purpose functions like (identity ...) or something
 (defn identity (x)
  x)
