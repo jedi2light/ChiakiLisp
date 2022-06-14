@@ -44,6 +44,12 @@ class Literal(LiteralType):
         self._token = token
         self._properties = {}
 
+    def unquote(self) -> None:
+
+        """Unquote a literal"""
+
+        self.properties()['quoted'] = None
+
     def dump(self, indent: int) -> None:
 
         """Dumps a single expression literal"""

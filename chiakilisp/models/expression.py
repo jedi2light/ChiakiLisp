@@ -90,6 +90,14 @@ class Expression(ExpressionType):
                 self.children())
         ) + ')'
 
+    def unquote(self) -> None:
+
+        """Recursively unquote am expression"""
+
+        self.properties()['quoted'] = None
+        for children in self.children():
+            children.unquote()
+
     def dump(self, indent: int) -> None:
 
         """Dumps the entire expression"""
