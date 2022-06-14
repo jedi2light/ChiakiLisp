@@ -35,7 +35,6 @@ class Literal(LiteralType):
     """
 
     _token: Token
-    _properties: dict
 
     def __init__(self, token: Token) -> None:
 
@@ -66,31 +65,6 @@ class Literal(LiteralType):
 
         return f'"{self.token().value()}"' \
             if self.token().is_string() else self.token().value()
-
-    def set_properties(self, _properties: list) -> None:
-
-        """Allows to set a literal property (i.e.: (defn ^t:int () 1))"""
-
-        self._properties = dict(map(lambda prop: prop.split(':'), _properties))
-
-    def property(self,
-                 name: str, default=None) -> str:
-
-        """Returns the property by its own name"""
-
-        return self._properties.get(name, default)
-
-    def properties(self) -> dict:
-
-        """Returns all the literal props"""
-
-        return self._properties
-
-    def quoted(self) -> bool:
-
-        """Returns whether literal is quoted"""
-
-        return bool(self.properties().get('quoted'))
 
     def lint(self, _: dict, rule: str, storage: dict, errors: list, __: dict) -> None:
 
