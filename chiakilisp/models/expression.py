@@ -528,7 +528,7 @@ class Expression(ExpressionType):
             ampersand_position: int = ampersand_found[0][0] if ampersand_found else -1  # get '&' position (or -1)
             positional_parameters = children[:ampersand_position] if ampersand_found else children   # positionals
             positional_parameters_length = len(positional_parameters)  # <------------ remember positionals length
-            for parameter in positional_parameters:  # <------------------------------ for each position parameter
+            for parameter in positional_parameters:  # <---------------------------- for each positional parameter
                 parameter: Literal  # <------------------------------------- assign parameter as a type of Literal
                 names.append(parameter.token().value())  # <--------------- append parameter name to the name list
                 types.append(TYPES.get(parameter.property('t'), object))  # append parameter type to the type list
@@ -612,7 +612,7 @@ class Expression(ExpressionType):
             ampersand_position: int = ampersand_found[0][0] if ampersand_found else -1  # get '&' position (or -1)
             positional_parameters = children[:ampersand_position] if ampersand_found else children   # positionals
             positional_parameters_length = len(positional_parameters)  # <------------ remember positionals length
-            for parameter in positional_parameters:  # <------------------------------ for each position parameter
+            for parameter in positional_parameters:  # <---------------------------- for each positional parameter
                 parameter: Literal  # <------------------------------------- assign parameter as a type of Literal
                 names.append(parameter.token().value())  # <--------------- append parameter name to the name list
                 types.append(TYPES.get(parameter.property('t'), object))  # append parameter type to the type list
