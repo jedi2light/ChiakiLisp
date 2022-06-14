@@ -152,6 +152,7 @@ class Expression(ExpressionType):
                 'try',     # in cxx mode we do not support code generation for try form. TODO: implement
                 'fn',       # in cxx mode we do not support code generation for lambdas. TODO: implement
                 'def?',                 # in cxx mode we do not support def? form (yet). TODO: implement
+                'defmacro',   # in cxx mode we do not support 'macros' generation (yet). TODO: implement
                 'import',        # in cxx mode we do not support Python 3 modules (now). TODO: implement
                 'require'    # in cxx mode we do not support ChiakiLisp modules require. TODO: implement
             ],
@@ -296,6 +297,8 @@ class Expression(ExpressionType):
         # import...
 
         # require...
+
+        # defmacro ...
 
         if head.token().value() == 'new':
             TAIL_IS_VALID(tail, 'new', where,                        'Expression[generate]: new: {why}')
