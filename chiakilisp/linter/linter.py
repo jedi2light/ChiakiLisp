@@ -1,7 +1,8 @@
 # pylint: disable=line-too-long
 # pylint: disable=missing-module-docstring
 
-from chiakilisp.parser import Children
+from typing import List
+from chiakilisp.models.forward import CommonType
 
 # Rules implemented right now:
 #  - UnusedGlobalVariables - check the source code for unused global variables
@@ -21,14 +22,17 @@ class BuiltinLinter:
     """ChiakiLisp Linter"""
 
     _env: dict
-    _wood: Children
+    _wood: List[CommonType]
     _errors: list
     _places: dict
     _config: dict
     _report: dict
     _global_variables_counts: dict
 
-    def __init__(self, wood: Children, env: dict, config: dict = None) -> None:
+    def __init__(self,
+                 wood: List[CommonType],
+                 env: dict,
+                 config: dict = None) -> None:
 
         """Initializes a built-in BuiltinLinter class"""
 

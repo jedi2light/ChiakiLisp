@@ -12,6 +12,15 @@ class CommonType:
 
     _properties: dict
 
+    def lint(self,                         # pylint: disable=too-many-arguments
+             env: dict,
+             rule: str,
+             storage: dict,
+             error: list,
+             places: dict) -> None:
+
+        """Just to define 'lint()' signature"""
+
     def execute(self, env: dict, top: bool):
 
         """Just to define 'execute()' signature"""
