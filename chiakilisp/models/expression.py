@@ -469,6 +469,11 @@ class Expression(ExpressionType):
             cond, true, false = (tail if arity == 3 else tail + [Nil])  # <-- tolerate missing false-branch for if
             return true.execute(environ, False) if cond.execute(environ, False) else false.execute(environ, False)
 
+        if head.token().value() == 'when' and environ.get('use-builtin-when-form'):  # if 'false', use a new macro
+            TAIL_IS_VALID(tail, 'when', where,                                 'Expression[execute]: when: {why}')
+            cond, *extras = tail  # <-------------------------- false branch is always equals to nil for when-form
+            return [true.execute(environ, False) for true in extras][-1] if cond.execute(environ, False) else None
+
         if head.token().value() == 'cond':
             if not tail:
                 return None  # <------------------------------------------ if nothing has been passed, return None
