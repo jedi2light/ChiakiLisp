@@ -3,7 +3,7 @@ all: build
 lint: chiakilang chiakilisp
 	pylint chiakilang chiakilisp
 
-build: chiakilisp chiakilang setup.cfg
+build: chiakilang chiakilisp setup.cfg
 	rm -rf dist/*  # <------ do not forget to clean the ./dist directory first
 	python -m build
 
