@@ -8,6 +8,7 @@
 
 from functools import partial
 from typing import Any, Callable
+from chiakilisp.proxies.keyword import Keyword  # <------ for Keyword
 from chiakilisp.utils import get_assertion_closure  # <- for ASSERT()
 from chiakilisp.models.token import Token  # Literal needs Token  :*)
 from chiakilisp.models.forward import LiteralType  # forward declared
@@ -66,6 +67,10 @@ class Literal(LiteralType):
 
             return self.token().value()
 
+        if self.token().type() == Token.Keyword:
+
+            return Keyword(self.token().value())
+
         if self.token().type() == Token.Boolean:
 
             return self.token().value() == 'true'
@@ -73,18 +78,16 @@ class Literal(LiteralType):
         if self.token().type() == Token.Identifier:
 
             name = self.token().value()  # <------------- because we reference token().value() so many times
-            where = self.token().position()  # <------------------------------------ remember token position
+            ASSERT = partial(_ASSERT, self.token().position())  # <---- create the ASSERT() partial function
 
-            ASSERT = partial(_ASSERT, where)  # <-------------- create partial function to simplify ASSERT()
-
-            if not name.startswith('/') and not name.endswith('/') and '/' in name:  # <--------- be careful
-                obj_name, member_name, *_ = name.split('/')  # <-------- syntax: <object name>/<member name>
-                obj_object = environment.get(obj_name, NotFound)  # <-- assign as a found object or NotFound
-                ASSERT(obj_object is not NotFound,                 f"no '{obj_name}' symbol in this scope.")
-                member_object = getattr(obj_object, member_name, NotFound)  # <--- assign as a member object
+            if not name.startswith('/') and not name.endswith('/') and '/' in name:   # catch that precisely
+                handle_name, member_name, *_ = name.split('/')  # <-----  *_ is to skip over leading garbage
+                handle_object = environment.get(handle_name, NotFound)    # try to get a handle object first
+                ASSERT(handle_object is not NotFound,           f"no '{handle_name}' symbol in this scope.")
+                member_object = getattr(handle_object, member_name, NotFound)   # try to get a member handle
                 ASSERT(member_object is not NotFound,
-                       f"object (or module) named '{obj_name}' has no such a member named '{member_name}'.")
-                return member_object  # <------------------ thus we return found module/object member object
+                       f'the handle named: \'{handle_name}\' has no such a member named: \'{member_name}\'')
+                return member_object  # <------------------ we return handle member object found by its name
 
             found = environment.get(name, NotFound)  # <--- handle case when identifier name isn't qualified
 

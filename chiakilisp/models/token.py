@@ -10,10 +10,13 @@ class Token:
     Nil: str = 'Nil'
     Number: str = 'Number'
     String: str = 'String'
+    Keyword: str = 'Keyword'
     Boolean: str = 'Boolean'
     Identifier: str = 'Identifier'
-    OpeningBrace: str = 'OpeningBrace'
-    ClosingBrace: str = 'ClosingBrace'
+    OpeningParen: str = 'OpeningParen'
+    ClosingParen: str = 'ClosingParen'
+    InlineFunMarker: str = 'InlineFunMarker'
+    CommentedMarker: str = 'CommentedMarker'
 
     _type: str
     _value: str

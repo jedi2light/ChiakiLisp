@@ -5,6 +5,7 @@
 # pylint: disable=too-many-return-statements  # it's fine. dear
 
 from typing import Callable, Sized, Generator
+from chiakilisp.proxies.keyword import Keyword
 
 FORMATTERS = {'True': 'true', 'False': 'false',  'None': 'nil'}
 
@@ -37,6 +38,9 @@ def wrap(arg) -> str:
 
     """Wraps Python 3 object or instance to a string"""
 
+    if isinstance(arg, Keyword):  # <-- wrap Keyword in a colon
+        return f':{arg}'
+
     if isinstance(arg, str):  # <- wrap string in double quotes
         return f'"{arg}"'
 
@@ -53,6 +57,12 @@ def wrap(arg) -> str:
                 getattr(arg, '__class__', None).__name__
             )
         )
+
+    if isinstance(arg, set):  # if it's a set ...
+        # then wrap its elements in {} and separate by a space
+
+        formatted = ' '.join(map(wrap, arg))
+        return f'#{{{formatted}}}'
 
     if isinstance(arg, list):  # if it's a list ...
         # then wrap its elements in [] and separate by a space

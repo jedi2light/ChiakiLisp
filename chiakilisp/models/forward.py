@@ -14,11 +14,11 @@ class CommonType:
 
     def dump(self, indent: int) -> None:
 
-        """Just to define 'dump()' method signature"""
+        """To define 'dump()' method signature"""
 
     def execute(self, env: dict, top: bool):
 
-        """Just to define 'execute()' method signature"""
+        """To define 'execute()' method signature"""
 
 
 class LiteralType(CommonType):
@@ -34,6 +34,6 @@ class ExpressionType(CommonType):
 
     """Forward declaration for Expression model"""
 
-    def children(self) -> list:
+    def nodes(self) -> list:
 
-        """Just to define 'children()' method signature"""
+        """Just to define 'nodes()' method signature"""

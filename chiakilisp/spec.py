@@ -117,18 +117,18 @@ class FormOf(SignatureVariantType):
         if not is_chiakilisp_expression(form):
             return False, 'should be a form'
 
-        if self._empty and not form.children():
+        if self._empty and not form.nodes():
             return False, \
                    'should be a non-empty form'
 
         if self._even \
-                and not len(form.children()) % 2 == 0:
+                and not len(form.nodes()) % 2 == 0:
             return False,\
                    'should be a form with even args count'
 
-        items = pairs(form.children()) \
+        items = pairs(form.nodes()) \
             if isinstance(self._variant, Pair) \
-            else form.children()
+            else form.nodes()
 
         for each in items:
             valid, why = self._variant.valid(each)
@@ -403,6 +403,10 @@ rules = {
                  Signature(Literal(Identifier),
                            FormOf(Literal(Identifier)),
                            RestOf(Anything))),
+    'defn?': Rule(Arity(AtLeast(2)),
+                  Signature(Literal(Identifier),
+                            FormOf(Literal(Identifier)),
+                            RestOf(Anything))),
     'import': Rule(Arity(Exactly(1)), Signature(Literal(Identifier))),
     'require': Rule(Arity(Exactly(1)), Signature(Literal(Identifier))),
     # new rules for other internal forms will be added here a bit later.

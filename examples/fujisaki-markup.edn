@@ -1,0 +1,7 @@
+{:layout    :vbox
+ :items     [{:type  :label :text "ChiakiLisp"}
+             {:type  :image :path "./Logo.png"}
+             {:type  :label :text "ChiakiLisp @jedi2light May, 2023"}]
+:window     {:width  350
+             :height 150
+             :window-title  "ChiakiLisp @jedi2light May, 2023 WTFPL"}}

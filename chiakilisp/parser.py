@@ -8,15 +8,15 @@ from chiakilisp.models.literal import Literal
 from chiakilisp.models.expression import Expression
 
 
-Child = Literal or Expression  # define the type for a single child
-Children = List[Child]  # define a type describing list of children
+Node = Literal or Expression  # define the type for one node
+Nodes = List[Node]  # define a type describing list of nodes
 
 
 class Parser:
 
     """Parser is the class that takes a list of tokens and produces a wood of Expressions/Literals"""
 
-    _wood: Children
+    _wood: Nodes
     _tokens: List[Token]
 
     def __init__(self, tokens: List[Token]) -> None:
@@ -26,7 +26,7 @@ class Parser:
         self._tokens = tokens
         self._wood = []
 
-    def wood(self) -> Children:
+    def wood(self) -> Nodes:
 
         """Its a getter for private _wood field"""
 
@@ -39,23 +39,23 @@ class Parser:
         self._wood = read(self._tokens)  # utilizes dedicated read() func
 
 
-def find_nearest_closing_brace(filtered: list, visited: list) -> tuple:
+def find_nearest_closing_paren(filtered: list, visited: list) -> tuple:
 
-    """This function takes a token collection list and finds the nearest closing brace position"""
+    """This function takes a token collection list and finds the nearest closing paren position"""
 
-    _all = tuple(filter(lambda p: p not in visited and p[1].type() == Token.ClosingBrace, filtered))
+    _all = tuple(filter(lambda p: p not in visited and p[1].type() == Token.ClosingParen, filtered))
     if not _all:
-        raise SyntaxError('Parser::find_nearest_closing_brace() there is no nearest ClosingBrace token')
+        raise SyntaxError('Parser::find_nearest_closing_paren() there is no nearest ClosingParen token')
     return _all[0]
 
 
-def find_nearest_opening_brace(filtered: list, visited: list) -> tuple:
+def find_nearest_opening_paren(filtered: list, visited: list) -> tuple:
 
-    """This function takes a token collection list and finds the nearest opening brace position"""
+    """This function takes a token collection list and finds the nearest opening paren position"""
 
-    _all = tuple(filter(lambda p: p not in visited and p[1].type() == Token.OpeningBrace, filtered))
+    _all = tuple(filter(lambda p: p not in visited and p[1].type() == Token.OpeningParen, filtered))
     if not _all:
-        raise SyntaxError('Parser::find_nearest_closing_brace() there is no nearest OpeningBrace token')
+        raise SyntaxError('Parser::find_nearest_closing_paren() there is no nearest OpeningParen token')
     return _all[0]
 
 
@@ -63,54 +63,68 @@ def boundary(lst: List[Token]) -> int:
 
     """This function takes a token collection listing and finds actual boundary to starting expression"""
 
-    assert len(lst) >= 2 and lst[0].type() == Token.OpeningBrace  # non-empty tokens list, first should match '('.
+    assert len(lst) >= 2 and lst[0].type() == Token.OpeningParen  # non-empty tokens list, first should match '('.
 
-    filtered: list  # for some reason, pylint confuses about filtered type assuming it is the same type as the lst
+    filtered: list  # for some reason, pylint confuses about filtered type assuming it's the same type as the list
 
-    filtered = list(filter(lambda _pr: _pr[1].type() in [Token.OpeningBrace, Token.ClosingBrace], enumerate(lst)))
+    filtered = list(filter(lambda _pr: _pr[1].type() in [Token.OpeningParen, Token.ClosingParen], enumerate(lst)))
 
-    starting_opening_brace = filtered[0]
-    starting_opening_brace_position = starting_opening_brace[0]
+    starting_opening_paren = filtered[0]
+    starting_opening_paren_position = starting_opening_paren[0]
 
-    visited = []  # define list of brace tokens we've already visited
+    visited = []  # define list of paren tokens we've already visited
 
     while True:
         if not filtered:
-            return -1  # return '-1' if there are no more brace tokens
+            return -1  # return '-1' if there are no more paren tokens
 
-        nearest_closing_brace = find_nearest_closing_brace(filtered, visited)
-        nearest_closing_brace_position = nearest_closing_brace[0]
+        nearest_closing_paren = find_nearest_closing_paren(filtered, visited)
+        nearest_closing_paren_position = nearest_closing_paren[0]
 
-        reversed_filtered = list(reversed(filtered[:filtered.index(nearest_closing_brace) + 1]))
+        reversed_filtered = list(reversed(filtered[:filtered.index(nearest_closing_paren) + 1]))
 
-        nearest_opening_brace_to_that_closing = find_nearest_opening_brace(reversed_filtered, visited)
-        nearest_opening_brace_to_that_closing_position = nearest_opening_brace_to_that_closing[0]
+        nearest_opening_paren_to_that_closing = find_nearest_opening_paren(reversed_filtered, visited)
+        nearest_opening_paren_to_that_closing_position = nearest_opening_paren_to_that_closing[0]
 
-        if nearest_opening_brace_to_that_closing_position == starting_opening_brace_position:
-            return nearest_closing_brace_position  # if matches exact same position, its valid expression boundary
+        if nearest_opening_paren_to_that_closing_position == starting_opening_paren_position:
+            return nearest_closing_paren_position  # if matches exact same position, its valid expression boundary
 
-        visited.append(nearest_closing_brace)
-        visited.append(nearest_opening_brace_to_that_closing)  # then, append these two tokens to the visited list
+        visited.append(nearest_closing_paren)
+        visited.append(nearest_opening_paren_to_that_closing)  # then, append these two tokens to the visited list
 
 
-def read(tokens: List[Token]) -> Children:
+def read(tokens: List[Token]) -> Nodes:
 
     """This function produces wood of Expressions/Literals"""
 
     if not tokens:
         return []  # allow empty expressions, useful for empty function parameters like: (defn my-function () ...)
 
-    children: Children = []
+    nodes: Nodes = []
     idx: int = 0
+    is_inline_fn: bool = False
+    is_commented: bool = False
 
     while idx < len(tokens):
         current_token = tokens[idx]
-        if current_token.type() == Token.OpeningBrace:  # <- if read() function has encountered OpeningBrace token
-            left_boundary, right_boundary = idx + 1, boundary(tokens[idx:]) + idx  # <---------- define boundaries
-            children.append(Expression(read(tokens[left_boundary:right_boundary])))  # <-------- append expression
+        if current_token.type() == Token.OpeningParen:  # <- if read() function has encountered OpeningParen token
+            left_boundary, right_boundary = idx + 1, boundary(tokens[idx:]) + idx   # define expression boundaries
+            if not is_commented:  # <----------------------- if current expression is not intended to be commented
+                nodes.append(Expression(read(tokens[left_boundary:right_boundary]),    is_inline_fn=is_inline_fn))
+            is_inline_fn = False  # <-------------------------------------------------------- reset inline fm flag
+            is_commented = False  # <-------------------------------------------------------- reset commented flag
             idx = right_boundary + 1  # and then let the read() function to advance to the next one token instance
+        elif current_token.type() == Token.InlineFunMarker:
+            is_inline_fn = True  # <----------------------------------------------------- set inline function flag
+            idx += 1  # <-------------- and then let the read() function to advance to the next one token instance
+        elif current_token.type() == Token.CommentedMarker:
+            is_commented = True  # <------------------------------------------------------- set commented out flag
+            idx += 1  # <-------------- and then let the read() function to advance to the next one token instance
         else:
-            children.append(Literal(current_token))  # <------------------------------------------- append literal
+            if not is_commented:  # <-------------------------- if current literal is not intended to be commented
+                nodes.append(Literal(current_token))  # <---------------------- then initialize and append literal
+            is_inline_fn = False  # <-------------------------------------------------------- reset inline fm flag
+            is_commented = False  # <-------------------------------------------------------- reset commented flag
             idx += 1  # <-------------- and then let the read() function to advance to the next one token instance
 
-    return children   # <-------------- so at the end of the day, return a list of Expression or Literal instances
+    return nodes   # <----------------- so at the end of the day, return a list of Expression or Literal instances

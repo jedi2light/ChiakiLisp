@@ -1,12 +1,15 @@
 # ChiakiLisp - Yet another LISP
 
-## Qt5 Demo
+## Demo
 
-![alt Qt5 Demo](demos/qt5-demo-app.png)
+![alt Fujisaki Demo](demos/fujisaki.png)
+[Qt5 Demo Source Code](examples/fujisaki-example.cl)
 
-## Demo Source
+## Libraries
 
-1. [Qt5 Demo)](examples/qt5-simple-app-window.cl)
+All the libraries are written in pure ChiakiLisp and located in the [`libraries`](./libraries) directory.
+
+1. [Fujisaki](libraries/fujisaki.cl) - a small library that allows to write PyQt5 applications in a declarative way.
 
 ## Description
 
