@@ -164,12 +164,13 @@ class Expression(ExpressionType):
 
         assert self.nodes(),              'Expression[execute]: current expression is empty, unable to execute it'
 
+        get = environ.get('get')  # <------- some features like destructing or keyword-as-fn will require core/get
+
         head, *tail = self.nodes()
 
         where = head.token().position()  # <------------ when make assertions on expression head, this can be used
 
         if head.token().type() == Token.Keyword:
-            get = environ.get('get')  # <----------------------- using handy 'get' from the ChiakiLisp corelib ...
             RE_ASSERT(where, get,   "Expression[execute]: unable to use keyword as a function without `core/get`")
             SE_ASSERT(where, len(tail) >= 1,  'Expression[execute]: keyword must be followed by at least one arg')
             SE_ASSERT(where, len(tail) <= 2,   'Expression[execute]: keyword can be followed by at most two args')
