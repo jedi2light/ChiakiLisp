@@ -39,7 +39,7 @@ class Literal(LiteralType):
 
     def token(self) -> Token:
 
-        """Returns Token instance"""
+        """Returns literal token"""
 
         return self._token
 
