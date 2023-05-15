@@ -22,7 +22,7 @@ from chiakilisp.utils import get_assertion_closure, pairs
 
 class ArityError(SyntaxError):
 
-    """ArityError (just for name)"""
+    """Stub class to display that there is an arity error"""
 
 
 NE_ASSERT = get_assertion_closure(NameError)  # <-------- raises NameError
