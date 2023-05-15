@@ -63,7 +63,6 @@ class Expression(ExpressionType):
         """Initialize Expression instance"""
 
         self._nodes = nodes
-        self._assert_even_number_of_map_literals()
         self._is_inline_fn = props.get('is_inline_fn', False)
 
     def nodes(self) -> list:
@@ -85,9 +84,9 @@ class Expression(ExpressionType):
             for argument in rest:
                 argument.dump(indent + 1)   # increment indent
 
-    def _assert_even_number_of_map_literals(self) -> None:
+    def _assert_even_number_of_dict_literals(self) -> None:
 
-        """Asserts that there is an even number of map literals"""
+        """Asserts that there is an even number of dict literals"""
 
         if (self.nodes()
                 and isinstance(self.nodes()[0], Literal)
@@ -95,7 +94,7 @@ class Expression(ExpressionType):
                 and self.nodes()[0].token().value() == 'dicty'):
             is_even = len(self.nodes()[1:]) % 2 == 0
             position = self.nodes()[0].token().position()
-            SE_ASSERT(position, is_even, 'Map literal must be followed by a value')
+            SE_ASSERT(position, is_even, 'Dictionary key literal must be followed by a value')
 
     @staticmethod
     def _parse_function_and_create_a_handle(
@@ -425,5 +424,7 @@ class Expression(ExpressionType):
             return None  # <----------------------------------------------------------------------- and return nil
 
         handle = head.execute(environ, False)  # resolve handle object by its name, this could raise a 'NameError'
+
+        self._assert_even_number_of_dict_literals()  # verify literals form arity before dictionary initialization
 
         return handle(*tuple(map(lambda argument: argument.execute(environ,  False),  tail)))  # return the result
