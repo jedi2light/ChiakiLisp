@@ -84,6 +84,17 @@ class Expression(ExpressionType):
             for argument in rest:
                 argument.dump(indent + 1)   # increment indent
 
+    @staticmethod
+    def _is_identifier_matching(
+            node: CommonType, name: str) -> bool:
+
+        """Returns true it the given node is
+        an Identifier and its value matches the {name}"""
+
+        return (isinstance(node, Literal)
+                and node.token().type() == Token.Identifier
+                and node.token().value() == name)
+
     def _assert_even_number_of_dict_literals(self) -> None:
 
         """Asserts that there is an even number of dict literals"""
