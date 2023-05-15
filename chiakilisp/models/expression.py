@@ -330,29 +330,32 @@ class Expression(ExpressionType):
 
         if head.token().value() == 'let':
             TAIL_IS_VALID(tail, 'let', where,                                   'Expression[execute]: let: {why}')
-            bindings: Expression  # <------------------------------------- assign bindings as a type of Expression
-            bindings, *body = tail  # <--------------------------------------- assign body as a list of CommonType
-            let = {}  # <---------------------------------------------- initialize a new environment for let-block
+            bindings, *body = tail  # <------------------------------------- parse let form bindings list and body
+            let = {}  # <------------------------------------------------------ initialize local `let` environment
             let.update(environ)  # <------------------------------------------------ update it with the global one
             for raw, value in pairs(bindings.nodes()):  # <-------------------------------- for the each next pair
 
-                if isinstance(raw, Expression):  # <------------------------ if a left-hand-side seems like a coll
-                    get = environ.get('get')  # <--------------- using handy 'get' from the ChiakiLisp corelib ...
-                    RE_ASSERT(where, get,    "Expression[execute]: let: destructuring requires core/get function")
-                    executed = value.execute(let, False)  # <--------- and the right-hand-side computed result ...
+                computed_right_hand_side = value.execute(let, False)  # <------ get computed right-hand-side value
 
-                    if raw.nodes() and raw.nodes()[0].token().value() == 'listy':  # determine coll type first ...
-                        for alias in map(lambda v: v.token().value(), raw.nodes()[1:]):  # if its a list maker ...
-                            let.update({alias: get(executed, alias, None)})  # <- assign nil or named item of coll
-                    else:
-                        for idx, alias in enumerate(map(lambda v: v.token().value(), raw.nodes())):  # if its list
-                            let.update({alias: get(executed, idx, None)})  # <- assign nil or indexed item of coll
+                if isinstance(raw, Expression):  # <------------------------ if a left-hand-side seems like a coll
+                    RE_ASSERT(where, get,    "Expression[execute]: let: destructuring requires core/get function")
+
+                    get_by_idx = True
+                    skip_first = False
+                    if (raw.nodes() and
+                            self._is_identifier_matching(raw.nodes()[0], 'dicty')):  # <- dictionary destructuring
+                        skip_first = True
+                        get_by_idx = False
+
+                    for idx, k_alias in enumerate(map(lambda v: v.token().value(),
+                                                      raw.nodes()[1:] if skip_first else raw.nodes())):
+                        let.update({k_alias: get(computed_right_hand_side, idx if get_by_idx else k_alias, None)})
 
                 else:  # <------------------------------------------- if a left-hand-side seems like an identifier
-                    let.update({raw.token().value(): value.execute(let, False)})  # <- assign value to its binding
+                    let.update({raw.token().value(): computed_right_hand_side})  # <- directly assign computed rhs
 
             if not body:
-                body = [Nil]  # <----------- let the ... let have an empty body, in this case, result would be nil
+                body = [Nil]  # <----------- if there is no let-block body, let's just  return a simple nil literal
 
             return [node.execute(let, False) for node in body][-1]  # <--------- return the last calculation result
 
