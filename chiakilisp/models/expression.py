@@ -25,10 +25,10 @@ class ArityError(SyntaxError):
     """Stub class to display that there is an arity error"""
 
 
-NE_ASSERT = get_assertion_closure(NameError)  # <-------- raises NameError
-TE_ASSERT = get_assertion_closure(TypeError)  # <-------- raises TypeError
-SE_ASSERT = get_assertion_closure(SyntaxError)  # <---- raises SyntaxError
-RE_ASSERT = get_assertion_closure(RuntimeError)  # <-- raises RuntimeError
+NE_ASSERT = get_assertion_closure(NameError)  # <--------- raises NameError
+TE_ASSERT = get_assertion_closure(TypeError)  # <--------- raises TypeError
+SE_ASSERT = get_assertion_closure(SyntaxError)  # <----- raises SyntaxError
+RE_ASSERT = get_assertion_closure(RuntimeError)  # <--- raises RuntimeError
 
 
 def IDENTIFIER_ASSERT(lit: Literal, message: str) -> None:
