@@ -111,20 +111,20 @@ def read(tokens: List[Token]) -> Nodes:
             left_boundary, right_boundary = idx + 1, boundary(tokens[idx:]) + idx   # define expression boundaries
             if not is_commented:  # <----------------------- if current expression is not intended to be commented
                 nodes.append(Expression(read(tokens[left_boundary:right_boundary]),    is_inline_fn=is_inline_fn))
-            is_inline_fn = False  # <-------------------------------------------------------- reset inline fm flag
-            is_commented = False  # <-------------------------------------------------------- reset commented flag
-            idx = right_boundary + 1  # and then let the read() function to advance to the next one token instance
+            is_inline_fn = False  # <--------------------------------------- reset (previously set) inline fm flag
+            is_commented = False  # <--------------------------------------- reset (previously set) commented flag
+            idx = right_boundary + 1  # <--- and let the read() function to advance to the next one token instance
         elif current_token.type() == Token.InlineFunMarker:
-            is_inline_fn = True  # <----------------------------------------------------- set inline function flag
-            idx += 1  # <-------------- and then let the read() function to advance to the next one token instance
+            is_inline_fn = True  # <----------------------------------------------------------- set inline fn flag
+            idx += 1  # <------------------- and let the read() function to advance to the next one token instance
         elif current_token.type() == Token.CommentedMarker:
-            is_commented = True  # <------------------------------------------------------- set commented out flag
-            idx += 1  # <-------------- and then let the read() function to advance to the next one token instance
+            is_commented = True  # <----------------------------------------------------------- set commented flag
+            idx += 1  # <------------------- and let the read() function to advance to the next one token instance
         else:
             if not is_commented:  # <-------------------------- if current literal is not intended to be commented
                 nodes.append(Literal(current_token))  # <---------------------- then initialize and append literal
-            is_inline_fn = False  # <-------------------------------------------------------- reset inline fm flag
-            is_commented = False  # <-------------------------------------------------------- reset commented flag
-            idx += 1  # <-------------- and then let the read() function to advance to the next one token instance
+            is_inline_fn = False  # <--------------------------------------- reset (previously set) inline fm flag
+            is_commented = False  # <--------------------------------------- reset (previously set) commented flag
+            idx += 1  # <------------------- and let the read() function to advance to the next one token instance
 
     return nodes   # <----------------- so at the end of the day, return a list of Expression or Literal instances
