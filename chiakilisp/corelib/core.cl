@@ -182,6 +182,6 @@
        parser  (parser/Parser (.tokens lexer))
        _       (.parse parser)
        environ {}
-       _       (.update env runtime/ENVIRONMENT))
+       _       (.update environ runtime/ENVIRONMENT))
   (->> (.wood parser)
        (map (fn (an-expression) (.execute an-expression environ))))))
