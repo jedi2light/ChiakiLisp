@@ -110,7 +110,7 @@ class Expression(ExpressionType):
 
     @staticmethod
     def _parse_function_and_create_a_handle(
-            domain: str, where: tuple, environ: dict, name: str, parameters: 'Expression', body: list):
+            domain_: str, where: tuple, environ: dict, name: str, parameters: 'Expression', body: list):
 
         """
         Takes necessary parameters like position in the source code and current environment
@@ -120,7 +120,7 @@ class Expression(ExpressionType):
         names = []
         nodes = parameters.nodes()
 
-        ampersand_found = tuple(filter(lambda p: p[1].token().value() == '&', enumerate(nodes)))  # find amper
+        ampersand_found = tuple(filter(lambda p: p[1].token().value() == '&', enumerate(nodes)))  # find the &
         ampersand_position: int = ampersand_found[0][0] if ampersand_found else -1  # exact ampersand position
         positional_parameters = nodes[:ampersand_position] if ampersand_found else nodes
         positional_parameters_length = len(positional_parameters)  # build a list of the positional parameters
@@ -128,17 +128,17 @@ class Expression(ExpressionType):
         for parameter in positional_parameters:
             parameter: Literal
             names.append(parameter.token().value())  # build a list of the function positional parameter names
-        can_take_extras = False  # and now we should set the flag 'that the function can take extra arguments'
+        can_take_extras = False      # by default function can't take extra arguments (no ampersand was found)
 
         if ampersand_found:
-            can_take_extras = True  # determine whether the function could take extra arguments or it couldn't
+            can_take_extras = True   # however, if we found ampersand, validate signature, then alter the flag
             SE_ASSERT(where,
                       len(nodes) - 1 != ampersand_position,
-                      'Expression[execute]: {domain}: you can only mention one alias for the extra arguments')
+                      f'Expression[execute]: {domain_}: can only mention one alias for extra arguments tuple')
             SE_ASSERT(where,
                       len(nodes) - 2 == ampersand_position,
-                      'Expression[execute]: {domain}: you have to mention alias name for the extra arguments')
-            names.append(nodes[-1].token().value())  # if an extra arguments tuple alias is valid, remember it
+                      f'Expression[execute]: {domain_}: have to mention alias name for extra arguments tuple')
+            names.append(nodes[-1].token().value())  # when signature is valid, remember extra arguments alias
 
         if not body:
             body = [Nil]  # if there is no function body, let the function to just return a simple nil literal
@@ -160,11 +160,11 @@ class Expression(ExpressionType):
                 else:
                     c_arguments = c_arguments + (tuple(),)  # <- if extras are possible but missing, set to ()
 
-            fn = {}  # <------------------------------------------------- initialize new execution environment
+            fn = {}  # <----------------------------------------------- initialize new computation environment
             fn.update(environ)  # <--------------------------------------------- update it with the global one
             fn.update(dict(zip(names, c_arguments)))  # <-------------- associate parameters with their values
             fn.update({'kwargs': kwargs})  # <---------------------- update environment with keyword arguments
-            return [node.execute(fn, False) for node in body][-1]  # then return the last _calculation_ result
+            return [node.execute(fn, False) for node in body][-1]  # then return the last _computation_ result
 
         return handle  # <-------- return the closure that will be a good handle for the user defined function
 
@@ -194,14 +194,14 @@ class Expression(ExpressionType):
 
             def handler(*args, **kwargs):   # <---------------------- then construct an anonymous function handler
 
-                env = {}  # <------------------------------------------- start with an empty execution environment
+                env = {}  # <----------------------------------------- start with an empty computation environment
                 env.update(environ)  # <-------------------------------------------- update it with the global one
-                env.update({'%': args[0]})  # <--------- make first argument accessible with % (percent) character
-                env.update({'kwargs': kwargs})  # <--- make all keyword arguments accessible with a 'kwargs' alias
+                env.update({'%': args[0]})  # <------------------------------ make an alias for the first argument
+                env.update({'kwargs': kwargs})  # <----------------------- make an alias for the keyword arguments
                 # env.update({'%&': ...})  # TODO: implement %& parameter, probably, requires body functon parsing
-                env.update({f'%{i+1}': args[i] for i in range(len(args))})  # <----- populate all the %i arguments
+                env.update({f'%{argument_index +1}': args[argument_index] for argument_index in range(len(args))})
 
-                return [node.execute(env, False) for node in [Expression(self.nodes())]][-1]  # execute a function
+                return [every_body_node.execute(env, False) for every_body_node in [Expression(self.nodes())]][-1]
 
             handler.x__custom_name__x = '<anonymous function>'  # <------- give an anonymous function its own name
             return handler  # <------------------------------------------------------------ and return its handler
@@ -297,17 +297,17 @@ class Expression(ExpressionType):
                       len(head.token().value()) > 1,    'Expression[execute]: dot-form: method name is mandatory')
             TAIL_IS_VALID(tail,                         'dot-form', where, 'Expression[execute]: dot-form: {why}')
             handle_name: Literal  # <------------------------------------- assign handle name as a type of Literal
-            handle_name, *method_args = tail  # <--------------- get the handle name and method args from the tail
-            method_alias = head.token().value()[1:]  # <------------------------------ get the method name (alias)
+            handle_name, *method_args = tail  # <------------------------ parse dot-form handle name and arguments
+            method_name = head.token().value()[1:]  # <------------------ parse handle name from the first literal
             handle_instance = handle_name.execute(environ, False)  # <--- get the handle instance from environment
             SE_ASSERT(where,
                       hasattr(handle_instance, '__class__'),
                       'Expression[execute]: dot-form: use object/method, module/method to invoke a static method')
             handle_alias = handle_instance.__class__.__name__  # <------------- get the actual instance class name
-            handle_method: Callable = getattr(handle_instance, method_alias, NotFound)  # <--- get a method object
+            handle_method: Callable = getattr(handle_instance, method_name, NotFound)  # <-- get the method handle
             NE_ASSERT(where,
                       handle_method is not NotFound,
-                      f"Expression[execute]: dot-form: an '{handle_alias}' object has no method '{method_alias}'")
+                      f"Expression[execute]: dot-form: the '{handle_alias}' object has no method '{method_name}'")
             return handle_method(*(node.execute(environ, False) for node in method_args))  # <- return last result
 
         if head.token().value() == 'if':
@@ -331,14 +331,14 @@ class Expression(ExpressionType):
 
         if head.token().value() == 'let':
             TAIL_IS_VALID(tail, 'let', where,                                   'Expression[execute]: let: {why}')
-            bindings, *body = tail  # <------------------------------------- parse let form bindings list and body
-            let = {}  # <------------------------------------------------------ initialize local `let` environment
+            bindings, *body = tail  # <------------------------------------------ parse let form bindings and body
+            let = {}  # <---------------------------------------------------------- initialize a local environment
             let.update(environ)  # <------------------------------------------------ update it with the global one
             for raw, value in pairs(bindings.nodes()):  # <-------------------------------- for the each next pair
 
-                computed_right_hand_side = value.execute(let, False)  # <------ get computed right-hand-side value
+                computed_right_hand_side = value.execute(let, False)  # <------- compute the right-hand-side value
 
-                if isinstance(raw, Expression):  # <------------------------ if a left-hand-side seems like a coll
+                if isinstance(raw, Expression):  # <--------------------- if the left-hand-side seems to be a coll
                     RE_ASSERT(where, get,    "Expression[execute]: let: destructuring requires core/get function")
 
                     get_by_idx = True
@@ -352,13 +352,13 @@ class Expression(ExpressionType):
                                                       raw.nodes()[1:] if skip_first else raw.nodes())):
                         let.update({k_alias: get(computed_right_hand_side, idx if get_by_idx else k_alias, None)})
 
-                else:  # <------------------------------------------- if a left-hand-side seems like an identifier
+                else:  # <---------------------------------------- if the left-hand-side seems to be an identifier
                     let.update({raw.token().value(): computed_right_hand_side})  # <- directly assign computed rhs
 
             if not body:
-                body = [Nil]  # <----------- if there is no let-block body, let's just  return a simple nil literal
+                body = [Nil]  # <---------- if there is no 'let' block body, let's just return a simple nil literal
 
-            return [node.execute(let, False) for node in body][-1]  # <--------- return the last calculation result
+            return [node.execute(let, False) for node in body][-1]  # <---------------------- return computed value
 
         if head.token().value() == 'fn':
             TAIL_IS_VALID(tail, 'fn', where,                                     'Expression[execute]: fn: {why}')
@@ -376,9 +376,9 @@ class Expression(ExpressionType):
             TAIL_IS_VALID(tail, 'def', where,                                   'Expression[execute]: def: {why}')
             name: Literal  # <--------------------------------------------------- assign name as a type of Literal
             name, value = tail  # <-------------------------------------------------- assign value as a CommonType
-            computed = value.execute(environ, False)  # <-------------------------------- store the executed value
+            computed = value.execute(environ, False)  # <-------------------------------- store the computed value
             environ.update({name.token().value(): computed})  # <------------------- assign it to its binding name
-            return computed   # <----------------------------------------------------------- return executed value
+            return computed   # <----------------------------------------------------------- return computed value
 
         if head.token().value() == 'def?':
             SE_ASSERT(where, top, 'Expression[execute]: def?: can only use (def?) form at the top of the program')
@@ -387,8 +387,8 @@ class Expression(ExpressionType):
             name, value = tail  # <-------------------------------------------------- assign value as a CommonType
             from_env = environ.get(name.token().value()) if (name.token().value() in environ.keys()) else NotFound
             computed = value.execute(environ, False) if from_env is NotFound else from_env  # try to find existing
-            environ.update({name.token().value(): computed})  # assign existing/executed value to its binding name
-            return computed   # <----------------------------------------------------------- return executed value
+            environ.update({name.token().value(): computed})  # assign existing/computed value to its binding name
+            return computed   # <----------------------------------------------------------- return computed value
 
         if head.token().value() == 'defn':
             SE_ASSERT(where, top, 'Expression[execute]: defn: can only use (defn) form at the top of the program')
@@ -408,8 +408,8 @@ class Expression(ExpressionType):
             TAIL_IS_VALID(tail, 'defn?', where,                               'Expression[execute]: defn?: {why}')
             name, parameters, *body = tail  # <-------------------- parse named function name, parameters and body
 
-            if environ.get(name.token().value()):   # if there is a function with the same name already exists ...
-                return environ.get(name.token().value())  # ...then just get its handle from environ and return it
+            if environ.get(name.token().value()):   # if there is a function with exact same name already exists...
+                return environ.get(name.token().value())  # ...then just grab its handle from the env and return it
 
             handle = self._parse_function_and_create_a_handle(
                 'defn', where, environ, name.token().value(), parameters, body  # let the shortcut do all the work
@@ -420,14 +420,14 @@ class Expression(ExpressionType):
             return handle  # <-------------------------------------------------- return the function handle object
 
         if head.token().value() == 'import':
-            SE_ASSERT(where, top,    'Expression[execute]: import: you should place all the (import)s at the top')
+            SE_ASSERT(where, top,   'Expression[execute]: import: you should place all Python 3 (import)s on top')
             TAIL_IS_VALID(tail, 'import', where,                             'Expression[execute]: import: {why}')
             alias: str = tail[0].token().value()  # <------------------------------- assign alias a type of string
             environ[alias.split('.')[-1]] = importlib.import_module(alias)  # <-------- assign to unqualified path
             return None  # <----------------------------------------------------------------------- and return nil
 
         if head.token().value() == 'require':
-            SE_ASSERT(where, top,  'Expression[execute]: require: you should place all the (require)s at the top')
+            SE_ASSERT(where, top,      'Expression[execute]: require: you should place all (require)ments on top')
             TAIL_IS_VALID(tail, 'require', where,                           'Expression[execute]: require: {why}')
             alias: str = tail[0].token().value()  # <---------------------------- assign alias as a type of string
             environ[alias.split('/')[-1]] = environ.get('__require__')(alias)  # <----- assign to unqualified path
