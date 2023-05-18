@@ -423,14 +423,14 @@ class Expression(ExpressionType):
             SE_ASSERT(where, top,    'Expression[execute]: import: you should place all the (import)s at the top')
             TAIL_IS_VALID(tail, 'import', where,                             'Expression[execute]: import: {why}')
             alias: str = tail[0].token().value()  # <------------------------------- assign alias a type of string
-            environ[alias.split('.')[-1]] = importlib.import_module(alias)  # <- assign module handle to its alias
+            environ[alias.split('.')[-1]] = importlib.import_module(alias)  # <-------- assign to unqualified path
             return None  # <----------------------------------------------------------------------- and return nil
 
         if head.token().value() == 'require':
             SE_ASSERT(where, top,  'Expression[execute]: require: you should place all the (require)s at the top')
             TAIL_IS_VALID(tail, 'require', where,                           'Expression[execute]: require: {why}')
             alias: str = tail[0].token().value()  # <---------------------------- assign alias as a type of string
-            environ[alias.split('/')[-1]] = environ.get('__require__')(alias)  # assign module handle to its alias
+            environ[alias.split('/')[-1]] = environ.get('__require__')(alias)  # <----- assign to unqualified path
             return None  # <----------------------------------------------------------------------- and return nil
 
         handle = head.execute(environ, False)  # resolve handle object by its name, this could raise a 'NameError'
