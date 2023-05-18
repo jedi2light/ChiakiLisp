@@ -8,6 +8,7 @@
 # pylint: disable=too-many-statements
 # pylint: disable=too-many-return-statements
 
+import importlib
 from copy import deepcopy
 from typing import List, Any, Callable
 from chiakilisp.models.token import Token
@@ -422,20 +423,14 @@ class Expression(ExpressionType):
             SE_ASSERT(where, top,    'Expression[execute]: import: you should place all the (import)s at the top')
             TAIL_IS_VALID(tail, 'import', where,                             'Expression[execute]: import: {why}')
             alias: str = tail[0].token().value()  # <------------------------------- assign alias a type of string
-            parts = alias.split('.')  # <---------------- split the importable module name into a list by '.' char
-            unqualified = parts[-1]  # <----------------- store the unqualified name of importable Python 3 module
-            identifiers = iter(parts[1:])  # <----------------- make it possible to iterate over parts with next()
-            module = __import__(alias)  # <---------------------- import the Python 3 module by its qualified name
-            while module.__name__.split('.')[-1] != unqualified:  # while unqualified doesn't match an object name
-                module = getattr(module, next(identifiers), None)  # lookup for an object inside of current object
-            environ[unqualified] = module  # <--------------------------- assign module object to unqualified name
+            environ[alias.split('.')[-1]] = importlib.import_module(alias)  # <- assign module handle to its alias
             return None  # <----------------------------------------------------------------------- and return nil
 
         if head.token().value() == 'require':
             SE_ASSERT(where, top,  'Expression[execute]: require: you should place all the (require)s at the top')
             TAIL_IS_VALID(tail, 'require', where,                           'Expression[execute]: require: {why}')
             alias: str = tail[0].token().value()  # <---------------------------- assign alias as a type of string
-            environ[alias.split('/')[-1]] = environ.get('__require__')(alias)  # assign module object to its alias
+            environ[alias.split('/')[-1]] = environ.get('__require__')(alias)  # assign module handle to its alias
             return None  # <----------------------------------------------------------------------- and return nil
 
         handle = head.execute(environ, False)  # resolve handle object by its name, this could raise a 'NameError'
