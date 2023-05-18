@@ -407,6 +407,12 @@ rules = {
                   Signature(Literal(Identifier),
                             FormOf(Literal(Identifier)),
                             RestOf(Anything))),
+    'for': Rule(Arity(Exactly(2)),
+                Signature(FormOf(Pair(Literal(Identifier),
+                                      Anything)),
+                          Anything)),
+    'while': Rule(Arity(Exactly(2)),
+                  Signature(Anything, Anything)),
     'import': Rule(Arity(Exactly(1)), Signature(Literal(Identifier))),
     'require': Rule(Arity(Exactly(1)), Signature(Literal(Identifier))),
     # new rules for other internal forms will be added here a bit later.
