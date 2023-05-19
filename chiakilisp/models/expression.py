@@ -109,7 +109,7 @@ class Expression(ExpressionType):
             SE_ASSERT(position, is_even, 'Dictionary key literal must be followed by a value')
 
     @staticmethod
-    def _parse_function_and_create_a_handle(
+    def _parse_function_and_create_a_handle(  # pylint: disable=too-many-arguments
             domain_: str, where: tuple, environ: dict, name: str, parameters: 'Expression', body: list):
 
         """
