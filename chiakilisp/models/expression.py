@@ -177,6 +177,7 @@ class Expression(ExpressionType):
         assert self.nodes(),              'Expression[execute]: current expression is empty, unable to execute it'
 
         get = environ.get('get')  # <------- some features like destructing or keyword-as-fn will require core/get
+        first = environ.get('first')  # <----- some feature like inline function or others will require core/first
 
         head, *tail = self.nodes()
 
@@ -192,11 +193,13 @@ class Expression(ExpressionType):
 
         if self._is_inline_fn:  # <--- if this expression is actually an inline function: i.e.: #(prn "Hello," %1)
 
+            RE_ASSERT(where, first,     'Expression[execute]: unable to use inline function without `core/first`')
+
             def handler(*args, **kwargs):   # <---------------------- then construct an anonymous function handler
 
                 env = {}  # <----------------------------------------- start with an empty computation environment
                 env.update(environ)  # <-------------------------------------------- update it with the global one
-                env.update({'%': args[0]})  # <------------------------------ make an alias for the first argument
+                env.update({'%': first(args)})  # <-------------------------- make an alias for the first argument
                 env.update({'kwargs': kwargs})  # <----------------------- make an alias for the keyword arguments
                 # env.update({'%&': ...})  # TODO: implement %& parameter, probably, requires body functon parsing
                 env.update({f'%{argument_index +1}': args[argument_index] for argument_index in range(len(args))})
