@@ -3,14 +3,17 @@ all: build
 lint: chiakilang chiakilisp
 	pylint chiakilang chiakilisp
 
+test:
+	find tests -name \*.cl -exec ./chiakilang {} \;  # <---- using local files
+
 build: chiakilang chiakilisp setup.cfg
 	rm -rf dist/*  # <------ do not forget to clean the ./dist directory first
 	python -m build
 
-upload: lint build
+upload: lint test build
 	python -m twine upload --repository pypi --verbose ./dist/chiakilisp-*.whl
 
-install: lint build
+install: lint test build
 	pip install --force-reinstall dist/chiakilisp-*.whl  # force reinstall pkg
 
 build-upload-install: lint build
