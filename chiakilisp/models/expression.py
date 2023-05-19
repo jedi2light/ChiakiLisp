@@ -342,7 +342,7 @@ class Expression(ExpressionType):
                 computed_right_hand_side = value.execute(let, False)  # <------- compute the right-hand-side value
 
                 if isinstance(raw, Expression):  # <--------------------- if the left-hand-side seems to be a coll
-                    RE_ASSERT(where, get,    "Expression[execute]: let: destructuring requires core/get function")
+                    RE_ASSERT(where, get,  "Expression[execute]: let: destructuring requires `core/get` function")
 
                     get_by_idx = True
                     skip_first = False
