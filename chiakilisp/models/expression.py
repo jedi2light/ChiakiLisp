@@ -197,14 +197,14 @@ class Expression(ExpressionType):
 
             def handler(*args, **kwargs):   # <---------------------- then construct an anonymous function handler
 
-                env = {}  # <----------------------------------------- start with an empty computation environment
-                env.update(environ)  # <-------------------------------------------- update it with the global one
-                env.update({'%': first(args)})  # <-------------------------- make an alias for the first argument
-                env.update({'kwargs': kwargs})  # <----------------------- make an alias for the keyword arguments
+                ifn = {}  # <----------------------------------------- start with an empty computation environment
+                ifn.update(environ)  # <-------------------------------------------- update it with the global one
+                ifn.update({'%': first(args)})  # <-------------------------- make an alias for the first argument
+                ifn.update({'kwargs': kwargs})  # <----------------------- make an alias for the keyword arguments
                 # env.update({'%&': ...})  # TODO: implement %& parameter, probably, requires body functon parsing
-                env.update({f'%{argument_index +1}': args[argument_index] for argument_index in range(len(args))})
+                ifn.update({f'%{argument_index +1}': args[argument_index] for argument_index in range(len(args))})
 
-                return [every_body_node.execute(env, False) for every_body_node in [Expression(self.nodes())]][-1]
+                return [every_body_node.execute(ifn, False) for every_body_node in [Expression(self.nodes())]][-1]
 
             handler.x__custom_name__x = '<anonymous function>'  # <------- give an anonymous function its own name
             return handler  # <------------------------------------------------------------ and return its handler
@@ -426,7 +426,7 @@ class Expression(ExpressionType):
             TAIL_IS_VALID(tail, 'for', where,                                   'Expression[execute]: for: {why}')
             RE_ASSERT(where, get,               'Expression[execute]: for: for-loop requires `core/get` function')
             bindings, body = tail  # <------------------------------------------- parse for-loop bindings and body
-            env = {}  # <---------------------------------------------------------- initialize a local environment
+            env: dict = {}  # <--(for some reason this type hint is necessary)----- initialize a local environment
             env.update(environ)  # <------------------------------------------------ update it with the global one
             max_length = 0  # <- as we go through all given collections, we need to define maximum number of steps
             gathered_binding_aliases = []  # <- as go through all the coll element aliases, we need to gather them
@@ -437,7 +437,7 @@ class Expression(ExpressionType):
                 gathered_binding_aliases.append(alias.token().value())  # and then we append the alias to the list
                 env.update({f'$_{alias.token().value()}': collection.execute(environ, False)})  # should be hidden
             for element_idx in range(max_length):  # for each next index (remember we computed maximum length) ...
-                current_collection_element_temporary_env = {}  # create a current collection' temporary collection
+                current_collection_element_temporary_env = {}  # create a current collection temporary environment
                 current_collection_element_temporary_env.update(env)  # <------------ update it with the local one
                 for alias in gathered_binding_aliases:  # for each next alias (remember we have a hidden variable)
                     current_collection = env.get(f'$_{alias}')  # get computed collection via that hidden variable

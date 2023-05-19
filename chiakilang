@@ -251,11 +251,11 @@ if __name__ == '__main__':
         if not os.path.isfile(source_code_file_path) or os.path.islink(source_code_file_path):
             print(f'{self}: {source_code_file_path}: the path node is not a file')
             sys.exit(1)  # <-------------------------- exit with the error code if the path node is not a file
-        source_code_file_name: str = source_code_file_path.split('/')[-1]  # split('/')[-1] gives us base name
+        source_code_file_base_name: str = source_code_file_path.split('/')[-1]  # split('/')[-1] for base name
         with open(source_code_file_path, 'r', encoding='utf-8') as r:
             if args.dump:
-                dump(r.read(), source_code_file_name)  # <--------------- dump() helper will read, parse, dump
+                dump(r.read(), source_code_file_base_name)  # <---------- dump() helper will read, parse, dump
                 sys.exit(0)  # <---------------------------------------------------- exit with zero error code
-            execute(r.read(), source_code_file_name,  silent=True)  # <---- silent=True will suppress printing
+            execute(r.read(), source_code_file_base_name,  silent=True)   # silent=True will suppress printing
     else:
         repl(history_path=os.path.join(chiakilisp_home, 'repl-history'))  # <- start built-in REPL environment
