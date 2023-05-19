@@ -23,9 +23,9 @@
                 positive?-tests])
 
 (for (specific-tests all-tests)
- (for (test specific-tests)
+ (for (specific-test specific-tests)
   (let ({run
-         expected}     test
+         expected}     specific-test
         test-result    (-> run eval list first)
         successful?    (= test-result expected))
    (prn run (if successful? "PASSED" (+ "FAILED: expected: " (str expected) " got: " (str test-result)))))))
