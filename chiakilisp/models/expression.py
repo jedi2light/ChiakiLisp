@@ -424,6 +424,7 @@ class Expression(ExpressionType):
 
         if head.token().value() == 'for':
             TAIL_IS_VALID(tail, 'for', where,                                   'Expression[execute]: for: {why}')
+            RE_ASSERT(where, get,               'Expression[execute]: for: for-loop requires `core/get` function')
             bindings, body = tail  # <------------------------------------------- parse for-loop bindings and body
             env = {}  # <---------------------------------------------------------- initialize a local environment
             env.update(environ)  # <------------------------------------------------ update it with the global one
