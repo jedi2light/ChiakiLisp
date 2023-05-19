@@ -419,6 +419,39 @@ class Expression(ExpressionType):
             environ.update({name.token().value(): handle})   # update environment to access defined function later
             return handle  # <-------------------------------------------------- return the function handle object
 
+        if head.token().value() == 'for':
+            TAIL_IS_VALID(tail, 'for', where,                                   'Expression[execute]: for: {why}')
+            bindings, body = tail  # <------------------------------------------- parse for-loop bindings and body
+            env = {}  # <---------------------------------------------------------- initialize a local environment
+            env.update(environ)  # <------------------------------------------------ update it with the global one
+            max_length = 0  # <- as we go through all given collections, we need to define maximum number of steps
+            gathered_binding_aliases = []  # <- as go through all the coll element aliases, we need to gather them
+            for alias, collection in pairs(bindings.nodes()):  # for each next coll element alias and collection..
+                computed_collection = collection.execute(environ, False)  # we first compute collection from input
+                computed_collection_length = len(computed_collection)  # then store its length to compare bellow |
+                max_length = computed_collection_length if computed_collection_length > max_length else max_length
+                gathered_binding_aliases.append(alias.token().value())  # and then we append the alias to the list
+                env.update({f'$_{alias.token().value()}': collection.execute(environ, False)})  # should be hidden
+            for element_idx in range(max_length):  # for each next index (remember we computed maximum length) ...
+                current_collection_element_temporary_env = {}  # create a current collection' temporary collection
+                current_collection_element_temporary_env.update(env)  # <------------ update it with the local one
+                for alias in gathered_binding_aliases:  # for each next alias (remember we have a hidden variable)
+                    current_collection = env.get(f'$_{alias}')  # get computed collection via that hidden variable
+                    current_collection_element_temporary_env.update({alias: get(current_collection, element_idx)})
+                body.execute(current_collection_element_temporary_env, False)  # <------- and finally compute body
+            return None  # <--------------------- behave as imperative loop where there is no return value but nil
+
+        if head.token().value() == 'while':
+            TAIL_IS_VALID(tail, 'while', where,                               'Expression[execute]: while: {why}')
+            condition, body = tail  # <---------------------------------------- parse while-loop bindings and body
+            while condition.execute(environ, False):  # <--- while while-loop condition is evaluates to truthy one
+                control = body.execute(environ, False)  # <- execute while-loop and guarantee that we give control
+                if control == '$control:break':      # <---- and in case of the '$control:break' we break the loop
+                    break
+                if control == '$control:continue':   # and in case of the '$control:continue' we continue the loop
+                    continue
+            return None  # <--------------------- behave as imperative loop where there is no return value but nil
+
         if head.token().value() == 'import':
             SE_ASSERT(where, top,   'Expression[execute]: import: you should place all Python 3 (import)s on top')
             TAIL_IS_VALID(tail, 'import', where,                             'Expression[execute]: import: {why}')
