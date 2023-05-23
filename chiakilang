@@ -226,7 +226,12 @@ if __name__ == '__main__':
 
     ENVIRONMENT['__require__'] = require  # <------------------ proxy require() helper to use late in (require)
     BUILTINS = globals()['__builtins__']  # <------------------------ gather all the Python 3 builtin functions
-    ENVIRONMENT.update({n: getattr(BUILTINS, n, None) for n in dir(BUILTINS)})  # <------------- and proxy them
+
+    ENVIRONMENT.update({
+        n: getattr(BUILTINS, n, None)
+        for n in
+        filter(lambda k: k not in ['__import__', '__loader__', '__name__', '__package__', '__spec__'],
+               dir(BUILTINS))})  # proxy only allowed builtin Python 3 symbols, others are proven to cause bugs
 
     if not args.coreless:
         if os.path.exists('chiakilisp/corelib/core.cl'):
