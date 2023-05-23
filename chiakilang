@@ -14,6 +14,8 @@ import atexit
 import pkgutil
 import argparse
 import traceback
+import importlib.abc
+import importlib.util
 from chiakilisp.utils import pprint
 from chiakilisp.lexer import Lexer
 from chiakilisp.parser import Parser
@@ -73,7 +75,7 @@ def require(path: str,
 
     :param path: path to the ChiakiLisp module
     :param use_global_env: use global environ or not
-    :return: loaded ChiakiLisp module as a Python 3 object
+    :return: loaded ChiakiLisp module as a Python 3 module
     """
 
     path = path + '.cl' \
@@ -90,12 +92,23 @@ def require(path: str,
             if not use_global_env \
             else ENVIRONMENT   # use the global environment
         # Use split('/')[-1] to get a base name of the path
+
+        # TODO: maybe play around `custom_module_loader` ?)
+        custom_module_loader = importlib.abc.Loader()
+        spec = importlib.util.spec_from_loader(
+            module_name, custom_module_loader, origin=path)
+        module = importlib.util.module_from_spec(spec)
+
         execute(
             _r.read(),
             unqualified_path,
             current_environment=environment,  # specify env
             silent=True)  # 'silent' prevents from printing
-        return type(module_name,  (object, ),  environment)
+
+        for name, value in environment.items():
+            setattr(module, name, value)  # populate module
+
+        return module  # return pseudo-python module object
 
 
 def execute(source_code: str,
