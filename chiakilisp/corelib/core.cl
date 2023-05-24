@@ -2,6 +2,7 @@
 ;; to omit loading this file append --coreless option to interpreter
 
 (import json)
+(import types)              ;; nil? requires types.NoneType to refer
 (import functools)          ;; <- import functools module for reduce
 (def reduce
      functools/reduce)
@@ -40,7 +41,7 @@
   (> x 0))
 
 (defn nil? (x)               ;; Returns true if 'x' is a NoneType
-  (= x nil))
+  (isinstance x types/NoneType))
 (defn int? (x)               ;; Returns true if 'x' is an integer
   (isinstance x int))
 (defn set? (x)               ;; Returns true if 'x' is a set
@@ -132,6 +133,11 @@
         (cond (>= (count args) 2)
               (functools/reduce (fn (acc n)
                                   (get acc n default)) path coll)))))
+
+(defn cons                   ;; Behaves the same as cons in Clojure
+ (first-item others)
+ (when (list? others)
+  (let (new-list [first-item]) (.extend new-list others) new-list)))
 
 (defn assoc                  ;; Behaves the same as assoc in Clojure
  (collection key value)
