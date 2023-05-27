@@ -21,6 +21,11 @@ from chiakilisp.models.forward import\
 from chiakilisp.utils import get_assertion_closure, pairs
 
 
+class Py3xError(Exception):
+
+    """Exception.execute() may throw this exception"""
+
+
 class ArityError(SyntaxError):
 
     """Stub class to display that there is an arity error"""
@@ -30,6 +35,9 @@ NE_ASSERT = get_assertion_closure(NameError)  # <--------- raises NameError
 TE_ASSERT = get_assertion_closure(TypeError)  # <--------- raises TypeError
 SE_ASSERT = get_assertion_closure(SyntaxError)  # <----- raises SyntaxError
 RE_ASSERT = get_assertion_closure(RuntimeError)  # <--- raises RuntimeError
+
+MANAGED_ERRORS = (
+    Py3xError, ArityError, NameError, TypeError, SyntaxError, RuntimeError)
 
 
 def IDENTIFIER_ASSERT(lit: Literal, message: str) -> None:
@@ -474,4 +482,10 @@ class Expression(ExpressionType):
 
         self._assert_even_number_of_dict_literals()  # verify literals form arity before dictionary initialization
 
-        return handle(*tuple(map(lambda argument: argument.execute(environ,  False),  tail)))  # return the result
+        try:
+            return handle(*tuple(map(lambda argument: argument.execute(environ,  False), tail)))  # catch an error
+        except Exception as _error_:
+            if not isinstance(_error_, MANAGED_ERRORS):
+                raise Py3xError(f'{":".join(map(str, where))}: {_error_.__class__.__name__}: {_error_.__str__()}')
+            else:
+                raise _error_  # re-raise error if it's managed one, raise Py3xError if its arbitrary Python 3 one
