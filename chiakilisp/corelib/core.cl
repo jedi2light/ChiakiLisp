@@ -119,15 +119,8 @@
   (get coll -1))))
 
 (defn rest (coll)                 ;; Returns the rest of a collection
- (when (and coll
-            (or (list? coll)
-                (tuple? coll)))
-  (let (cast (cond (list? coll) list
-                   (tuple? coll) tuple)   ;; preserve collection type
-        new  (list coll)
-        rev  (-> new reversed list))
-   (.pop rev)
-   (-> rev reversed cast))))
+ (when (and coll (or (str? coll) (list? coll) (tuple? coll)))
+  (get coll (slice 1..))))        ;; this one is equivalent for: [1:]
 
 (defn get-in (& args)        ;; Goes through full path to get an item
  (when args
