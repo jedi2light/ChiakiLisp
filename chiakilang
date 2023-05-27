@@ -250,7 +250,7 @@ if __name__ == '__main__':
     del ENVIRONMENT['__debug__']  # <- we will proxy this built-in boolean variable by `running-in-debug-mode?`
     del ENVIRONMENT['__build_class__']   # <-- no need to proxy this built-in method, as there is `type` exists
 
-    ENVIRONMENT['running-in-debug-mode?'] = BUILTINS.__debug__  # <-------- proxy `__debug__` built-in variable
+    ENVIRONMENT['running-in-debug-mode?'] =  __debug__  # <---------------- proxy `__debug__` built-in variable
 
     if not args.coreless:
         if os.path.exists('chiakilisp/corelib/core.cl'):
