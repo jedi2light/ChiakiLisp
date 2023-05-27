@@ -113,22 +113,23 @@ class Lexer:
             elif self._current_symbol_is_number() \
                     or (self._current_symbol_is_sign()
                         and self._next_symbol_is_number()):
-                has_already_encountered_dot_character = False
                 value = self._current_symbol()
                 self._advance()
                 self._increment_char_number()
                 while self._has_next_symbol():
-                    if self._current_symbol_is_number() or \
-                            (self._current_symbol_is_dot() and
-                             not has_already_encountered_dot_character):
-                        if self._current_symbol_is_dot():
-                            has_already_encountered_dot_character = True
+                    if self._current_symbol_is_number() \
+                            or self._current_symbol_is_dot():
                         value += self._current_symbol()
                         self._advance()
                         self._increment_char_number()
                     else:
                         break
-                self._tokens.append(Token(Token.Number, value, self.pos()))
+                if re.match(r'^\d\.{2}\d?$', value):
+                    self._tokens.append(Token(Token.Slice, value, self.pos()))
+                elif re.match(r'^(-)?\d+(\.\d+)?$', value):
+                    self._tokens.append(Token(Token.Number, value, self.pos()))
+                else:
+                    self._raise_syntax_error(f'Invalid float syntax: {value}.')
 
             elif self._current_symbol_is_letter() \
                     or self._current_symbol_is_colon():
