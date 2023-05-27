@@ -203,7 +203,6 @@ class Expression(ExpressionType):
                 collection.execute(environ, False), head.execute(environ, False), default.execute(environ, False))
 
         if self._is_inline_fn:  # <--- if this expression is actually an inline function: i.e.: #(prn "Hello," %1)
-
             RE_ASSERT(where, first,     'Expression[execute]: unable to use inline function without `core/first`')
 
             def handler(*args, **kwargs):   # <---------------------- then construct an anonymous function handler
@@ -387,7 +386,6 @@ class Expression(ExpressionType):
         if head.token().value() == 'def':
             SE_ASSERT(where, top,   'Expression[execute]: def: can only use (def) form at the top of the program')
             TAIL_IS_VALID(tail, 'def', where,                                   'Expression[execute]: def: {why}')
-            name: Literal  # <--------------------------------------------------- assign name as a type of Literal
             name, value = tail  # <-------------------------------------------------- assign value as a CommonType
             computed = value.execute(environ, False)  # <-------------------------------- store the computed value
             environ.update({name.token().value(): computed})  # <------------------- assign it to its binding name
@@ -396,7 +394,6 @@ class Expression(ExpressionType):
         if head.token().value() == 'def?':
             SE_ASSERT(where, top, 'Expression[execute]: def?: can only use (def?) form at the top of the program')
             TAIL_IS_VALID(tail, 'def?', where,                                 'Expression[execute]: def?: {why}')
-            name: Literal  # <--------------------------------------------------- assign name as a type of Literal
             name, value = tail  # <-------------------------------------------------- assign value as a CommonType
             from_env = environ.get(name.token().value()) if (name.token().value() in environ.keys()) else NotFound
             computed = value.execute(environ, False) if from_env is NotFound else from_env  # try to find existing
