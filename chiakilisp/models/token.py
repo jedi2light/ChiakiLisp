@@ -8,6 +8,7 @@ class Token:
     """
 
     Nil: str = 'Nil'
+    Slice: str = 'Slice'
     Number: str = 'Number'
     String: str = 'String'
     Keyword: str = 'Keyword'
@@ -53,6 +54,12 @@ class Token:
         """Just a handy shortcut"""
 
         return self._type == Token.Nil
+
+    def is_slice(self) -> bool:
+
+        """Just a handy shortcut"""
+
+        return self._type == Token.Slice
 
     def is_number(self) -> bool:
 
