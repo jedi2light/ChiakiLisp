@@ -59,6 +59,8 @@
   (isinstance x float))
 (defn tuple? (x)             ;; Returns true if 'x' is a tuple
   (isinstance x tuple))
+(defn slice? (x)             ;; Returns true if `x` is a slice
+  (isinstance x slice))
 (defn keyword? (x)           ;; Returns true if 'x' is a keyword
   (isinstance x keyword/Keyword))
 
