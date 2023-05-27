@@ -124,7 +124,7 @@ class Lexer:
                         self._increment_char_number()
                     else:
                         break
-                if re.match(r'^\d\.{2}\d?$', value):
+                if re.match(r'^\d+?\.{2}(\d+)?$', value):
                     self._tokens.append(Token(Token.Slice, value, self.pos()))
                 elif re.match(r'^(-)?\d+(\.\d+)?$', value):
                     self._tokens.append(Token(Token.Number, value, self.pos()))
@@ -153,7 +153,7 @@ class Lexer:
                     self._tokens.append(Token(Token.Nil, value, self.pos()))
                 elif value in ['true', 'false']:
                     self._tokens.append(Token(Token.Boolean, value, self.pos()))
-                elif re.match(r'^\.{2}\d$', value):  # make it equivalent for: 0..2
+                elif re.match(r'^\.{2}\d+$', value):  # make it equivalent for 0..2
                     self._tokens.append(Token(Token.Slice, value, self.pos()))
                 else:
                     self._tokens.append(Token(Token.Identifier, value, self.pos()))
