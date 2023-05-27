@@ -59,6 +59,11 @@ class Literal(LiteralType):
 
             return None
 
+        if self.token().type() == Token.Slice:
+
+            start_point, end_pint = self.token().value().split('..')
+            return slice(int(start_point) if start_point else None, int(end_pint) if end_pint else None)
+
         if self.token().type() == Token.Number:
 
             return float(self.token().value()) if '.' in self.token().value() else int(self.token().value())
