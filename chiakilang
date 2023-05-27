@@ -246,6 +246,12 @@ if __name__ == '__main__':
         filter(lambda k: k not in ['__import__', '__loader__', '__name__', '__package__', '__spec__'],
                dir(BUILTINS))})  # proxy only allowed builtin Python 3 symbols, others are proven to cause bugs
 
+    del ENVIRONMENT['__doc__']   # <-- no need to proxy this built-in var, as it's unlikely be accessed by user
+    del ENVIRONMENT['__debug__']  # <- we will proxy this built-in boolean variable by `running-in-debug-mode?`
+    del ENVIRONMENT['__build_class__']   # <-- no need to proxy this built-in method, as there is `type` exists
+
+    ENVIRONMENT['running-in-debug-mode?'] = BUILTINS.__debug__  # <-------- proxy `__debug__` built-in variable
+
     if not args.coreless:
         if os.path.exists('chiakilisp/corelib/core.cl'):
             require('chiakilisp/corelib/core.cl', use_global_env=True)  # <------- load ChiakiLisp core library
