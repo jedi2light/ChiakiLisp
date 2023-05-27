@@ -184,6 +184,7 @@ class Expression(ExpressionType):
 
         assert self.nodes(),              'Expression[execute]: current expression is empty, unable to execute it'
 
+        # TODO: implement something like chiakilisp.libs.core module to store symbols like `get` and `first` there
         get = environ.get('get')  # <------- some features like destructing or keyword-as-fn will require core/get
         first = environ.get('first')  # <----- some feature like inline function or others will require core/first
 
