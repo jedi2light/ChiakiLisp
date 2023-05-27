@@ -308,7 +308,6 @@ class Expression(ExpressionType):
             SE_ASSERT(where,
                       len(head.token().value()) > 1,    'Expression[execute]: dot-form: method name is mandatory')
             TAIL_IS_VALID(tail,                         'dot-form', where, 'Expression[execute]: dot-form: {why}')
-            handle_name: Literal  # <------------------------------------- assign handle name as a type of Literal
             handle_name, *method_args = tail  # <------------------------ parse dot-form handle name and arguments
             method_name = head.token().value()[1:]  # <------------------ parse handle name from the first literal
             handle_instance = handle_name.execute(environ, False)  # <--- get the handle instance from environment
