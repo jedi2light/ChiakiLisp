@@ -99,7 +99,7 @@
          (let (default   (.__getitem__ args 2))
           (cond (set? coll) (when (contains? coll item) item)
                 (and (or (str? coll) (list? coll) (tuple? coll))
-                     (int? item))
+                     (or (int? item) (slice? item)))
                 (try (.__getitem__ coll item)
                   (catch IndexError _ default))
                 (dict? coll) (try (.__getitem__ coll item)
