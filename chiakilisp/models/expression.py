@@ -6,6 +6,8 @@
 # pylint: disable=arguments-renamed
 # pylint: disable=too-many-branches
 # pylint: disable=too-many-statements
+# pylint: disable=raise-missing-from
+# pylint: disable=unnecessary-dunder-call
 # pylint: disable=too-many-return-statements
 
 import importlib
@@ -487,5 +489,4 @@ class Expression(ExpressionType):
         except Exception as _error_:
             if not isinstance(_error_, MANAGED_ERRORS):
                 raise Py3xError(f'{":".join(map(str, where))}: {_error_.__class__.__name__}: {_error_.__str__()}')
-            else:
-                raise _error_  # re-raise error if it's managed one, raise Py3xError if its arbitrary Python 3 one
+            raise _error_  # re-raise the error if it's managed one, raise Py3xError if its arbitrary Python 3 one
