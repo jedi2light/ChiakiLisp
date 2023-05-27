@@ -144,12 +144,17 @@ class Lexer:
                         self._increment_char_number()
                     else:
                         break
-                if value.startswith(':'):
+                if re.match(r'^\.\d+$', value):
+                    value = '0' + value  # make it possible to define 0.2 as .2
+                    self._tokens.append(Token(Token.Number, value, self.pos()))
+                elif value.startswith(':'):
                     self._tokens.append(Token(Token.Keyword, value, self.pos()))
                 elif value == 'nil':
                     self._tokens.append(Token(Token.Nil, value, self.pos()))
                 elif value in ['true', 'false']:
                     self._tokens.append(Token(Token.Boolean, value, self.pos()))
+                elif re.match(r'^\.{2}\d$', value):  # make it equivalent for: 0..2
+                    self._tokens.append(Token(Token.Slice, value, self.pos()))
                 else:
                     self._tokens.append(Token(Token.Identifier, value, self.pos()))
 
