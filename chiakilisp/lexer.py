@@ -22,6 +22,12 @@ class Lexer:
     _tokens: List[Token]  # <----------------------- list of the populated Tokens
     _line_num, _char_num = 1, 0  # <------------ initial pointer position in file
 
+    def _raise_syntax_error(self, message: str) -> None:
+
+        """A shortcut for future that helps to throw a SyntaxError"""
+
+        raise SyntaxError(f'{":".join(map(str, self.pos()))}: {message}')
+
     def __init__(self, source_code: str, source_code_file_name: str) -> None:
 
         """Initialize Lexer instance"""
