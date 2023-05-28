@@ -1,3 +1,5 @@
+.PHONY: algos
+
 all: build
 
 lint: chiakilang chiakilisp
@@ -5,6 +7,9 @@ lint: chiakilang chiakilisp
 
 test:
 	find tests -name \*.cl -exec ./chiakilang {} \;  # <---- using local files
+
+algos:
+	find algos/cl/ -name \*.cl -exec ./chiakilang --settingsless {} \; # algos
 
 build: chiakilang chiakilisp setup.cfg
 	rm -rf dist/*  # <------ do not forget to clean the ./dist directory first
