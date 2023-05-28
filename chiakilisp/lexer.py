@@ -65,35 +65,35 @@ class Lexer:
 
         """Process the given source code, thus produces a list of Token instances"""
 
-        while self._has_next_symbol():
+        while self._can_be_advanced():
 
-            if self._current_symbol_is_semicolon() or \
-                    (self._current_symbol_is_hash() and
-                        self._next_symbol_is_exclamation_mark()):
+            if self._current_char_is_semicolon() or \
+                    (self._current_char_is_hash() and
+                        self._next_char_is_exclamation_mark()):
                 self._advance()
-                while self._has_next_symbol():
-                    if self._current_symbol_is_nl():
+                while self._can_be_advanced():
+                    if self._current_char_is_nl():
                         break
                     self._advance()
                 self._advance()
                 self._increment_line_number_with_char_number_reset()
 
-            elif (self._current_symbol_is_hash()
-                    and self._next_symbol_is_opening_paren()):
+            elif (self._current_char_is_hash()
+                  and self._next_char_is_opening_paren()):
                 self._advance()
                 self._increment_char_number()
                 self._tokens.append(Token(Token.InlineFunMarker,  '#{', self.pos()))
 
-            elif (self._current_symbol_is_hash()
-                    and self._next_symbol_is_underscore()):
+            elif (self._current_char_is_hash()
+                  and self._next_char_is_underscore()):
                 self._advance()
                 self._advance()
                 self._increment_char_number()
                 self._increment_char_number()
                 self._tokens.append(Token(Token.CommentedMarker,  '#_', self.pos()))
 
-            elif (self._current_symbol_is_hash()
-                    and self._next_symbol_is_cr_opening_paren()):
+            elif (self._current_char_is_hash()
+                  and self._next_char_is_cr_opening_paren()):
                 self._advance()
                 self._increment_char_number()  # <-- increment character num as well
                 self._tokens.append(Token(Token.OpeningParen,      '(', self.pos()))
@@ -101,8 +101,8 @@ class Lexer:
                 self._advance()
                 self._increment_char_number()  # <-- increment character num as well
 
-            elif (self._current_symbol_is_hash()
-                  and self._next_symbol_is_sq_opening_paren()):
+            elif (self._current_char_is_hash()
+                  and self._next_char_is_sq_opening_paren()):
                 self._advance()
                 self._increment_char_number()  # <-- increment character num as well
                 self._tokens.append(Token(Token.OpeningParen,     '(', self.pos()))
@@ -110,16 +110,16 @@ class Lexer:
                 self._advance()
                 self._increment_char_number()  # <-- increment character num as well
 
-            elif self._current_symbol_is_number() \
-                    or (self._current_symbol_is_sign()
-                        and self._next_symbol_is_number()):
-                value = self._current_symbol()
+            elif self._current_char_is_number() \
+                    or (self._current_char_is_sign()
+                        and self._next_char_is_number()):
+                value = self._current_char()
                 self._advance()
                 self._increment_char_number()
-                while self._has_next_symbol():
-                    if self._current_symbol_is_number() \
-                            or self._current_symbol_is_dot():
-                        value += self._current_symbol()
+                while self._can_be_advanced():
+                    if self._current_char_is_number() \
+                            or self._current_char_is_dot():
+                        value += self._current_char()
                         self._advance()
                         self._increment_char_number()
                     else:
@@ -131,15 +131,15 @@ class Lexer:
                 else:
                     self._raise_syntax_error(f'Invalid float syntax: {value}.')
 
-            elif self._current_symbol_is_letter() \
-                    or self._current_symbol_is_colon():
-                value = self._current_symbol()
+            elif self._current_char_is_letter() \
+                    or self._current_char_is_colon():
+                value = self._current_char()
                 self._advance()
                 self._increment_char_number()
-                while self._has_next_symbol():
-                    if self._current_symbol_is_letter() or \
-                            self._current_symbol_is_number():
-                        value += self._current_symbol()
+                while self._can_be_advanced():
+                    if self._current_char_is_letter() or \
+                            self._current_char_is_number():
+                        value += self._current_char()
                         self._advance()
                         self._increment_char_number()
                     else:
@@ -158,62 +158,62 @@ class Lexer:
                 else:
                     self._tokens.append(Token(Token.Identifier, value, self.pos()))
 
-            elif self._current_symbol_is_double_quote():
+            elif self._current_char_is_double_quote():
                 value = ''
-                while self._has_next_symbol():
+                while self._can_be_advanced():
                     self._advance()
                     self._increment_char_number()
-                    if self._current_symbol() == '\\':
+                    if self._current_char() == '\\':
                         self._advance()
                         self._increment_char_number()
-                        if self._current_symbol() == 'n':
+                        if self._current_char() == 'n':
                             value += '\n'
-                        if self._current_symbol() == 't':
+                        if self._current_char() == 't':
                             value += '\t'
-                        if self._current_symbol_is_double_quote():
+                        if self._current_char_is_double_quote():
                             value += '"'
                         continue
-                    if not self._current_symbol_is_double_quote():
-                        value += self._current_symbol()
+                    if not self._current_char_is_double_quote():
+                        value += self._current_char()
                     else:
                         self._tokens.append(Token(Token.String, value,  self.pos()))
                         break
                 self._advance()  # <--- call _advance() to skip the leading '"' char
                 self._increment_char_number()  # <-- increment character num as well
 
-            elif self._current_symbol_is_opening_paren():
+            elif self._current_char_is_opening_paren():
                 self._tokens.append(Token(Token.OpeningParen,      '(', self.pos()))
                 self._advance()
                 self._increment_char_number()  # <-- increment character num as well
 
-            elif self._current_symbol_is_closing_paren():
+            elif self._current_char_is_closing_paren():
                 self._tokens.append(Token(Token.ClosingParen,      ')', self.pos()))
                 self._advance()
                 self._increment_char_number()  # <-- increment character num as well
 
-            elif self._current_symbol_is_cr_opening_paren():
+            elif self._current_char_is_cr_opening_paren():
                 self._tokens.append(Token(Token.OpeningParen,      '(', self.pos()))
                 self._tokens.append(Token(Token.Identifier,    'dicty', self.pos()))
                 self._advance()
                 self._increment_char_number()  # <-- increment character num as well
 
-            elif self._current_symbol_is_cr_closing_paren():
+            elif self._current_char_is_cr_closing_paren():
                 self._tokens.append(Token(Token.ClosingParen,      ')', self.pos()))
                 self._advance()
                 self._increment_char_number()  # <-- increment character num as well
 
-            elif self._current_symbol_is_sq_opening_paren():
+            elif self._current_char_is_sq_opening_paren():
                 self._tokens.append(Token(Token.OpeningParen,      '(', self.pos()))
                 self._tokens.append(Token(Token.Identifier,    'listy', self.pos()))
                 self._advance()
                 self._increment_char_number()  # <-- increment character num as well
 
-            elif self._current_symbol_is_sq_closing_paren():
+            elif self._current_char_is_sq_closing_paren():
                 self._tokens.append(Token(Token.ClosingParen,      ')', self.pos()))
                 self._advance()
                 self._increment_char_number()  # <-- increment character num as well
 
-            elif self._current_symbol_is_nl():
+            elif self._current_char_is_nl():
                 self._advance()
                 self._increment_line_number_with_char_number_reset()  # go a newline
 
@@ -223,153 +223,153 @@ class Lexer:
 
     def _advance(self) -> None:
 
-        """Advance the pointer"""
+        """Advances char pointer"""
 
         self._pointer += 1
 
-    def _current_symbol(self) -> str:
+    def _current_char(self) -> str:
 
-        """Returns the current symbol"""
+        """Returns a current character"""
 
         return self._source_code[self._pointer]
 
-    def _next_symbol(self) -> str:
+    def _next_char(self) -> str:
 
-        """Returns the next symbol (if possible, otherwise '')"""
+        """Returns a next character if possible, otherwise ''"""
 
         if (len(self._source_code) == 1 and not self._pointer) \
-                or not self._has_next_symbol():
+                or not self._can_be_advanced():
             return ''
         return self._source_code[self._pointer + 1]
 
-    def _has_next_symbol(self) -> bool:
+    def _can_be_advanced(self) -> bool:
 
-        """Returns whether source has next symbol"""
+        """Whether source has a next character"""
 
         return self._pointer < len(self._source_code)
 
-    def _current_symbol_is_nl(self) -> bool:
+    def _current_char_is_nl(self) -> bool:
 
-        """Returns whether current symbol is a newline symbol"""
+        """Returns whether current character is a newline character"""
 
-        return self._current_symbol() == '\n'
+        return self._current_char() == '\n'
 
-    def _current_symbol_is_sign(self) -> bool:
+    def _current_char_is_sign(self) -> bool:
 
-        """Returns whether current symbol is a number sign"""
+        """Returns whether current character is a number sign: +, -"""
 
-        return self._current_symbol() in ['+', '-']
+        return self._current_char() in ['+', '-']
 
-    def _current_symbol_is_hash(self) -> bool:
+    def _current_char_is_hash(self) -> bool:
 
-        """Returns whether current symbol is a hashtag symbol"""
+        """Returns whether current character is a hashtag character"""
 
-        return self._current_symbol() == '#'
+        return self._current_char() == '#'
 
-    def _current_symbol_is_dot(self) -> bool:
+    def _current_char_is_dot(self) -> bool:
 
-        """Returns whether current symbol is a dot symbol"""
+        """Returns whether current character is a dot character"""
 
-        return self._current_symbol() == '.'
+        return self._current_char() == '.'
 
-    def _current_symbol_is_colon(self) -> bool:
+    def _current_char_is_colon(self) -> bool:
 
-        """Returns whether current symbol is a colon symbol"""
+        """Returns whether current character is a colon character"""
 
-        return self._current_symbol() == ':'
+        return self._current_char() == ':'
 
-    def _current_symbol_is_semicolon(self) -> bool:
+    def _current_char_is_semicolon(self) -> bool:
 
-        """Returns whether current symbol is a semicolon symbol"""
+        """Returns whether current character is a semicolon character"""
 
-        return self._current_symbol() == ';'
+        return self._current_char() == ';'
 
-    def _current_symbol_is_double_quote(self) -> bool:
+    def _current_char_is_double_quote(self) -> bool:
 
-        """Returns whether current symbol is a double-quote symbol"""
+        """Returns whether current character is a double-quote character"""
 
-        return self._current_symbol() == '"'
+        return self._current_char() == '"'
 
-    def _current_symbol_is_opening_paren(self) -> bool:
+    def _current_char_is_opening_paren(self) -> bool:
 
-        """Returns whether current symbol is an opening paren symbol"""
+        """Returns whether current character is an opening paren character"""
 
-        return self._current_symbol() == '('
+        return self._current_char() == '('
 
-    def _current_symbol_is_closing_paren(self) -> bool:
+    def _current_char_is_closing_paren(self) -> bool:
 
-        """Returns whether current symbol is a closing paren symbol"""
+        """Returns whether current character is a closing paren character"""
 
-        return self._current_symbol() == ')'
+        return self._current_char() == ')'
 
-    def _current_symbol_is_cr_opening_paren(self) -> bool:
+    def _current_char_is_cr_opening_paren(self) -> bool:
 
-        """Returns whether current symbol is a curly-opening paren symbol"""
+        """Returns whether current character is a curly-opening paren character"""
 
-        return self._current_symbol() == '{'
+        return self._current_char() == '{'
 
-    def _current_symbol_is_cr_closing_paren(self) -> bool:
+    def _current_char_is_cr_closing_paren(self) -> bool:
 
-        """Returns whether current symbol is a curly-closing paren symbol"""
+        """Returns whether current character is a curly-closing paren character"""
 
-        return self._current_symbol() == '}'
+        return self._current_char() == '}'
 
-    def _current_symbol_is_sq_opening_paren(self) -> bool:
+    def _current_char_is_sq_opening_paren(self) -> bool:
 
-        """Returns whether current symbol is a square-opening paren symbol"""
+        """Returns whether current character is a square-opening paren character"""
 
-        return self._current_symbol() == '['
+        return self._current_char() == '['
 
-    def _current_symbol_is_sq_closing_paren(self) -> bool:
+    def _current_char_is_sq_closing_paren(self) -> bool:
 
-        """Returns whether current symbol is a square-closing paren symbol"""
+        """Returns whether current character is a square-closing paren character"""
 
-        return self._current_symbol() == ']'
+        return self._current_char() == ']'
 
-    def _next_symbol_is_number(self) -> bool:
+    def _next_char_is_number(self) -> bool:
 
-        """Returns whether next symbol is a number, valid number is from 0 to 9"""
+        """Returns whether next symbol is a character, valid number is from 0 to 9"""
 
-        return re.match(r'\d', self._next_symbol()) is not None
+        return re.match(r'\d', self._next_char()) is not None
 
-    def _next_symbol_is_exclamation_mark(self) -> bool:
+    def _next_char_is_exclamation_mark(self) -> bool:
 
-        """Returns whether next symbol is an exclamation mark symbol"""
+        """Returns whether next character is an exclamation mark character"""
 
-        return self._next_symbol() == '!'
+        return self._next_char() == '!'
 
-    def _next_symbol_is_opening_paren(self) -> bool:
+    def _next_char_is_opening_paren(self) -> bool:
 
-        """Returns whether next symbol is an opening paren symbol"""
+        """Returns whether next character is an opening paren character"""
 
-        return self._next_symbol() == '('
+        return self._next_char() == '('
 
-    def _next_symbol_is_underscore(self) -> bool:
+    def _next_char_is_underscore(self) -> bool:
 
-        """Returns whether next symbol is an underscore symbol"""
+        """Returns whether next character is an underscore character"""
 
-        return self._next_symbol() == '_'
+        return self._next_char() == '_'
 
-    def _next_symbol_is_cr_opening_paren(self) -> bool:
+    def _next_char_is_cr_opening_paren(self) -> bool:
 
-        """Returns whether next symbol is a curly-opening paren symbol"""
+        """Returns whether next character is a curly-opening paren character"""
 
-        return self._next_symbol() == '{'
+        return self._next_char() == '{'
 
-    def _next_symbol_is_sq_opening_paren(self) -> bool:
+    def _next_char_is_sq_opening_paren(self) -> bool:
 
-        """Returns whether next symbol is a square-opening paren symbol"""
+        """Returns whether next character is a square-opening paren character"""
 
-        return self._next_symbol() == '['
+        return self._next_char() == '['
 
-    def _current_symbol_is_number(self) -> bool:
+    def _current_char_is_number(self) -> bool:
 
-        """Returns whether current symbol is a number, valid number is from 0 to 9"""
+        """Returns whether current character is a number, valid number is from 0 to 9"""
 
-        return re.match(r'\d', self._current_symbol()) is not None
+        return re.match(r'\d', self._current_char()) is not None
 
-    def _current_symbol_is_letter(self) -> bool:
+    def _current_char_is_letter(self) -> bool:
 
-        """Returns whether current symbol is a letter: valid letter is from a-zA-Z or from the alphabet"""
+        """Returns whether current character is a letter: valid letter is from a-zA-Z or from ALPHABET"""
 
-        return re.match(r'[a-zA-Z]', self._current_symbol()) is not None or self._current_symbol() in ALPHABET
+        return re.match(r'[a-zA-Z]', self._current_char()) is not None or self._current_char() in ALPHABET
