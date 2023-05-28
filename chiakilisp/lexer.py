@@ -147,6 +147,9 @@ class Lexer:
                 if re.match(r'^\.\d+$', value):
                     value = '0' + value  # make it possible to define 0.2 as .2
                     self._tokens.append(Token(Token.Number, value, self.pos()))
+                elif re.match(r'^-\.\d+$', value):
+                    value = '-0' + value[1:]  # make it possible to prepend '-'
+                    self._tokens.append(Token(Token.Number, value, self.pos()))
                 elif value.startswith(':'):
                     self._tokens.append(Token(Token.Keyword, value, self.pos()))
                 elif value == 'nil':
