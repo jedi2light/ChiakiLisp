@@ -120,7 +120,7 @@
 
 (defn rest (coll)                 ;; Returns the rest of a collection
  (when (and coll (or (str? coll) (list? coll) (tuple? coll)))
-  (get coll (slice 1..))))        ;; this one is equivalent for: [1:]
+  (get coll 1..)))                ;; this one is equivalent for: [1:]
 
 (defn get-in (& args)        ;; Goes through full path to get an item
  (when args
