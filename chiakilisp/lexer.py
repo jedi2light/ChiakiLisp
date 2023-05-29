@@ -19,8 +19,8 @@ class Lexer:
     _source_code: str  # <----------------------------------- source code context
     _source_code_file_name: str  # <----------------------- source code file name
     _pointer: int = 0  # <------------------------------ default pointer position
-    _tokens: List[Token]  # <----------------------- list of the populated Tokens
-    _line_num, _char_num = 1, 0  # <------------ initial pointer position in file
+    _tokens: List[Token]  # <------------------------------ populated Tokens list
+    _line_num, _char_num, _start_num = 1, 1, 1  # <---- initial pointer positions
 
     def _raise_syntax_error(self, message: str) -> None:
 
@@ -52,14 +52,20 @@ class Lexer:
 
         """Increments line number by 1 and resets character number"""
 
-        self._char_num = 0
+        self._char_num = 1
         self._line_num += 1
+
+    def _start(self) -> None:
+
+        """Assign self._start_num to current self._char_num value"""
+
+        self._start_num = self._char_num
 
     def pos(self) -> tuple:
 
         """Returns a tuple containing current char and line number"""
 
-        return tuple((self._source_code_file_name, self._line_num, self._char_num))
+        return tuple((self._source_code_file_name, self._line_num, self._start_num))
 
     def lex(self) -> None:  # pylint: disable=R0912, disable=R0915  # maybe refactor
 
@@ -70,6 +76,7 @@ class Lexer:
             if self._current_char_is_semicolon() or \
                     (self._current_char_is_hash() and
                         self._next_char_is_exclamation_mark()):
+                self._start()
                 self._advance()
                 while self._can_be_advanced():
                     if self._current_char_is_nl():
@@ -80,12 +87,14 @@ class Lexer:
 
             elif (self._current_char_is_hash()
                   and self._next_char_is_opening_paren()):
+                self._start()
                 self._advance()
                 self._increment_char_number()
                 self._tokens.append(Token(Token.InlineFunMarker,  '#{', self.pos()))
 
             elif (self._current_char_is_hash()
                   and self._next_char_is_underscore()):
+                self._start()
                 self._advance()
                 self._advance()
                 self._increment_char_number()
@@ -94,6 +103,7 @@ class Lexer:
 
             elif (self._current_char_is_hash()
                   and self._next_char_is_cr_opening_paren()):
+                self._start()
                 self._advance()
                 self._increment_char_number()  # <-- increment character num as well
                 self._tokens.append(Token(Token.OpeningParen,      '(', self.pos()))
@@ -103,6 +113,7 @@ class Lexer:
 
             elif (self._current_char_is_hash()
                   and self._next_char_is_sq_opening_paren()):
+                self._start()
                 self._advance()
                 self._increment_char_number()  # <-- increment character num as well
                 self._tokens.append(Token(Token.OpeningParen,     '(', self.pos()))
@@ -113,6 +124,7 @@ class Lexer:
             elif self._current_char_is_number() \
                     or (self._current_char_is_sign()
                         and self._next_char_is_number()):
+                self._start()
                 value = self._current_char()
                 self._advance()
                 self._increment_char_number()
@@ -133,6 +145,7 @@ class Lexer:
 
             elif self._current_char_is_letter() \
                     or self._current_char_is_colon():
+                self._start()
                 value = self._current_char()
                 self._advance()
                 self._increment_char_number()
@@ -162,6 +175,7 @@ class Lexer:
                     self._tokens.append(Token(Token.Identifier, value, self.pos()))
 
             elif self._current_char_is_double_quote():
+                self._start()
                 value = ''
                 while self._can_be_advanced():
                     self._advance()
@@ -185,42 +199,50 @@ class Lexer:
                 self._increment_char_number()  # <-- increment character num as well
 
             elif self._current_char_is_opening_paren():
+                self._start()
                 self._tokens.append(Token(Token.OpeningParen,      '(', self.pos()))
                 self._advance()
                 self._increment_char_number()  # <-- increment character num as well
 
             elif self._current_char_is_closing_paren():
+                self._start()
                 self._tokens.append(Token(Token.ClosingParen,      ')', self.pos()))
                 self._advance()
                 self._increment_char_number()  # <-- increment character num as well
 
             elif self._current_char_is_cr_opening_paren():
+                self._start()
                 self._tokens.append(Token(Token.OpeningParen,      '(', self.pos()))
                 self._tokens.append(Token(Token.Identifier,    'dicty', self.pos()))
                 self._advance()
                 self._increment_char_number()  # <-- increment character num as well
 
             elif self._current_char_is_cr_closing_paren():
+                self._start()
                 self._tokens.append(Token(Token.ClosingParen,      ')', self.pos()))
                 self._advance()
                 self._increment_char_number()  # <-- increment character num as well
 
             elif self._current_char_is_sq_opening_paren():
+                self._start()
                 self._tokens.append(Token(Token.OpeningParen,      '(', self.pos()))
                 self._tokens.append(Token(Token.Identifier,    'listy', self.pos()))
                 self._advance()
                 self._increment_char_number()  # <-- increment character num as well
 
             elif self._current_char_is_sq_closing_paren():
+                self._start()
                 self._tokens.append(Token(Token.ClosingParen,      ')', self.pos()))
                 self._advance()
                 self._increment_char_number()  # <-- increment character num as well
 
             elif self._current_char_is_nl():
+                self._start()
                 self._advance()
                 self._increment_line_number_with_char_number_reset()  # go a newline
 
             else:
+                self._start()
                 self._advance()  # call _advance() to skip over the extra characters
                 self._increment_char_number()  # <-- increment character num as well
 
