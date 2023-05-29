@@ -5,7 +5,7 @@ pages:
     paths:
        - public
   script:
-    - mkdir public
+    - mkdir -p public/images
     - cp web/index.html public/index.html
     - cp web/images/icon.ico public/images/icon.ico
     - cp web/images/logo.webp public/images/logo.webp
