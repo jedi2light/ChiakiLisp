@@ -328,7 +328,12 @@ class Expression(ExpressionType):
             NE_ASSERT(where,
                       handle_method is not NotFound,
                       f"Expression[execute]: dot-form: the '{handle_alias}' object has no method '{method_name}'")
-            return handle_method(*(node.execute(environ, False) for node in method_args))  # <- return last result
+            try:
+                return handle_method(*(node.execute(environ, False) for node in method_args))  # <- catch an error
+            except Exception as _err_:
+                if not isinstance(_err_, MANAGED_ERRORS):
+                    raise Py3xError(f'{":".join(map(str, where))}: {_err_.__class__.__name__}: {_err_.__str__()}')
+                raise _err_  # re-raise the error if it is managed, raise Py3xError if its arbitrary Python 3x one
 
         if head.token().value() == 'if':
             arity = TAIL_IS_VALID(tail, 'if', where,                             'Expression[execute]: if: {why}')
