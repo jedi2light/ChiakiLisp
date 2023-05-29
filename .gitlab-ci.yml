@@ -1,0 +1,12 @@
+image: bash
+
+pages:
+  artifacts:
+    paths:
+       - public
+  script:
+    - mkdir public
+    - cp web/index.html public/index.html
+    - cp web/images/logo.png public/images/logo.png
+    - gzip -9 -c web/index.html > web/index.html.gz
+    - gzip -9 -c web/imagesg/logo.webp > public/images/logo.webp.gz
