@@ -129,6 +129,9 @@
               (functools/reduce (fn (acc n)
                                   (get acc n default)) path coll)))))
 
+(defn str*                   ;; Behaves the same as str in Clojure
+ (& parts) (.join "" (map #(str %) parts)))
+
 (defn cons                   ;; Behaves the same as cons in Clojure
  (first-item others)
  (when (list? others)
