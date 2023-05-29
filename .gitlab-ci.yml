@@ -7,6 +7,8 @@ pages:
   script:
     - mkdir public
     - cp web/index.html public/index.html
-    - cp web/images/logo.png public/images/logo.png
+    - cp web/images/icon.ico public/images/icon.ico
+    - cp web/images/logo.webp public/images/logo.webp
     - gzip -9 -c web/index.html > web/index.html.gz
-    - gzip -9 -c web/imagesg/logo.webp > public/images/logo.webp.gz
+    - gzip -9 -c web/images/icon.ico > web/images/icon.ico.gz
+    - gzip -9 -c web/images/logo.webp > public/images/logo.webp.gz
