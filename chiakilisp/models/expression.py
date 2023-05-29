@@ -37,8 +37,17 @@ NE_ASSERT = get_assertion_closure(NameError)  # <--------- raises NameError
 SE_ASSERT = get_assertion_closure(SyntaxError)  # <----- raises SyntaxError
 RE_ASSERT = get_assertion_closure(RuntimeError)  # <--- raises RuntimeError
 
+# MANAGED_ERRORS are required to properly raise exceptions, while executing
+# an expressions
+# However, we can't guarantee that in case of broken Python 3.x module user
+# tries to import those exceptions are raised properly.
+# 'NameError' may occur if module tries to reference non-existent variable;
+# 'SyntaxError' may occur if module contains some sort of the syntax error;
+# 'RuntimeError' may occur if module tries to call to (i.e.) virtual method
+
 MANAGED_ERRORS = (
-    Py3xError, ArityError, NameError, TypeError, SyntaxError, RuntimeError)
+    Py3xError, ArityError,
+    NameError, SyntaxError, RuntimeError)  # tuple may be updated in future
 
 
 def IDENTIFIER_ASSERT(lit: Literal, message: str) -> None:
