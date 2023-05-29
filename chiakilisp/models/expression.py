@@ -174,17 +174,17 @@ class Expression(ExpressionType):
             if can_take_extras:
                 if len(c_arguments) > positional_parameters_length:
                     e_arguments = c_arguments[positional_parameters_length:]
-                    c_arguments = c_arguments[:positional_parameters_length] + (e_arguments,)  # new args list
+                    c_arguments = c_arguments[:positional_parameters_length] + (e_arguments,)  # complete list
                 else:
                     c_arguments = c_arguments + (tuple(),)  # <- if extras are possible but missing, set to ()
 
             fn = {}  # <----------------------------------------------- initialize new computation environment
             fn.update(environ)  # <--------------------------------------------- update it with the global one
+            fn.update({'kwargs': kwargs})  # <--------------------------- update environment with keyword args
             fn.update(dict(zip(names, c_arguments)))  # <-------------- associate parameters with their values
-            fn.update({'kwargs': kwargs})  # <---------------------- update environment with keyword arguments
-            return [node.execute(fn, False) for node in body][-1]  # then return the last _computation_ result
+            return [node.execute(fn, False) for node in body][-1]  # <- and return the last computation result
 
-        return handle  # <-------- return the closure that will be a good handle for the user defined function
+        return handle  # <---------- return a closure that will be a good handle for the user defined function
 
     def execute(self, environ: dict, top: bool = True) -> Any:
 
@@ -202,7 +202,7 @@ class Expression(ExpressionType):
 
         where = head.token().position()  # <------------ when make assertions on expression head, this can be used
 
-        if head.token().type() == Token.Keyword:
+        if head.token().type() == Token.Keyword:  # if the head of expression is a keyword, evaluate call to `get`
             RE_ASSERT(where, get,   "Expression[execute]: unable to use keyword as a function without `core/get`")
             SE_ASSERT(where, len(tail) >= 1,  'Expression[execute]: keyword must be followed by at least one arg')
             SE_ASSERT(where, len(tail) <= 2,   'Expression[execute]: keyword can be followed by at most two args')
