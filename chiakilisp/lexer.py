@@ -277,7 +277,8 @@ class Lexer:
 
         """Returns whether current character is a newline character"""
 
-        return self._current_char() == '\n'
+        return self._current_char() == '\n' \
+            or self._current_char() == '\r\n'  # support for MSWindows
 
     def _current_char_is_sign(self) -> bool:
 
