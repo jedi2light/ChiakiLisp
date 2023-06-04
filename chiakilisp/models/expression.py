@@ -449,17 +449,17 @@ class Expression(ExpressionType):
             env: dict = {}  # <--(for some reason this type hint is necessary)----- initialize a local environment
             env.update(environ)  # <------------------------------------------------ update it with the global one
             max_length = 0  # <- as we go through all given collections, we need to define maximum number of steps
-            gathered_binding_aliases = []  # <- as go through all the coll element aliases, we need to gather them
+            gathered_binding_alias_list = []  # <- go through all the coll element aliases, we need to gather them
             for alias, collection in pairs(bindings.nodes()):  # for each next coll element alias and collection..
                 computed_collection = collection.execute(environ, False)  # we first compute collection from input
                 computed_collection_length = len(computed_collection)  # then store its length to compare bellow |
                 max_length = computed_collection_length if computed_collection_length > max_length else max_length
-                gathered_binding_aliases.append(alias.token().value())  # and then we append the alias to the list
+                gathered_binding_alias_list.append(alias.token().value())   # then we append the alias to the list
                 env.update({f'$_{alias.token().value()}': collection.execute(environ, False)})  # should be hidden
             for element_idx in range(max_length):  # for each next index (remember we computed maximum length) ...
                 current_collection_element_temporary_env = {}  # create a current collection temporary environment
                 current_collection_element_temporary_env.update(env)  # <------------ update it with the local one
-                for alias in gathered_binding_aliases:  # for each next alias (remember we have a hidden variable)
+                for alias in gathered_binding_alias_list:  # for each next alias, remember we have hidden variable
                     current_collection = env.get(f'$_{alias}')  # get computed collection via that hidden variable
                     current_collection_element_temporary_env.update({alias: get(current_collection, element_idx)})
                 body.execute(current_collection_element_temporary_env, False)  # <------- and finally compute body
