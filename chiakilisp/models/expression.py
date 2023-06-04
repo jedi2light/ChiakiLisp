@@ -470,9 +470,9 @@ class Expression(ExpressionType):
             condition, body = tail  # <---------------------------------------- parse while-loop bindings and body
             while condition.execute(environ, False):  # <--- while while-loop condition is evaluates to truthy one
                 control = body.execute(environ, False)  # <- execute while-loop and guarantee that we give control
-                if control == '$control:break':      # <---- and in case of the '$control:break' we break the loop
+                if control == '$loop-control:break':  # <-- in case of the '$loop-control:break' we break the loop
                     break
-                if control == '$control:continue':   # and in case of the '$control:continue' we continue the loop
+                if control == '$loop-control:continue':  # in case of the '$loop-control:continue' - continue loop
                     continue
             return None  # <--------------------- behave as imperative loop where there is no return value but nil
 

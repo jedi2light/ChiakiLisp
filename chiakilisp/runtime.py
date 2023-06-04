@@ -21,8 +21,8 @@ ENVIRONMENT = {
     'prn': pprint,
     'print': pprint,
     'println': pprint,  # we need more aliases for pprint!  \O/
-    'break': lambda: '$control:break',  # break in a while-loop
-    'continue': lambda: '$control:continue',  # continue a loop
+    'break': lambda: '$loop-control:break',  # while-loop break
+    'continue': lambda: '$loop-control:continue',  # while-loop
     'apply': lambda fn, args: fn(*args),  # built-in apply func
     '...': Ellipsis  # make it possible to write '...' for user
 }
